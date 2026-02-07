@@ -1,4 +1,4 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
+import { FirebaseApp, initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { initializeFirestore, enableMultiTabIndexedDbPersistence } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
@@ -15,31 +15,37 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
-const db = initializeFirestore(app, {});
+const isConfigValid = !!firebaseConfig.apiKey && firebaseConfig.apiKey !== "undefined";
 
-if (typeof window !== "undefined") {
-  enableMultiTabIndexedDbPersistence(db).catch((err) => {
-    if (err.code == 'failed-precondition') {
-      // Multiple tabs open, persistence can only be enabled
-      // in one tab at a a time.
-      console.warn('Firestore persistence failed: Multiple tabs open');
-    } else if (err.code == 'unimplemented') {
-      // The current browser does not support all of the
-      // features required to enable persistence
-      console.warn('Firestore persistence failed: Browser not supported');
-    }
-  });
+let app: FirebaseApp | null;
+try {
+  app = !getApps().length ? (isConfigValid ? initializeApp(firebaseConfig) : null) : getApp();
+} catch (error) {
+  console.error("Firebase initialization error:", error);
+  app = null;
 }
 
-const storage = getStorage(app);
+const auth = app ? getAuth(app) : ({} as any);
+const db = app ? initializeFirestore(app, {}) : ({} as any);
+const storage = app ? getStorage(app) : ({} as any);
+
+if (typeof window !== "undefined") {
+  if (db && typeof db.terminate !== 'undefined') {
+    enableMultiTabIndexedDbPersistence(db).catch((err) => {
+      if (err.code == 'failed-precondition') {
+        console.warn('Firestore persistence failed: Multiple tabs open');
+      } else if (err.code == 'unimplemented') {
+        console.warn('Firestore persistence failed: Browser not supported');
+      }
+    });
+  }
+}
 
 let analytics;
 // Initialize Analytics only on the client side
 if (typeof window !== "undefined") {
   isSupported().then((supported) => {
-    if (supported) {
+    if (supported && app) {
       analytics = getAnalytics(app);
     }
   });
