@@ -22,21 +22,34 @@ import { Event, Guest, AuditLog } from "@/types";
 const EVENTS_COLLECTION = "events";
 
 export const getEvents = async (): Promise<Event[]> => {
-  const q = query(collection(db, EVENTS_COLLECTION));
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
+  if (!db) return [];
+  try {
+    const q = query(collection(db, EVENTS_COLLECTION));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
 };
 
 export const getEventById = async (id: string): Promise<Event | null> => {
-  const docRef = doc(db, EVENTS_COLLECTION, id);
-  const docSnap = await getDoc(docRef);
-  if (docSnap.exists()) {
-    return { id: docSnap.id, ...docSnap.data() } as Event;
+  if (!db) return null;
+  try {
+    const docRef = doc(db, EVENTS_COLLECTION, id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() } as Event;
+    }
+  } catch (error) {
+    console.error(error);
   }
   return null;
 };
 
 export const createEvent = async (data: Omit<Event, "id" | "createdAt" | "status" | "bannerUrl">, bannerFile?: File): Promise<string> => {
+  if (!db || !storage) throw new Error("Firebase services not initialized");
+  
   let bannerUrl = "";
 
   if (bannerFile) {
@@ -56,15 +69,17 @@ export const createEvent = async (data: Omit<Event, "id" | "createdAt" | "status
 };
 
 export const updateEvent = async (id: string, data: Partial<Omit<Event, "id" | "createdAt">>, bannerFile?: File, bankQrFile?: File): Promise<void> => {
+  if (!db) throw new Error("Database not initialized");
+  
   let updateData: any = { ...data };
 
-  if (bannerFile) {
+  if (bannerFile && storage) {
     const storageRef = ref(storage, `banners/${Date.now()}_${bannerFile.name}`);
     await uploadBytes(storageRef, bannerFile);
     updateData.bannerUrl = await getDownloadURL(storageRef);
   }
 
-  if (bankQrFile) {
+  if (bankQrFile && storage) {
     const storageRef = ref(storage, `bank_qrs/${Date.now()}_${bankQrFile.name}`);
     await uploadBytes(storageRef, bankQrFile);
     updateData.bankQrUrl = await getDownloadURL(storageRef);
@@ -86,6 +101,7 @@ export const updateEvent = async (id: string, data: Partial<Omit<Event, "id" | "
 };
 
 export const deleteEvent = async (id: string): Promise<void> => {
+  if (!db) return;
   const docRef = doc(db, EVENTS_COLLECTION, id);
   await deleteDoc(docRef);
 };
@@ -93,15 +109,23 @@ export const deleteEvent = async (id: string): Promise<void> => {
 // --- Guest Sub-collection ---
 
 export const getGuests = async (eventId: string): Promise<Guest[]> => {
-  const q = query(
-    collection(db, EVENTS_COLLECTION, eventId, "guests"), 
-    orderBy("createdAt", "desc")
-  );
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Guest));
+  if (!db) return [];
+  try {
+    const q = query(
+      collection(db, EVENTS_COLLECTION, eventId, "guests"), 
+      orderBy("createdAt", "desc")
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Guest));
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
 };
 
 export const subscribeToGuests = (eventId: string, callback: (guests: Guest[]) => void) => {
+  if (!db) return () => {};
+  
   const q = query(
     collection(db, EVENTS_COLLECTION, eventId, "guests"), 
     orderBy("createdAt", "desc")
@@ -124,6 +148,7 @@ export const logActivity = async (
   oldValue?: any,
   newValue?: any
 ) => {
+  if (!db) return;
   try {
     await addDoc(collection(db, EVENTS_COLLECTION, eventId, "logs"), {
       guestId,
@@ -132,7 +157,7 @@ export const logActivity = async (
       oldValue,
       newValue,
       timestamp: serverTimestamp(),
-      userId: auth.currentUser?.uid || "anonymous"
+      userId: auth?.currentUser?.uid || "anonymous"
     });
   } catch (error) {
     console.error("Failed to log activity", error);
@@ -140,6 +165,7 @@ export const logActivity = async (
 };
 
 export const addGuest = async (eventId: string, guest: Omit<Guest, "id" | "createdAt">): Promise<string> => {
+  if (!db) throw new Error("Database not initialized");
   const docRef = await addDoc(collection(db, EVENTS_COLLECTION, eventId, "guests"), {
     ...guest,
     createdAt: serverTimestamp(),
@@ -160,6 +186,7 @@ export const addGuest = async (eventId: string, guest: Omit<Guest, "id" | "creat
 };
 
 export const updateGuest = async (eventId: string, guestId: string, data: Partial<Guest>) => {
+  if (!db) throw new Error("Database not initialized");
   const docRef = doc(db, EVENTS_COLLECTION, eventId, "guests", guestId);
   const oldDoc = await getDoc(docRef);
   const oldValue = oldDoc.exists() ? oldDoc.data() : null;
@@ -184,6 +211,7 @@ export const updateGuest = async (eventId: string, guestId: string, data: Partia
 };
 
 export const deleteGuest = async (eventId: string, guestId: string) => {
+  if (!db) throw new Error("Database not initialized");
   const docRef = doc(db, EVENTS_COLLECTION, eventId, "guests", guestId);
   const oldDoc = await getDoc(docRef);
   const oldValue = oldDoc.exists() ? oldDoc.data() : null;
@@ -201,26 +229,38 @@ export const deleteGuest = async (eventId: string, guestId: string) => {
 };
 
 export const getGuestLogs = async (eventId: string, guestId: string): Promise<AuditLog[]> => {
-  const q = query(
-    collection(db, EVENTS_COLLECTION, eventId, "logs"),
-    where("guestId", "==", guestId)
-  );
-  const snapshot = await getDocs(q);
-  const logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AuditLog));
-  
-  return logs.sort((a, b) => {
-    const timeA = a.timestamp instanceof Date ? a.timestamp.getTime() : (a.timestamp as any).toMillis?.() || 0;
-    const timeB = b.timestamp instanceof Date ? b.timestamp.getTime() : (b.timestamp as any).toMillis?.() || 0;
-    return timeB - timeA;
-  });
+  if (!db) return [];
+  try {
+    const q = query(
+      collection(db, EVENTS_COLLECTION, eventId, "logs"),
+      where("guestId", "==", guestId)
+    );
+    const snapshot = await getDocs(q);
+    const logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AuditLog));
+    
+    return logs.sort((a, b) => {
+      const timeA = a.timestamp instanceof Date ? a.timestamp.getTime() : (a.timestamp as any).toMillis?.() || 0;
+      const timeB = b.timestamp instanceof Date ? b.timestamp.getTime() : (b.timestamp as any).toMillis?.() || 0;
+      return timeB - timeA;
+    });
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
 };
 
 export const getEventLogs = async (eventId: string, limitCount: number = 20): Promise<AuditLog[]> => {
-  const q = query(
-    collection(db, EVENTS_COLLECTION, eventId, "logs"),
-    orderBy("timestamp", "desc"),
-    limit(limitCount)
-  );
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AuditLog));
+  if (!db) return [];
+  try {
+    const q = query(
+      collection(db, EVENTS_COLLECTION, eventId, "logs"),
+      orderBy("timestamp", "desc"),
+      limit(limitCount)
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AuditLog));
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
 };

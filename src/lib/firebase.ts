@@ -17,33 +17,34 @@ const firebaseConfig = {
 // Initialize Firebase
 const isConfigValid = !!firebaseConfig.apiKey && firebaseConfig.apiKey !== "undefined";
 
-let app: FirebaseApp | null;
-try {
-  app = !getApps().length ? (isConfigValid ? initializeApp(firebaseConfig) : null) : getApp();
-} catch (error) {
-  console.error("Firebase initialization error:", error);
-  app = null;
-}
-
-const auth = app ? getAuth(app) : ({} as any);
-const db = app ? initializeFirestore(app, {}) : ({} as any);
-const storage = app ? getStorage(app) : ({} as any);
-
-if (typeof window !== "undefined") {
-  if (db && typeof db.terminate !== 'undefined') {
-    enableMultiTabIndexedDbPersistence(db).catch((err) => {
-      if (err.code == 'failed-precondition') {
-        console.warn('Firestore persistence failed: Multiple tabs open');
-      } else if (err.code == 'unimplemented') {
-        console.warn('Firestore persistence failed: Browser not supported');
-      }
-    });
+let app: FirebaseApp | null = null;
+if (isConfigValid) {
+  try {
+    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+  } catch (error) {
+    console.error("Firebase initialization error:", error);
   }
 }
 
-let analytics;
+export const auth = app ? getAuth(app) : null;
+export const db = app ? initializeFirestore(app, {}) : null;
+export const storage = app ? getStorage(app) : null;
+
+export const isFirebaseConfigured = isConfigValid && !!app;
+
+if (typeof window !== "undefined" && db) {
+  enableMultiTabIndexedDbPersistence(db).catch((err) => {
+    if (err.code == 'failed-precondition') {
+      console.warn('Firestore persistence failed: Multiple tabs open');
+    } else if (err.code == 'unimplemented') {
+      console.warn('Firestore persistence failed: Browser not supported');
+    }
+  });
+}
+
+let analytics: any = null;
 // Initialize Analytics only on the client side
-if (typeof window !== "undefined") {
+if (typeof window !== "undefined" && app) {
   isSupported().then((supported) => {
     if (supported && app) {
       analytics = getAnalytics(app);
@@ -51,4 +52,4 @@ if (typeof window !== "undefined") {
   });
 }
 
-export { app, auth, db, storage, analytics };
+export { app, analytics };

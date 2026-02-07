@@ -10,6 +10,7 @@ import {
   signInWithPopup
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { toast } from "sonner";
 
 interface AuthContextType {
   user: User | null;
@@ -26,6 +27,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!auth) {
+      console.warn("Firebase Auth not initialized. Check your configuration.");
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
@@ -35,15 +42,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    if (!auth) {
+      toast.error("Auth system is not available. Check configuration.");
+      return;
+    }
     await signInWithEmailAndPassword(auth, email, password);
   };
 
   const signInWithGoogle = async () => {
+    if (!auth) {
+      toast.error("Auth system is not available. Check configuration.");
+      return;
+    }
     const provider = new GoogleAuthProvider();
     await signInWithPopup(auth, provider);
   };
 
   const signOut = async () => {
+    if (!auth) return;
     await firebaseSignOut(auth);
   };
 
