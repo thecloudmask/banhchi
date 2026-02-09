@@ -9,22 +9,39 @@ const CLOUD_NAME = "dw1ancaye";
 const UPLOAD_PRESET = "banhchi_uploads"; // You'll need to create this in Cloudinary dashboard
 
 /**
- * Upload an image file to Cloudinary
+ * Upload an image file to Cloudinary with aggressive compression
  * @param file - The file to upload
  * @param folder - Optional folder name in Cloudinary
+ * @param type - Type of image to determine compression level
  * @returns Promise with the uploaded image URL
  */
 export const uploadToCloudinary = async (
   file: File,
-  folder: string = "banhchi"
+  folder: string = "banhchi",
+  type: 'banner' | 'thumbnail' | 'gallery' = 'gallery'
 ): Promise<string> => {
   try {
-    // 1. Compress image before upload
+    // 1. Determine compression options based on type
+    let maxSizeMB = 0.5;
+    let maxWidthOrHeight = 1200;
+
+    if (type === 'banner') {
+      maxSizeMB = 0.8;
+      maxWidthOrHeight = 1600;
+    } else if (type === 'thumbnail') {
+      maxSizeMB = 0.15;
+      maxWidthOrHeight = 400;
+    } else if (type === 'gallery') {
+      maxSizeMB = 0.4;
+      maxWidthOrHeight = 1000;
+    }
+
     const options = {
-      maxSizeMB: 1, // Max size 1MB
-      maxWidthOrHeight: 1920, // Max dimension 1920px
+      maxSizeMB,
+      maxWidthOrHeight,
       useWebWorker: true,
-      fileType: 'image/jpeg'
+      fileType: 'image/jpeg',
+      initialQuality: 0.75
     };
     
     const compressedFile = await imageCompression(file, options);
@@ -61,7 +78,7 @@ export const uploadToCloudinary = async (
 };
 
 /**
- * Upload multiple images to Cloudinary
+ * Upload multiple images to Cloudinary sequentially to avoid network congestion
  * @param files - Array of files to upload
  * @param folder - Optional folder name in Cloudinary
  * @returns Promise with array of uploaded image URLs
@@ -70,10 +87,15 @@ export const uploadMultipleToCloudinary = async (
   files: File[],
   folder: string = "banhchi"
 ): Promise<string[]> => {
-  const uploadPromises = files.map((file) =>
-    uploadToCloudinary(file, folder)
-  );
-  return Promise.all(uploadPromises);
+  const results: string[] = [];
+  
+  // Process sequentially to be gentle on browser memory and network
+  for (const file of files) {
+    const url = await uploadToCloudinary(file, folder, 'gallery');
+    results.push(url);
+  }
+  
+  return results;
 };
 
 /**

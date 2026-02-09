@@ -15,7 +15,7 @@ import { getEvents } from "@/services/event.service";
 import { Event } from "@/types";
 import { Loader2, ArrowLeft, Plus, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
-import { uploadToCloudinary } from "@/lib/cloudinary";
+import { uploadToCloudinary, uploadMultipleToCloudinary } from "@/lib/cloudinary";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import RichTextEditor from "@/components/rich-text-editor";
@@ -68,9 +68,9 @@ export default function EditContentClient() {
   const [customType, setCustomType] = useState("");
   const [eventId, setEventId] = useState<string>("none");
   const [body, setBody] = useState("");
-  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
-  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
-  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const [currentImageUrls, setCurrentImageUrls] = useState<string[]>([]);
+  const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
+  const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
 
   // Dynamic Fields
   const [agendaItems, setAgendaItems] = useState<{ time: string; description: string }[]>([{ time: "", description: "" }]);
@@ -103,8 +103,13 @@ export default function EditContentClient() {
             }
           setEventId(contentData.eventId || "none");
           setBody(contentData.body || "");
-          setThumbnailUrl(contentData.thumbnail || null);
-          if (contentData.thumbnail) setThumbnailPreview(compressImage(contentData.thumbnail, 'thumbnail'));
+          
+          // Improved multiple image handling
+          if (contentData.images && contentData.images.length > 0) {
+              setCurrentImageUrls(contentData.images);
+          } else if (contentData.thumbnail) {
+              setCurrentImageUrls([contentData.thumbnail]);
+          }
 
           if (contentData.agenda && contentData.agenda.length > 0 && contentData.agenda[0].items) {
              setAgendaItems(contentData.agenda[0].items);
@@ -135,12 +140,26 @@ export default function EditContentClient() {
     if (user && id) init();
   }, [user, id, router, t]);
 
-  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setThumbnailFile(file);
-      setThumbnailPreview(URL.createObjectURL(file));
+  const handleImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      setNewImageFiles(prev => [...prev, ...files]);
+      
+      const previews = files.map(file => URL.createObjectURL(file));
+      setNewImagePreviews(prev => [...prev, ...previews]);
     }
+  };
+
+  const removeCurrentImage = (index: number) => {
+    setCurrentImageUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeNewImage = (index: number) => {
+    setNewImageFiles(prev => prev.filter((_, i) => i !== index));
+    setNewImagePreviews(prev => {
+      URL.revokeObjectURL(prev[index]);
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   const handleSave = async () => {
@@ -152,12 +171,9 @@ export default function EditContentClient() {
     try {
       setSaving(true);
       
-      let finalThumbnailUrl = thumbnailUrl;
-      if (thumbnailFile) {
-        finalThumbnailUrl = await uploadToCloudinary(thumbnailFile, "banhchi/contents");
-      } else if (!thumbnailPreview) {
-          finalThumbnailUrl = ""; // Removed
-      }
+      const uploadedImageUrls = await uploadMultipleToCloudinary(newImageFiles, "banhchi/contents");
+
+      const finalImages = [...currentImageUrls, ...uploadedImageUrls];
 
       // Filter empty items
       const cleanAgenda = agendaItems.filter(item => item.time || item.description);
@@ -171,7 +187,8 @@ export default function EditContentClient() {
         body,
         type: type === 'custom' ? customType : type,
         eventId: eventId !== "none" ? eventId : deleteField(),
-        thumbnail: finalThumbnailUrl || "",
+        thumbnail: finalImages[0] || "",
+        images: finalImages,
         
         agenda: cleanAgenda.length > 0 ? [{ items: cleanAgenda }] : [],
         committee: cleanCommittee.length > 0 ? cleanCommittee : []
@@ -297,23 +314,48 @@ export default function EditContentClient() {
                     <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t('short_description')} className="rounded-xl resize-none h-24" />
                 </div>
 
-                <div className="space-y-2">
-                    <Label className="font-bold">{t('thumbnail_image')}</Label>
+                <div className="space-y-4">
+                    <Label className="font-bold">{t('content_images') || 'Images'}</Label>
                     <p className="text-xs text-zinc-400">{t('thumbnail_desc')}</p>
-                    <div className="flex items-start gap-6">
-                        <div className="relative w-40 h-28 bg-zinc-100 rounded-xl overflow-hidden border border-dashed border-zinc-300 flex items-center justify-center shrink-0">
-                            {thumbnailPreview ? (
-                                <>
-                                    <Image src={thumbnailPreview} alt="Preview" fill className="object-cover" />
-                                    <button onClick={() => { setThumbnailFile(null); setThumbnailPreview(null); setThumbnailUrl(null); }} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 hover:bg-red-500 transition-colors">
-                                        <X className="h-3 w-3" />
-                                    </button>
-                                </>
-                            ) : (
-                                <Upload className="h-8 w-8 text-zinc-300" />
-                            )}
-                        </div>
-                        <Input type="file" onChange={handleThumbnailChange} accept="image/*" className="h-12 rounded-xl py-3" />
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {/* Current Images */}
+                        {currentImageUrls.map((url, index) => (
+                            <div key={`current-${index}`} className="relative aspect-video bg-zinc-100 rounded-xl overflow-hidden border border-zinc-200 group">
+                                <Image src={url} alt={`Current ${index}`} fill className="object-cover" />
+                                <button 
+                                    onClick={() => removeCurrentImage(index)} 
+                                    className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </div>
+                        ))}
+                        
+                        {/* New Image Previews */}
+                        {newImagePreviews.map((preview, index) => (
+                            <div key={`new-${index}`} className="relative aspect-video bg-zinc-100 rounded-xl overflow-hidden border border-primary/30 group">
+                                <Image src={preview} alt={`New Preview ${index}`} fill className="object-cover" />
+                                <button 
+                                    onClick={() => removeNewImage(index)} 
+                                    className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                                <div className="absolute bottom-1 right-1 bg-primary text-[8px] text-white px-1 rounded uppercase font-bold">New</div>
+                            </div>
+                        ))}
+                        
+                        <label className="relative aspect-video bg-zinc-50 rounded-xl overflow-hidden border-2 border-dashed border-zinc-200 flex flex-col items-center justify-center cursor-pointer hover:bg-zinc-100 transition-colors">
+                            <Upload className="h-6 w-6 text-zinc-300 mb-2" />
+                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{t('add_image') || 'Add Image'}</span>
+                            <input 
+                                type="file" 
+                                multiple 
+                                onChange={handleImagesChange} 
+                                accept="image/*" 
+                                className="hidden" 
+                            />
+                        </label>
                     </div>
                 </div>
             </CardContent>

@@ -16,7 +16,7 @@ import {
   deleteField,
   onSnapshot
 } from "firebase/firestore";
-import { uploadToCloudinary } from "@/lib/cloudinary";
+import { uploadToCloudinary, uploadMultipleToCloudinary } from "@/lib/cloudinary";
 import { Event, Guest, AuditLog } from "@/types";
 
 const EVENTS_COLLECTION = "events";
@@ -47,18 +47,28 @@ export const getEventById = async (id: string): Promise<Event | null> => {
   return null;
 };
 
-export const createEvent = async (data: Omit<Event, "id" | "createdAt" | "status" | "bannerUrl">, bannerFile?: File): Promise<string> => {
+export const createEvent = async (
+  data: Omit<Event, "id" | "createdAt" | "status" | "bannerUrl" | "galleryUrls">, 
+  bannerFile?: File,
+  galleryFiles?: File[]
+): Promise<string> => {
   if (!db) throw new Error("Firebase services not initialized");
   
   let bannerUrl = "";
+  let galleryUrls: string[] = [];
 
   if (bannerFile) {
-    bannerUrl = await uploadToCloudinary(bannerFile, "banners");
+    bannerUrl = await uploadToCloudinary(bannerFile, "banners", 'banner');
+  }
+
+  if (galleryFiles && galleryFiles.length > 0) {
+    galleryUrls = await uploadMultipleToCloudinary(galleryFiles, "galleries");
   }
 
   const docRef = await addDoc(collection(db, EVENTS_COLLECTION), {
     ...data,
     bannerUrl,
+    galleryUrls,
     status: 'active',
     eventDate: Timestamp.fromDate(data.eventDate as Date),
     createdAt: serverTimestamp(),
@@ -66,17 +76,32 @@ export const createEvent = async (data: Omit<Event, "id" | "createdAt" | "status
   return docRef.id;
 };
 
-export const updateEvent = async (id: string, data: Partial<Omit<Event, "id" | "createdAt">>, bannerFile?: File, bankQrFile?: File): Promise<void> => {
+export const updateEvent = async (
+  id: string, 
+  data: Partial<Omit<Event, "id" | "createdAt">>, 
+  bannerFile?: File, 
+  bankQrFile?: File,
+  galleryFiles?: File[]
+): Promise<void> => {
   if (!db) throw new Error("Database not initialized");
   
   let updateData: any = { ...data };
 
   if (bannerFile) {
-    updateData.bannerUrl = await uploadToCloudinary(bannerFile, "banners");
+    updateData.bannerUrl = await uploadToCloudinary(bannerFile, "banners", 'banner');
   }
 
   if (bankQrFile) {
-    updateData.bankQrUrl = await uploadToCloudinary(bankQrFile, "bank_qrs");
+    updateData.bankQrUrl = await uploadToCloudinary(bankQrFile, "bank_qrs", 'thumbnail');
+  }
+
+  if (galleryFiles && galleryFiles.length > 0) {
+    const newUrls = await uploadMultipleToCloudinary(galleryFiles, "galleries");
+    // If we have existing galleryUrls in data, append. Otherwise, fetch or just set.
+    // However, the UI usually passes the full 'galleryUrls' list if it wants to manage removals.
+    // If galleryFiles is provided, we append them to whatever is in updateData.galleryUrls or event.galleryUrls.
+    const currentUrls = updateData.galleryUrls || [];
+    updateData.galleryUrls = [...currentUrls, ...newUrls];
   }
 
   if (data.eventDate) {

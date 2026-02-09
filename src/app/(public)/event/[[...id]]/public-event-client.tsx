@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getEventById } from "@/services/event.service";
 import { getContentsByEventId, getContentById, Content } from "@/services/content.service";
+import { useAuth } from "@/providers/auth-provider";
 import { Event } from "@/types";
 import { useLanguage } from "@/providers/language-provider";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Calendar, MapPin, ArrowLeft, Clock, Share2, Navigation, Image as ImageIcon, Smartphone, Plus, Lock, ArrowRight, ShieldCheck, Users, FileText } from "lucide-react";
+import { Loader2, Calendar, MapPin, ArrowLeft, Clock, Share2, Navigation, Image as ImageIcon, Smartphone, Plus, Lock, ArrowRight, ShieldCheck, Users, FileText, LayoutDashboard, X } from "lucide-react";
 import { formatDate, cn } from "@/lib/utils";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,6 +30,7 @@ interface TimeLeft {
 }
 
 export default function PublicEventClient() {
+  const { user } = useAuth();
   const params = useParams();
   
   // Robustly determine eventId using both params and window location (fallback for static export)
@@ -74,6 +76,7 @@ export default function PublicEventClient() {
   const [isLocked, setIsLocked] = useState(false);
   const [pin, setPin] = useState("");
   const [unlocking, setUnlocking] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (eventId) {
@@ -321,9 +324,17 @@ export default function PublicEventClient() {
                 <div className="h-10 w-32 items-center justify-center overflow-hidden">
                   <img src="/SIDETH-THEAPKA.png" alt="Logo" className="w-full h-full object-contain object-left" />
                 </div>
-                <span className="font-black text-base sm:text-lg tracking-tight text-blue-900 uppercase">{t('app_name')}</span>
+                {/* <span className="font-black text-base sm:text-lg tracking-tight text-blue-900 uppercase">{t('app_name')}</span> */}
               </Link>
               <div className="flex items-center gap-3 sm:gap-4">
+                {user && (
+                    <Link href="/admin">
+                        <Button variant="ghost" size="sm" className="h-9 sm:h-10 rounded-xl gap-2 font-bold text-xs text-blue-900/60 hover:text-blue-900 border border-blue-900/10 hover:bg-blue-50">
+                            <LayoutDashboard className="h-4 w-4" />
+                            <span className="hidden sm:inline">{t('dashboard') || 'Dashboard'}</span>
+                        </Button>
+                    </Link>
+                )}
                 <LanguageSwitcher />
               </div>
             </div>
@@ -420,26 +431,55 @@ export default function PublicEventClient() {
                            </div>
                         )}
 
-                        {content.committee && content.committee.length > 0 && (
-                           <div className="w-full pt-8 pb-12">
-                              <h2 className="text-2xl font-black text-blue-900 mb-10 inline-block border-b-2 border-blue-900/30 pb-2 px-10 font-moul">
-                                 {t('committee_organizers')}
-                              </h2>
-                              
-                              <div className="grid sm:grid-cols-2 gap-x-12 gap-y-10 text-blue-900 text-left max-w-2xl mx-auto">
-                                 {content.committee.map((group, idx) => (
-                                    <div key={idx} className="space-y-3 p-6 rounded-2xl bg-zinc-50/50 border border-zinc-100">
-                                       <h3 className="font-black text-lg text-blue-900 font-moul border-b border-blue-100 pb-2">
-                                          {group.role}
-                                       </h3>
-                                       <p className="font-bold leading-relaxed text-zinc-600">
-                                          {group.members.join(", ")}
-                                       </p>
-                                    </div>
-                                 ))}
-                              </div>
-                           </div>
-                        )}
+                         {content.committee && content.committee.length > 0 && (
+                            <div className="w-full pt-8 pb-12">
+                               <h2 className="text-2xl font-black text-blue-900 mb-10 inline-block border-b-2 border-blue-900/30 pb-2 px-10 font-moul">
+                                  {t('committee_organizers')}
+                               </h2>
+                               
+                               <div className="grid sm:grid-cols-2 gap-x-12 gap-y-10 text-blue-900 text-left max-w-2xl mx-auto">
+                                  {content.committee.map((group, idx) => (
+                                     <div key={idx} className="space-y-3 p-6 rounded-2xl bg-zinc-50/50 border border-zinc-100">
+                                        <h3 className="font-black text-lg text-blue-900 font-moul border-b border-blue-100 pb-2">
+                                           {group.role}
+                                        </h3>
+                                        <p className="font-bold leading-relaxed text-zinc-600">
+                                           {group.members.join(", ")}
+                                        </p>
+                                     </div>
+                                  ))}
+                               </div>
+                            </div>
+                         )}
+
+                         {/* Optional Gallery for Agenda */}
+                         {content.images && content.images.length > 0 && (
+                            <div className="w-full pt-12 pb-8 border-t border-blue-50/50">
+                                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-blue-900/40 mb-8">{t('gallery')}</h3>
+                                <div className="grid grid-cols-2 gap-4 auto-rows-[120px] sm:auto-rows-[180px]">
+                                    {content.images.map((img, idx) => {
+                                        const isFeatured = idx % 5 === 0;
+                                        return (
+                                            <div 
+                                                key={idx} 
+                                                onClick={() => setSelectedImage(img)}
+                                                className={cn(
+                                                    "relative rounded-xl sm:rounded-2xl overflow-hidden border border-blue-100 bg-blue-50/30 group cursor-zoom-in transition-all duration-500",
+                                                    isFeatured ? "col-span-2 row-span-2" : "col-span-1 row-span-1"
+                                                )}
+                                            >
+                                                <Image 
+                                                    src={compressImage(img, isFeatured ? 'banner' : 'large')} 
+                                                    alt="" 
+                                                    fill 
+                                                    className="object-cover transition-transform duration-700 group-hover:scale-110" 
+                                                />
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                         )}
 
                         <div className="pt-12 w-full border-t border-blue-100 text-blue-800/60 text-[10px] font-black uppercase tracking-[0.3em]">
                            {event.location && (
@@ -459,7 +499,7 @@ export default function PublicEventClient() {
                                     <img src="/SIDETH-THEAPKA.png" alt="Logo" className="w-full h-full object-contain object-left" />
                                  </div>
                                  <div className="text-left leading-none">
-                                    <div className="font-black text-xs tracking-tight text-blue-900 uppercase">BANHCHI</div>
+                                    {/* <div className="font-black text-xs tracking-tight text-blue-900 uppercase">BANHCHI</div> */}
                                     <div className="text-[8px] font-bold text-zinc-400">{t('digital_companion')}</div>
                                  </div>
                               </div>
@@ -500,18 +540,52 @@ export default function PublicEventClient() {
                         </div>
                      </div>
 
-                     <div className="max-w-2xl mx-auto">
-                        {content.description && (
-                           <div className="text-xl font-medium text-zinc-500 leading-relaxed italic mb-12 border-l-4 border-zinc-100 pl-8">
-                              {content.description}
-                           </div>
-                        )}
+                      <div className="max-w-2xl mx-auto">
+                         {content.description && (
+                            <div className="text-xl font-medium text-zinc-500 leading-relaxed italic mb-12 border-l-4 border-zinc-100 pl-8">
+                               {content.description}
+                            </div>
+                         )}
 
-                        <div 
-                          className="content-body prose prose-zinc max-w-none"
-                          dangerouslySetInnerHTML={{ __html: content.body }} 
-                        />
-                     </div>
+                         <div 
+                           className="content-body prose prose-zinc max-w-none mb-16"
+                           dangerouslySetInnerHTML={{ __html: content.body }} 
+                         />
+
+                         {/* Content Gallery */}
+                         {content.images && content.images.length > 0 && (
+                            <div className="space-y-6 pt-12 border-t border-zinc-50">
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">{t('gallery')}</h3>
+                                <div className="grid grid-cols-2 gap-4 auto-rows-[150px] sm:auto-rows-[250px]">
+                                    {content.images.map((img, idx) => {
+                                        const isFeatured = idx % 3 === 0;
+                                        return (
+                                            <div 
+                                                key={idx} 
+                                                onClick={() => setSelectedImage(img)}
+                                                className={cn(
+                                                    "relative rounded-3xl overflow-hidden bg-zinc-50 border border-zinc-100 group cursor-zoom-in transition-all duration-500 hover:shadow-xl hover:shadow-zinc-200/50",
+                                                    isFeatured ? "col-span-2 row-span-2" : "col-span-1 row-span-1"
+                                                )}
+                                            >
+                                                <Image 
+                                                    src={compressImage(img, isFeatured ? 'banner' : 'large')} 
+                                                    alt="" 
+                                                    fill 
+                                                    className="object-cover transition-transform duration-700 group-hover:scale-110" 
+                                                />
+                                                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <div className="h-10 w-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center scale-90 group-hover:scale-100 transition-all">
+                                                        <Plus className="h-5 w-5 text-white" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                         )}
+                      </div>
 
                      <div className="pt-16 border-t border-zinc-50 flex flex-col items-center gap-8">
                         <div className="flex items-center gap-4 p-6 rounded-3xl bg-zinc-50 border border-zinc-100">
@@ -549,7 +623,7 @@ export default function PublicEventClient() {
             <div className="h-10 w-32 sm:h-12 sm:w-40 items-center justify-center overflow-hidden transition-transform">
               <img src="/SIDETH-THEAPKA.png" alt="Logo" className="w-full h-full object-contain object-left" />
             </div>
-            <span className="font-black text-lg sm:text-xl tracking-tighter uppercase">BANHCHI</span>
+            {/* <span className="font-black text-lg sm:text-xl tracking-tighter uppercase">BANHCHI</span> */}
           </Link>
           <div className="flex items-center gap-3 sm:gap-4">
             <LanguageSwitcher />
@@ -663,6 +737,71 @@ export default function PublicEventClient() {
                   </div>
                </div>
             </section>
+          )}
+
+          {/* Event Gallery */}
+          {event.galleryUrls && event.galleryUrls.length > 0 && (
+             <section className="space-y-12">
+                <div className="text-center space-y-4">
+                  <h2 className="text-3xl font-black tracking-tight text-zinc-900">{t('event_gallery')}</h2>
+                  <div className="h-1 w-12 bg-primary mx-auto rounded-full" />
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-6 auto-rows-[150px] sm:auto-rows-[200px]">
+                  {event.galleryUrls.map((url, idx) => {
+                    // Feature every 5th image (0, 5, 10...)
+                    const isFeatured = idx % 5 === 0;
+                    return (
+                        <div 
+                          key={idx} 
+                          onClick={() => setSelectedImage(url)}
+                          className={cn(
+                            "relative rounded-[1.5rem] sm:rounded-[2.5rem] overflow-hidden border border-zinc-100 bg-zinc-50 group cursor-zoom-in transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10",
+                            isFeatured ? "col-span-2 row-span-2" : "col-span-1 row-span-1"
+                          )}
+                        >
+                          <Image 
+                            src={compressImage(url, isFeatured ? 'banner' : 'large')} 
+                            alt="" 
+                            fill 
+                            className="object-cover transition-all duration-700 group-hover:scale-110 group-hover:rotate-1" 
+                          />
+                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center scale-75 group-hover:scale-100 transition-all duration-500">
+                                  <Plus className="h-5 w-5 text-white" />
+                              </div>
+                          </div>
+                        </div>
+                    );
+                  })}
+                </div>
+             </section>
+          )}
+
+          {/* Lightbox / Image Preview Modal */}
+          {selectedImage && (
+            <div 
+              className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 sm:p-10 animate-in fade-in duration-300"
+              onClick={() => setSelectedImage(null)}
+            >
+              <button 
+                className="absolute top-6 right-6 h-12 w-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors z-10"
+                onClick={(e) => { e.stopPropagation(); setSelectedImage(null); }}
+              >
+                <X className="h-6 w-6" />
+              </button>
+              
+              <div className="relative w-full h-full max-w-6xl max-h-[85vh] flex items-center justify-center">
+                <img 
+                  src={selectedImage} 
+                  alt="Gallery Preview" 
+                  className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl animate-in zoom-in-95 duration-500"
+                />
+              </div>
+              
+              <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/40 text-[10px] font-black uppercase tracking-[0.4em]">
+                {t('app_name')} • {t('event_gallery')}
+              </div>
+            </div>
           )}
 
           {/* Bank QR */}

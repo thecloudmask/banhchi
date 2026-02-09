@@ -15,11 +15,11 @@ import { getEvents } from "@/services/event.service";
 import { Event } from "@/types";
 import { Loader2, ArrowLeft, Plus, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
-import { uploadToCloudinary } from "@/lib/cloudinary";
+import { uploadToCloudinary, uploadMultipleToCloudinary } from "@/lib/cloudinary";
 import Image from "next/image";
 import RichTextEditor from "@/components/rich-text-editor";
 
-export default function CreateContentPage() {
+export default function CreateContentClient() {
   const { user } = useAuth();
   const router = useRouter();
   const { t } = useLanguage();
@@ -34,8 +34,8 @@ export default function CreateContentPage() {
   const [customType, setCustomType] = useState("");
   const [eventId, setEventId] = useState<string>("none");
   const [body, setBody] = useState("");
-  const [thumbnail, setThumbnail] = useState<File | null>(null);
-  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const [images, setImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   // Dynamic Fields
   const [agendaItems, setAgendaItems] = useState<{ time: string; description: string }[]>([{ time: "", description: "" }]);
@@ -53,41 +53,59 @@ export default function CreateContentPage() {
     if (user) loadEvents();
   }, [user]);
 
-  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setThumbnail(file);
-      setThumbnailPreview(URL.createObjectURL(file));
+  const handleImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setImages(prev => [...prev, ...newFiles]);
+      
+      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+      setImagePreviews(prev => [...prev, ...newPreviews]);
     }
   };
 
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => {
+      URL.revokeObjectURL(prev[index]);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
   const handleSave = async () => {
-    if (!title) {
+    if (!title.trim()) {
         toast.error(t('title_required'));
+        return;
+    }
+
+    if (type === 'custom' && !customType.trim()) {
+        toast.error(t('enter_custom_category') || "Please enter custom category");
         return;
     }
 
     try {
       setLoading(true);
       
-      let thumbnailUrl = "";
-      if (thumbnail) {
-        thumbnailUrl = await uploadToCloudinary(thumbnail, "banhchi/contents");
-      }
+      const uploadedImageUrls = await uploadMultipleToCloudinary(images, "banhchi/contents");
 
       // Filter empty items
-      const cleanAgenda = agendaItems.filter(item => item.time || item.description);
+      const cleanAgenda = agendaItems.filter(item => item.time.trim() || item.description.trim());
       const cleanCommittee = committeeItems
-        .filter(item => item.role || item.members)
-        .map(item => ({ role: item.role, members: item.members.split(',').map(m => m.trim()) }));
+        .filter(item => item.role.trim() || item.members.trim())
+        .map(item => ({ 
+          role: item.role.trim(), 
+          members: item.members.split(',').map(m => m.trim()).filter(Boolean) 
+        }));
 
       const newItem: Omit<Content, "id" | "createdAt" | "updatedAt"> = {
-        title,
-        description,
+        title: title.trim(),
+        description: description.trim(),
         body,
-        type: type === 'custom' ? customType : type,
+        type: type === 'custom' ? customType.trim() : type,
         ...(eventId !== "none" ? { eventId } : {}),
-        ...(thumbnailUrl ? { thumbnail: thumbnailUrl } : {}),
+        ...(uploadedImageUrls.length > 0 ? { 
+            thumbnail: uploadedImageUrls[0],
+            images: uploadedImageUrls 
+        } : {}),
         status: "published",
         author: {
             name: user?.displayName || "Admin",
@@ -99,7 +117,7 @@ export default function CreateContentPage() {
 
       await addContent(newItem);
       toast.success(t('content_created'));
-      router.push("/admin/contents");
+      router.push("/admin/contents/");
     } catch (error) {
       console.error(error);
       toast.error(t('failed_create_content'));
@@ -162,12 +180,12 @@ export default function CreateContentPage() {
                                         <span className="text-xs text-zinc-400">{t('announcement_desc')}</span>
                                     </div>
                                 </SelectItem>
-                                <SelectItem value="poster">
+                                {/* <SelectItem value="poster">
                                     <div className="flex flex-col items-start gap-1 py-1">
                                         <span className="font-bold">{t('poster')}</span>
                                         <span className="text-xs text-zinc-400">{t('poster_desc')}</span>
                                     </div>
-                                </SelectItem>
+                                </SelectItem> */}
                                 <SelectItem value="custom">
                                     <div className="flex flex-col items-start gap-1 py-1">
                                         <span className="font-bold">{t('custom')}</span>
@@ -213,23 +231,34 @@ export default function CreateContentPage() {
                     <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder={t('short_description')} className="rounded-xl resize-none h-24" />
                 </div>
 
-                <div className="space-y-2">
-                    <Label className="font-bold">{t('thumbnail_image')}</Label>
+                <div className="space-y-4">
+                    <Label className="font-bold">{t('content_images') || 'Images'}</Label>
                     <p className="text-xs text-zinc-400">{t('thumbnail_desc')}</p>
-                    <div className="flex items-start gap-6">
-                        <div className="relative w-40 h-28 bg-zinc-100 rounded-xl overflow-hidden border border-dashed border-zinc-300 flex items-center justify-center shrink-0">
-                            {thumbnailPreview ? (
-                                <>
-                                    <Image src={thumbnailPreview} alt="Preview" fill className="object-cover" />
-                                    <button onClick={() => { setThumbnail(null); setThumbnailPreview(null); }} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 hover:bg-red-500 transition-colors">
-                                        <X className="h-3 w-3" />
-                                    </button>
-                                </>
-                            ) : (
-                                <Upload className="h-8 w-8 text-zinc-300" />
-                            )}
-                        </div>
-                        <Input type="file" onChange={handleThumbnailChange} accept="image/*" className="h-12 rounded-xl py-3" />
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {imagePreviews.map((preview, index) => (
+                            <div key={index} className="relative aspect-video bg-zinc-100 rounded-xl overflow-hidden border border-zinc-200 group">
+                                <Image src={preview} alt={`Preview ${index}`} fill className="object-cover" />
+                                <button 
+                                    onClick={() => removeImage(index)} 
+                                    className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </div>
+                        ))}
+                        
+                        <label className="relative aspect-video bg-zinc-50 rounded-xl overflow-hidden border-2 border-dashed border-zinc-200 flex flex-col items-center justify-center cursor-pointer hover:bg-zinc-100 transition-colors">
+                            <Upload className="h-6 w-6 text-zinc-300 mb-2" />
+                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{t('add_image') || 'Add Image'}</span>
+                            <input 
+                                type="file" 
+                                multiple 
+                                onChange={handleImagesChange} 
+                                accept="image/*" 
+                                className="hidden" 
+                            />
+                        </label>
                     </div>
                 </div>
             </CardContent>
@@ -356,7 +385,7 @@ export default function CreateContentPage() {
                     value={body} 
                     onChange={setBody} 
                     placeholder={t('full_content_desc')} 
-                    className="min-h-[400px]" 
+                     className="min-h-100" 
                  />
             </CardContent>
         </Card>
@@ -365,7 +394,7 @@ export default function CreateContentPage() {
              <Button variant="ghost" type="button" onClick={() => router.back()} className="h-12 px-8 rounded-xl font-bold text-zinc-500">
                 {t('cancel')}
              </Button>
-             <Button onClick={handleSave} disabled={loading} className="h-12 px-8 rounded-xl font-bold text-lg min-w-[200px]">
+             <Button onClick={handleSave} disabled={loading} className="h-12 px-8 rounded-xl font-bold text-lg min-w-50">
                 {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
                 {loading ? t('saving_content') : t('publish_content')}
              </Button>

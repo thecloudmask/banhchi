@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { updateEvent } from "@/services/event.service";
-import { Loader2, Globe, Copy, Smartphone, Lock, ShieldCheck, Eye, EyeOff } from "lucide-react";
+import { Loader2, Globe, Copy, Smartphone, Lock, ShieldCheck, Eye, EyeOff, Upload, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { Event } from "@/types";
 import { QRCodeSVG } from "qrcode.react";
@@ -26,20 +26,60 @@ export function PublicSettingsDialog({ event, onRefresh }: PublicSettingsDialogP
   const [showGuestList, setShowGuestList] = useState(event.showGuestList || false);
   const [passcode, setPasscode] = useState(event.passcode || "");
   const [showPasscode, setShowPasscode] = useState(false);
+  
+  // Bank QR
   const [bankQrFile, setBankQrFile] = useState<File | null>(null);
   const [qrPreview, setQrPreview] = useState<string | null>(event.bankQrUrl || null);
   
+  // Banner
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(event.bannerUrl || null);
+
+  // Gallery
+  const [currentGalleryUrls, setCurrentGalleryUrls] = useState<string[]>(event.galleryUrls || []);
+  const [newGalleryFiles, setNewGalleryFiles] = useState<File[]>([]);
+  const [newGalleryPreviews, setNewGalleryPreviews] = useState<string[]>([]);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+
   const publicUrl = typeof window !== "undefined" ? `${window.location.protocol}//${window.location.host}/event/${event.id}` : "";
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setBankQrFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => setQrPreview(reader.result as string);
-      reader.readAsDataURL(file);
+      setQrPreview(URL.createObjectURL(file));
     }
+  };
+
+  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setBannerFile(file);
+      setBannerPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      setNewGalleryFiles(prev => [...prev, ...files]);
+      setNewGalleryPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
+    }
+  };
+
+  const removeCurrentGallery = (index: number) => {
+    setCurrentGalleryUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeNewGallery = (index: number) => {
+    setNewGalleryFiles(prev => prev.filter((_, i) => i !== index));
+    setNewGalleryPreviews(prev => {
+        URL.revokeObjectURL(prev[index]);
+        return prev.filter((_, i) => i !== index);
+    });
   };
 
   const handleSave = async () => {
@@ -50,14 +90,17 @@ export function PublicSettingsDialog({ event, onRefresh }: PublicSettingsDialogP
 
     try {
       setLoading(true);
+
       await updateEvent(
         event.id, 
         { 
           showGuestList, 
-          passcode: passcode.trim() || "" // Use empty string instead of undefined to reset
+          passcode: passcode.trim() || "",
+          galleryUrls: currentGalleryUrls
         }, 
-        undefined, 
-        bankQrFile || undefined
+        bannerFile || undefined, 
+        bankQrFile || undefined,
+        newGalleryFiles
       );
       toast.success(t('settings_updated'));
       onRefresh();
@@ -108,7 +151,7 @@ export function PublicSettingsDialog({ event, onRefresh }: PublicSettingsDialogP
           </div>
 
           {/* Right: Settings Form */}
-          <div className="flex-1 p-10 bg-white">
+          <div className="flex-1 p-10 bg-white overflow-y-auto max-h-[85vh]">
             <DialogHeader className="mb-8">
               <DialogTitle className="text-xl font-black">{t('public_controls')}</DialogTitle>
             </DialogHeader>
@@ -153,26 +196,85 @@ export function PublicSettingsDialog({ event, onRefresh }: PublicSettingsDialogP
                 />
               </div>
 
-              {/* Bank QR */}
-              <div className="space-y-4">
-                <Label className="text-xs font-black uppercase tracking-widest opacity-40">{t('digital_gift_qr')}</Label>
-                <div 
-                   onClick={() => fileInputRef.current?.click()}
-                   className={cn(
-                     "relative aspect-square max-w-40 rounded-[2rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition-all overflow-hidden bg-white",
-                     qrPreview && "border-solid border-primary/20"
-                   )}
-                >
-                  {qrPreview && qrPreview !== "" ? (
-                    <img src={qrPreview} alt="Bank QR" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="flex flex-col items-center gap-2 opacity-40">
-                      <Smartphone className="h-8 w-8 text-primary" />
-                      <span className="text-[10px] font-black uppercase">{t('upload')}</span>
+              {/* Visual Assets Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                 {/* Banner */}
+                 <div className="space-y-4">
+                    <Label className="text-xs font-black uppercase tracking-widest opacity-40">{t('banner_image_optional')}</Label>
+                    <div 
+                        onClick={() => bannerInputRef.current?.click()}
+                        className={cn(
+                        "relative aspect-video rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition-all overflow-hidden bg-white",
+                        bannerPreview && "border-solid border-primary/20"
+                        )}
+                    >
+                        {bannerPreview ? (
+                            <img src={bannerPreview} alt="Banner" className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="flex flex-col items-center gap-2 opacity-40">
+                                <Upload className="h-6 w-6 text-primary" />
+                                <span className="text-[10px] font-black uppercase">{t('banner')}</span>
+                            </div>
+                        )}
+                        <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={handleBannerChange} />
                     </div>
-                  )}
-                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
-                </div>
+                 </div>
+
+                 {/* Bank QR */}
+                 <div className="space-y-4">
+                    <Label className="text-xs font-black uppercase tracking-widest opacity-40">{t('digital_gift_qr')}</Label>
+                    <div 
+                        onClick={() => fileInputRef.current?.click()}
+                        className={cn(
+                        "relative aspect-square max-w-35 rounded-[2rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition-all overflow-hidden bg-white",
+                        qrPreview && "border-solid border-primary/20"
+                        )}
+                    >
+                    {qrPreview && qrPreview !== "" ? (
+                        <img src={qrPreview} alt="Bank QR" className="w-full h-full object-cover" />
+                    ) : (
+                        <div className="flex flex-col items-center gap-2 opacity-40">
+                        <Smartphone className="h-8 w-8 text-primary" />
+                        <span className="text-[10px] font-black uppercase">{t('upload')}</span>
+                        </div>
+                    )}
+                    <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
+                    </div>
+                 </div>
+              </div>
+
+              {/* Gallery Manager */}
+              <div className="space-y-4">
+                 <Label className="text-xs font-black uppercase tracking-widest opacity-40">{t('event_gallery') || 'Event Gallery'}</Label>
+                 <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    {/* Current */}
+                    {currentGalleryUrls.map((url, idx) => (
+                        <div key={`cur-${idx}`} className="relative aspect-square rounded-xl overflow-hidden border border-slate-200 group">
+                            <img src={url} className="w-full h-full object-cover" />
+                            <button onClick={() => removeCurrentGallery(idx)} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all">
+                                <X className="h-3 w-3" />
+                            </button>
+                        </div>
+                    ))}
+                    {/* New */}
+                    {newGalleryPreviews.map((pre, idx) => (
+                        <div key={`new-${idx}`} className="relative aspect-square rounded-xl overflow-hidden border border-primary/30 group">
+                            <img src={pre} className="w-full h-full object-cover" />
+                            <button onClick={() => removeNewGallery(idx)} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all">
+                                <X className="h-3 w-3" />
+                            </button>
+                            <div className="absolute bottom-1 right-1 bg-primary text-[6px] text-white px-1 rounded uppercase font-black">New</div>
+                        </div>
+                    ))}
+                    {/* Add Button */}
+                    <button 
+                        onClick={() => galleryInputRef.current?.click()}
+                        className="aspect-square rounded-xl border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 hover:bg-white hover:border-primary transition-all"
+                    >
+                        <Plus className="h-5 w-5" />
+                        <input type="file" multiple ref={galleryInputRef} className="hidden" accept="image/*" onChange={handleGalleryChange} />
+                    </button>
+                 </div>
               </div>
             </div>
 

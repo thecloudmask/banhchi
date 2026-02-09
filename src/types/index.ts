@@ -47,3 +47,15 @@ export interface FieldDefinition {
   type: 'money_usd' | 'money_khr' | 'number' | 'text';
   unit?: string;
 }
+
+export interface Expense {
+  id: string;
+  name: string;
+  budgetAmount: number;
+  actualAmount: number;
+  invoiceNumber?: string;
+  currency: 'USD' | 'KHR';
+  paymentMethod: PaymentMethod;
+  note?: string;
+  createdAt: Timestamp | Date;
+}

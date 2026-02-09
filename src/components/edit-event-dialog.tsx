@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Event } from "@/types";
 import { updateEvent } from "@/services/event.service";
 import { useLanguage } from "@/providers/language-provider";
@@ -16,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Pencil, CalendarIcon, Upload, MapPin, Clock, Navigation } from "lucide-react";
+import { Loader2, Pencil, CalendarIcon, Upload, MapPin, Clock, Navigation, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -46,6 +46,14 @@ export function EditEventDialog({ event, onSuccess, trigger }: EditEventDialogPr
   const [customCategory, setCustomCategory] = useState("");
   const [currentBannerUrl, setCurrentBannerUrl] = useState(event.bannerUrl || "");
 
+  // Gallery Management
+  const [currentGalleryUrls, setCurrentGalleryUrls] = useState<string[]>(event.galleryUrls || []);
+  const [newGalleryFiles, setNewGalleryFiles] = useState<File[]>([]);
+  const [newGalleryPreviews, setNewGalleryPreviews] = useState<string[]>([]);
+  
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     if (open) {
       setTitle(event.title);
@@ -69,7 +77,12 @@ export function EditEventDialog({ event, onSuccess, trigger }: EditEventDialogPr
 
       setCurrentBannerUrl(event.bannerUrl || "");
       setBanner(null);
-      
+
+      // Reset gallery state
+      setCurrentGalleryUrls(event.galleryUrls || []);
+      setNewGalleryFiles([]);
+      setNewGalleryPreviews([]);
+
       if (event.eventDate) {
         let eventDate: Date;
         if (event.eventDate instanceof Date) {
@@ -87,6 +100,26 @@ export function EditEventDialog({ event, onSuccess, trigger }: EditEventDialogPr
     }
   }, [open, event]);
 
+  const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      setNewGalleryFiles(prev => [...prev, ...files]);
+      setNewGalleryPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
+    }
+  };
+
+  const removeCurrentGallery = (index: number) => {
+    setCurrentGalleryUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeNewGallery = (index: number) => {
+    setNewGalleryFiles(prev => prev.filter((_, i) => i !== index));
+    setNewGalleryPreviews(prev => {
+        URL.revokeObjectURL(prev[index]);
+        return prev.filter((_, i) => i !== index);
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !date) {
@@ -99,15 +132,18 @@ export function EditEventDialog({ event, onSuccess, trigger }: EditEventDialogPr
       await updateEvent(
         event.id,
         {
-          title,
+          title: title.trim(),
           eventDate: new Date(date),
           eventTime: time || undefined,
           location: location || undefined,
           mapUrl: mapUrl || undefined,
           status,
           category: category === 'custom' ? customCategory : category,
+          galleryUrls: currentGalleryUrls
         },
-        banner || undefined
+        banner || undefined,
+        undefined, // bankQrFile
+        newGalleryFiles
       );
       toast.success(t('toast_updated'));
       if (onSuccess) onSuccess();
@@ -303,6 +339,41 @@ export function EditEventDialog({ event, onSuccess, trigger }: EditEventDialogPr
               </div>
             )}
           </div>
+        </div>
+
+        {/* Gallery Manager */}
+        <div className="space-y-4">
+           <Label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 ml-1">{t('event_gallery') || 'Event Gallery'}</Label>
+           <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 p-4 bg-zinc-50 rounded-2xl border border-zinc-100">
+              {/* Current */}
+              {currentGalleryUrls.map((url, idx) => (
+                  <div key={`cur-${idx}`} className="relative aspect-square rounded-xl overflow-hidden border border-zinc-200 group">
+                      <img src={url} className="w-full h-full object-cover" />
+                      <button type="button" onClick={() => removeCurrentGallery(idx)} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all">
+                          <X className="h-3 w-3" />
+                      </button>
+                  </div>
+              ))}
+              {/* New */}
+              {newGalleryPreviews.map((pre, idx) => (
+                  <div key={`new-${idx}`} className="relative aspect-square rounded-xl overflow-hidden border border-primary/30 group">
+                      <img src={pre} className="w-full h-full object-cover" />
+                      <button type="button" onClick={() => removeNewGallery(idx)} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all">
+                          <X className="h-3 w-3" />
+                      </button>
+                      <div className="absolute bottom-1 right-1 bg-primary text-[6px] text-white px-1 rounded uppercase font-black">New</div>
+                  </div>
+              ))}
+              {/* Add Button */}
+              <button 
+                  type="button"
+                  onClick={() => galleryInputRef.current?.click()}
+                  className="aspect-square rounded-xl border-2 border-dashed border-zinc-300 flex items-center justify-center text-zinc-400 hover:bg-white hover:border-primary transition-all"
+              >
+                  <Plus className="h-5 w-5" />
+                  <input type="file" multiple ref={galleryInputRef} className="hidden" accept="image/*" onChange={handleGalleryChange} />
+              </button>
+           </div>
         </div>
 
         {/* Banner image now at top */}

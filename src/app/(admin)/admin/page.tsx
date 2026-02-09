@@ -93,7 +93,7 @@ export default function AdminDashboard() {
             />
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
-            <Link href="/admin/contents" className="flex-1 sm:flex-none">
+            <Link href="/admin/contents/" className="flex-1 sm:flex-none">
               <Button variant="outline" className="h-11 rounded-xl px-4 border-zinc-200 font-bold bg-white text-zinc-700 hover:bg-zinc-50 shadow-sm w-full">
                 <FileText className="mr-2 h-4 w-4 text-zinc-400" />
                 {t('manage_contents')}
@@ -119,7 +119,7 @@ export default function AdminDashboard() {
           ) : (
             filteredEvents.map((event) => (
               <Card key={event.id} className="group border border-zinc-100 bg-white shadow-sm rounded-2xl overflow-hidden flex flex-col p-0">
-                <Link href={`/admin/events/${event.id}`} className="block relative aspect-4/3 overflow-hidden bg-zinc-50 border-b border-zinc-50">
+                <Link href={`/admin/events/${event.id}/`} className="block relative aspect-4/3 overflow-hidden bg-zinc-50 border-b border-zinc-50">
                   {event.bannerUrl ? (
                     <Image 
                       src={event.bannerUrl} 
@@ -143,7 +143,7 @@ export default function AdminDashboard() {
                 </Link>
                 
                 <div className="p-6 flex-1 flex flex-col">
-                  <Link href={`/admin/events/${event.id}`} className="block mb-4 hover:text-primary">
+                  <Link href={`/admin/events/${event.id}/`} className="block mb-4 hover:text-primary">
                     <h3 className="text-lg font-black tracking-tight leading-tight line-clamp-2">
                       {event.title}
                     </h3>
@@ -194,7 +194,7 @@ export default function AdminDashboard() {
                       </AlertDialog>
                     </div>
                     
-                    <Link href={`/admin/events/${event.id}`}>
+                    <Link href={`/admin/events/${event.id}/`}>
                       <Button variant="outline" className="h-9 rounded-lg px-4 font-black text-[10px] uppercase tracking-widest border-zinc-200 hover:bg-zinc-50">
                         {t('manage')}
                       </Button>

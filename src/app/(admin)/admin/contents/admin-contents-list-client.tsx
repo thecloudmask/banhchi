@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { getAllContents, deleteContent, Content } from "@/services/content.service";
 import { Calendar, Loader2, Pencil, Trash2, Search, Plus, FileText, Image as ImageIcon, LayoutTemplate } from "lucide-react";
@@ -26,6 +27,7 @@ import Image from "next/image";
 import { compressImage } from "@/lib/cloudinary";
 
 export default function AdminContentsListClient() {
+  const router = useRouter();
   const { user } = useAuth();
   const [contents, setContents] = useState<Content[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,12 +90,13 @@ export default function AdminContentsListClient() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Link href="/admin/contents/create">
-            <Button className="h-11 rounded-xl px-6 font-bold shadow-lg shadow-primary/20">
-              <Plus className="mr-2 h-4 w-4" />
-              {t('create_content')}
-            </Button>
-          </Link>
+          <Button 
+            onClick={() => router.push("/admin/contents/create/")}
+            className="h-11 rounded-xl cursor-pointer px-6 font-bold shadow-lg shadow-primary/20"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            {t('create_content')}
+          </Button>
         </div>
       </div>
 
@@ -110,7 +113,10 @@ export default function AdminContentsListClient() {
           ) : (
             filteredContents.map((content) => (
               <Card key={content.id} className="group border border-zinc-100 bg-white shadow-sm rounded-2xl overflow-hidden flex flex-col hover:shadow-md transition-all p-0">
-                <Link href={`/admin/contents/${content.id}`} className="block relative aspect-4/3 overflow-hidden bg-zinc-50 border-b border-zinc-50">
+                <div 
+                  onClick={() => router.push(`/admin/contents/${content.id}/`)} 
+                  className="block relative aspect-4/3 overflow-hidden bg-zinc-50 border-b border-zinc-50 cursor-pointer"
+                >
                   {content.thumbnail || (content.images && content.images.length > 0) ? (
                     <Image 
                       src={compressImage(content.thumbnail || content.images![0], 'thumbnail')} 
@@ -139,17 +145,17 @@ export default function AdminContentsListClient() {
                         <span className="px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest shadow-sm bg-zinc-900 text-white">{t('linked')}</span>
                     )}
                   </div>
-                </Link>
+                </div>
                 
                 <div className="p-6 flex-1 flex flex-col">
-                  <Link 
-                    href={`/admin/contents/${content.id}`} 
-                    className="block group-hover:text-primary transition-colors mb-3"
+                  <div 
+                    onClick={() => router.push(`/admin/contents/${content.id}/`)} 
+                    className="block group-hover:text-primary transition-colors mb-3 cursor-pointer"
                   >
                     <h3 className="text-lg font-black tracking-tight leading-tight line-clamp-2">
                        {content.title}
                     </h3>
-                  </Link>
+                  </div>
                   
                   <p className="text-zinc-500 text-sm line-clamp-2 mb-6 font-medium">
                       {content.description || t('no_description')}
@@ -161,13 +167,15 @@ export default function AdminContentsListClient() {
                     </div>
                     
                     <div className="flex gap-1">
-                      <Link 
-                        href={`/admin/contents/${content.id}`}
+                      <Button 
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => router.push(`/admin/contents/${content.id}/`)}
                         className="h-8 w-8 rounded-lg flex items-center justify-center text-zinc-300 hover:text-primary hover:bg-zinc-50 transition-colors"
                         title={t('edit')}
                       >
                         <Pencil className="h-4 w-4" />
-                      </Link>
+                      </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-zinc-300 hover:text-destructive">

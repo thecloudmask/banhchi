@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useLanguage } from "@/providers/language-provider";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Button } from "@/components/ui/button";
@@ -55,7 +56,7 @@ function FeedCard({ item, language, t }: { item: Event | Content, language: stri
   };
 
   return (
-    <Link href={`/event/${item.id}`} key={item.id} className="group block h-full">
+    <Link href={`/event/${item.id}/`} key={item.id} className="group block h-full">
       <Card className="h-full overflow-hidden border-border bg-white rounded-3xl shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 p-0">
         <div className="aspect-4/3 w-full overflow-hidden bg-secondary relative">
           {banner ? (
@@ -106,8 +107,12 @@ function FeedCard({ item, language, t }: { item: Event | Content, language: stri
 }
 
 export default function Home() {
+  const { signIn, signInWithGoogle, user, loading: authLoading } = useAuth();
   const { t, language } = useLanguage();
-  const { user } = useAuth();
+  const router = useRouter();
+
+  // Removed automatic redirect to allow admins to view the public site
+
   const [items, setItems] = useState<(Event | Content)[]>([]);
   const [loading, setLoading] = useState(true);
   const [featuredIndex, setFeaturedIndex] = useState(0);
@@ -198,12 +203,20 @@ export default function Home() {
           
           <nav className="hidden lg:flex items-center gap-8 text-sm font-bold uppercase tracking-widest">
             <Link href="#feed" className="text-muted-foreground hover:text-primary transition-colors">{t('all_events')}</Link>
-            <Link href="/support" className="text-muted-foreground hover:text-primary transition-colors">{t('tech_support')}</Link>
+            <Link href="/support/" className="text-muted-foreground hover:text-primary transition-colors">{t('tech_support')}</Link>
           </nav>
           
           <div className="flex items-center gap-1 sm:gap-4">
+            {user && (
+              <Link href="/admin/">
+                <Button variant="ghost" className="h-9 sm:h-11 rounded-xl px-4 border-zinc-200 font-bold bg-white text-zinc-700 hover:bg-zinc-50 shadow-sm transition-all hover:scale-105 active:scale-95 group">
+                   <LayoutDashboard className="h-4 w-4 mr-2 text-primary" />
+                   <span className="hidden sm:inline">{t('dashboard') || 'Dashboard'}</span>
+                </Button>
+              </Link>
+            )}
             <Link 
-              href="/support" 
+              href="/support/" 
               className="lg:hidden flex h-9 w-9 items-center justify-center rounded-xl bg-secondary text-primary hover:bg-primary hover:text-white transition-all shadow-xs"
               title={t('tech_support')}
             >

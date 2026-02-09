@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createEvent } from "@/services/event.service";
-import { Loader2, Plus, CalendarIcon, Upload, MapPin, Clock, Navigation } from "lucide-react";
+import { Loader2, Plus, CalendarIcon, Upload, MapPin, Clock, Navigation, X } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/providers/language-provider";
 import { cn } from "@/lib/utils";
@@ -26,9 +26,28 @@ export function CreateEventDialog() {
   const [location, setLocation] = useState("");
   const [mapUrl, setMapUrl] = useState("");
   const [banner, setBanner] = useState<File | null>(null);
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
   const [category, setCategory] = useState("merit_making");
   const [customCategory, setCustomCategory] = useState("");
   const router = useRouter();
+
+  const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setGalleryFiles(prev => [...prev, ...newFiles]);
+      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
+      setGalleryPreviews(prev => [...prev, ...newPreviews]);
+    }
+  };
+
+  const removeGalleryImage = (index: number) => {
+    setGalleryFiles(prev => prev.filter((_, i) => i !== index));
+    setGalleryPreviews(prev => {
+        URL.revokeObjectURL(prev[index]);
+        return prev.filter((_, i) => i !== index);
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,9 +64,8 @@ export function CreateEventDialog() {
         eventTime: time || undefined,
         location: location || undefined,
         mapUrl: mapUrl || undefined,
-        galleryUrls: [],
         category: category === 'custom' ? customCategory : category,
-      }, banner || undefined);
+      }, banner || undefined, galleryFiles);
       
       toast.success("Event created successfully");
       setOpen(false);
@@ -68,6 +86,8 @@ export function CreateEventDialog() {
     setLocation("");
     setMapUrl("");
     setBanner(null);
+    setGalleryFiles([]);
+    setGalleryPreviews([]);
     setCategory("merit_making");
     setCustomCategory("");
   };
@@ -93,53 +113,48 @@ export function CreateEventDialog() {
       </div>
 
       <div className="p-6 sm:p-8 space-y-6 sm:space-y-8 overflow-y-auto flex-1">
-        {/* NEW COVER IMAGE UPLOAD ZONE - Moved into scrollable body */}
-        <div className="space-y-3">
-          <Label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 ml-1">{t('banner_image_optional')}</Label>
-          <div className="relative rounded-2xl overflow-hidden border-2 border-dashed border-slate-200 h-40 sm:h-48 group bg-slate-50/50 hover:bg-slate-100/50 hover:border-primary/50 transition-all animate-in zoom-in duration-500">
-             {/* Hidden File Input */}
-             <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setBanner(e.target.files?.[0] || null)}
-                className="absolute inset-0 w-full h-full opacity-0 z-20 cursor-pointer"
-              />
+        
+        {/* Banner and Gallery Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Banner Section */}
+            <div className="space-y-3">
+                <Label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 ml-1">{t('banner_image_optional')}</Label>
+                <div className="relative rounded-2xl overflow-hidden border-2 border-dashed border-slate-200 h-40 group bg-slate-50/50 hover:bg-slate-100/50 hover:border-primary/50 transition-all animate-in zoom-in duration-500">
+                    <input type="file" accept="image/*" onChange={(e) => setBanner(e.target.files?.[0] || null)} className="absolute inset-0 w-full h-full opacity-0 z-20 cursor-pointer" />
+                    {banner ? (
+                        <div className="absolute inset-0 w-full h-full">
+                            <img src={URL.createObjectURL(banner)} alt="Preview" className={cn("w-full h-full object-cover", loading && "opacity-50 blur-sm")} />
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                <Upload className="h-6 w-6 text-white" />
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                            <Upload className="h-5 w-5 text-primary" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest">{t('banner')}</span>
+                        </div>
+                    )}
+                </div>
+            </div>
 
-              {banner ? (
-                <div className="absolute inset-0 w-full h-full">
-                  <img 
-                    src={URL.createObjectURL(banner)} 
-                    alt="Preview" 
-                    className={cn("w-full h-full object-cover transition-opacity duration-500", loading && "opacity-50 blur-sm")} 
-                  />
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                    <div className="flex flex-col items-center gap-2">
-                      <Upload className="h-6 w-6 text-white" />
-                      <span className="text-white text-[10px] font-black uppercase tracking-widest">{t('update_banner') || 'Change Photo'}</span>
-                    </div>
-                  </div>
+            {/* Gallery Section */}
+            <div className="space-y-3">
+                <Label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 ml-1">{t('gallery_images') || 'Gallery'}</Label>
+                <div className="grid grid-cols-3 gap-2 h-40 overflow-y-auto scrollbar-none p-1 bg-slate-50/30 rounded-2xl border border-slate-100">
+                    {galleryPreviews.map((pre, idx) => (
+                        <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-slate-200 group">
+                            <img src={pre} className="w-full h-full object-cover" />
+                            <button onClick={() => removeGalleryImage(idx)} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all">
+                                <X className="h-3 w-3" />
+                            </button>
+                        </div>
+                    ))}
+                    <label className="aspect-square rounded-lg border-2 border-dashed border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-100 transition-colors">
+                        <Plus className="h-4 w-4 text-slate-300" />
+                        <input type="file" multiple accept="image/*" onChange={handleGalleryChange} className="hidden" />
+                    </label>
                 </div>
-              ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-muted-foreground">
-                  <div className="p-4 rounded-full bg-white shadow-sm border border-slate-100">
-                    <Upload className="h-6 w-6 text-primary" />
-                  </div>
-                  <span className="text-xs font-bold uppercase tracking-widest">{t('click_choosing_image')}</span>
-                </div>
-              )}
-
-              {/* Uploading Status Overlay */}
-              {loading && banner && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px] z-30 animate-in fade-in duration-300">
-                  <div className="bg-white/90 p-3 rounded-full shadow-2xl mb-2 animate-bounce">
-                    <Loader2 className="h-6 w-6 text-primary animate-spin" />
-                  </div>
-                  <span className="text-white text-[10px] font-black uppercase tracking-widest drop-shadow-md">
-                    {t('uploading') || 'Uploading...'}
-                  </span>
-                </div>
-              )}
-          </div>
+            </div>
         </div>
         <div className="space-y-3 sm:space-y-4">
           <Label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 ml-1">{t('event_title')}</Label>

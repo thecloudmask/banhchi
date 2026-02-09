@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/providers/auth-provider";
@@ -16,9 +16,15 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const { signIn, signInWithGoogle } = useAuth();
+  const { signIn, signInWithGoogle, user, loading: authLoading } = useAuth();
   const { t } = useLanguage();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace("/admin");
+    }
+  }, [user, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +57,11 @@ export default function LoginPage() {
     }
   };
 
+  // Prevent flash: If we are still checking auth, or if we have a user (redirecting)
+  if (authLoading || user) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-white p-4">
       <div className="w-full bg-gray-100 shadow-lg p-4 rounded-lg max-w-sm space-y-8 text-center">
@@ -62,18 +73,18 @@ export default function LoginPage() {
         </div>
 
         <div className="space-y-6">
-          <Button 
+          {/* <Button 
             onClick={handleGoogleLogin}
             disabled={googleLoading || loading}
             variant="outline"
             className="w-full h-11 border-zinc-300 rounded-lg font-bold text-zinc-900 hover:bg-zinc-50 transition-none shadow-none"
           >
             {googleLoading ? <Loader2 className="h-4 w-4 animate-spin text-zinc-600" /> : "Sign in with Google"}
-          </Button>
+          </Button> */}
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-zinc-200" /></div>
-            <div className="relative flex justify-center text-xs"><span className="bg-gray-100 px-3 text-zinc-600 font-bold uppercase tracking-wider">or sign in with email</span></div>
+            <div className="relative flex justify-center text-xs"><span className="bg-gray-100 px-3 text-zinc-600 font-bold uppercase tracking-wider">sign in with email</span></div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4 text-left">

@@ -8,7 +8,7 @@ import { AddGuestDialog } from "@/components/add-guest-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Search, Wallet, Trash2, Pencil, Download, Smartphone, MessageSquare, ListFilter, ExternalLink, MoreVertical, Loader2, CreditCard } from "lucide-react";
+import { ArrowLeft, Search, Wallet, Trash2, Pencil, Download, Smartphone, MessageSquare, ListFilter, ExternalLink, MoreVertical, Loader2, CreditCard, TrendingDown, Receipt } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
@@ -21,6 +21,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { AdminEventLogsFeed } from "@/components/admin-event-logs-feed";
 import { Printer, History, Activity, TrendingUp, PieChart, Building2 } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import Link from "next/link";
 
 export default function AdminEventClient() {
   const { user, loading: authLoading } = useAuth();
@@ -252,6 +253,15 @@ export default function AdminEventClient() {
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full lg:w-auto">
            <div className="flex-1 sm:flex-none">
+              <Link href={`/admin/events/${event.id}/expenses`}>
+                <Button variant="outline" size="lg" className="h-10 sm:h-12 w-full rounded-xl border-gray-200 bg-white hover:bg-gray-50 font-bold gap-2 text-[10px] uppercase tracking-widest px-4 sm:px-6">
+                  <TrendingDown className="h-4 w-4 text-red-500" />
+                  <span className="hidden xs:inline">{t('expenses')}</span>
+                  <span className="xs:hidden">{t('expenses')}</span>
+                </Button>
+              </Link>
+           </div>
+           <div className="flex-1 sm:flex-none">
               <PublicSettingsDialog event={event} onRefresh={() => fetchData(false)} />
            </div>
            <div className="flex-1 sm:flex-none">
@@ -339,7 +349,7 @@ export default function AdminEventClient() {
               </div>
           </Card>
  
-          {/* Cash Subtotal Card */}
+           {/* Cash Subtotal Card */}
           <Card className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
               <div className="space-y-3">
                  <div className="flex items-center justify-between">
