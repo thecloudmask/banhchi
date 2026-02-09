@@ -179,7 +179,7 @@ export default function PublicEventClient() {
 
   const handleUnlock = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pin === event?.passcode) {
+    if (String(pin) === String(event?.passcode)) {
       setUnlocking(true);
       setTimeout(() => {
         if (event) {
