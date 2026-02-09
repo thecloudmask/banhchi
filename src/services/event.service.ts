@@ -1,4 +1,4 @@
-import { db, storage, auth } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase";
 import { 
   collection, 
   doc, 
@@ -16,7 +16,7 @@ import {
   deleteField,
   onSnapshot
 } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 import { Event, Guest, AuditLog } from "@/types";
 
 const EVENTS_COLLECTION = "events";
@@ -24,7 +24,7 @@ const EVENTS_COLLECTION = "events";
 export const getEvents = async (): Promise<Event[]> => {
   if (!db) return [];
   try {
-    const q = query(collection(db, EVENTS_COLLECTION));
+    const q = query(collection(db, EVENTS_COLLECTION), orderBy("eventDate", "desc"), limit(50));
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
   } catch (error) {
@@ -48,14 +48,12 @@ export const getEventById = async (id: string): Promise<Event | null> => {
 };
 
 export const createEvent = async (data: Omit<Event, "id" | "createdAt" | "status" | "bannerUrl">, bannerFile?: File): Promise<string> => {
-  if (!db || !storage) throw new Error("Firebase services not initialized");
+  if (!db) throw new Error("Firebase services not initialized");
   
   let bannerUrl = "";
 
   if (bannerFile) {
-    const storageRef = ref(storage, `banners/${Date.now()}_${bannerFile.name}`);
-    await uploadBytes(storageRef, bannerFile);
-    bannerUrl = await getDownloadURL(storageRef);
+    bannerUrl = await uploadToCloudinary(bannerFile, "banners");
   }
 
   const docRef = await addDoc(collection(db, EVENTS_COLLECTION), {
@@ -73,16 +71,12 @@ export const updateEvent = async (id: string, data: Partial<Omit<Event, "id" | "
   
   let updateData: any = { ...data };
 
-  if (bannerFile && storage) {
-    const storageRef = ref(storage, `banners/${Date.now()}_${bannerFile.name}`);
-    await uploadBytes(storageRef, bannerFile);
-    updateData.bannerUrl = await getDownloadURL(storageRef);
+  if (bannerFile) {
+    updateData.bannerUrl = await uploadToCloudinary(bannerFile, "banners");
   }
 
-  if (bankQrFile && storage) {
-    const storageRef = ref(storage, `bank_qrs/${Date.now()}_${bankQrFile.name}`);
-    await uploadBytes(storageRef, bankQrFile);
-    updateData.bankQrUrl = await getDownloadURL(storageRef);
+  if (bankQrFile) {
+    updateData.bankQrUrl = await uploadToCloudinary(bankQrFile, "bank_qrs");
   }
 
   if (data.eventDate) {

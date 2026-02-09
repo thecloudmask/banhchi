@@ -1,5 +1,5 @@
 import React from "react";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Outfit, Kantumruy_Pro, Moul } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/providers/language-provider";
@@ -28,8 +28,17 @@ const moul = Moul({
 });
 
 export const metadata: Metadata = {
-  title: "Banhchi - Turn Events into Digital Memories",
+  title: "Banhchi - Digital Event Companion",
   description: "Modern event contribution tracking for Khmer weddings and ceremonies.",
+  manifest: "/manifest.json",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#eab308",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({

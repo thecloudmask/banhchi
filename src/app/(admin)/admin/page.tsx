@@ -6,7 +6,7 @@ import { CreateEventDialog } from "@/components/create-event-dialog";
 import { Card } from "@/components/ui/card";
 import { getEvents } from "@/services/event.service";
 import { Event } from "@/types";
-import { Calendar, Loader2, Pencil, Trash2, Search, Download, Clock, MapPin, ExternalLink, MoreVertical } from "lucide-react";
+import { Calendar, Loader2, Pencil, Trash2, Search, Download, Clock, MapPin, ExternalLink, MoreVertical, FileText } from "lucide-react";
 import { formatDate, cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,10 +61,10 @@ export default function AdminDashboard() {
   const handleDeleteEvent = async (eventId: string, eventTitle: string) => {
     try {
       await deleteEvent(eventId);
-      toast.success(`Deleted ${eventTitle}`);
+      toast.success(`${t('toast_deleted')} ${eventTitle}`);
       fetchEvents();
     } catch (error) {
-      toast.error("Failed to delete");
+      toast.error(t('toast_failed_delete'));
     }
   };
 
@@ -77,22 +77,32 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-12">
       {/* Header & Actions */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 sm:gap-8">
         <div className="space-y-1">
-           <h1 className="text-3xl font-black tracking-tighter">{t('your_events')}</h1>
-            <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">{t('manage_celebrations')}</p>
+           <h1 className="text-2xl sm:text-3xl font-black tracking-tighter">{t('your_events')}</h1>
+            <p className="text-[10px] sm:text-xs font-bold text-zinc-400 uppercase tracking-widest">{t('manage_celebrations')}</p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1 md:w-64">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+          <div className="relative w-full sm:w-64">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-300" />
             <Input 
               placeholder={t('search_placeholder')} 
-              className="h-11 pl-11 rounded-xl border-zinc-200 bg-white shadow-sm font-bold text-sm"
+              className="h-11 pl-11 rounded-xl border-zinc-200 bg-white shadow-sm font-bold text-sm w-full"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <CreateEventDialog />
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Link href="/admin/contents" className="flex-1 sm:flex-none">
+              <Button variant="outline" className="h-11 rounded-xl px-4 border-zinc-200 font-bold bg-white text-zinc-700 hover:bg-zinc-50 shadow-sm w-full">
+                <FileText className="mr-2 h-4 w-4 text-zinc-400" />
+                {t('manage_contents')}
+              </Button>
+            </Link>
+            <div className="flex-1 sm:flex-none">
+              <CreateEventDialog />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -108,14 +118,14 @@ export default function AdminDashboard() {
             </div>
           ) : (
             filteredEvents.map((event) => (
-              <Card key={event.id} className="group border border-zinc-100 bg-white shadow-sm rounded-2xl overflow-hidden flex flex-col">
-                <Link href={`/admin/events/${event.id}`} className="block relative aspect-16/10 overflow-hidden bg-zinc-50">
+              <Card key={event.id} className="group border border-zinc-100 bg-white shadow-sm rounded-2xl overflow-hidden flex flex-col p-0">
+                <Link href={`/admin/events/${event.id}`} className="block relative aspect-4/3 overflow-hidden bg-zinc-50 border-b border-zinc-50">
                   {event.bannerUrl ? (
                     <Image 
                       src={event.bannerUrl} 
                       alt={event.title} 
                       fill
-                      className="object-cover grayscale-[0.2] group-hover:grayscale-0"
+                      className="object-cover object-top grayscale-[0.2] group-hover:grayscale-0 transition-all duration-500"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center opacity-10">

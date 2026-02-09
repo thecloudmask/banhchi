@@ -44,7 +44,7 @@ export function PublicSettingsDialog({ event, onRefresh }: PublicSettingsDialogP
 
   const handleSave = async () => {
     if (passcode && (passcode.length < 4 || isNaN(Number(passcode)))) {
-      toast.error("PIN must be 4 digits");
+      toast.error(t('pin_digit_error'));
       return;
     }
 
@@ -59,12 +59,12 @@ export function PublicSettingsDialog({ event, onRefresh }: PublicSettingsDialogP
         undefined, 
         bankQrFile || undefined
       );
-      toast.success("Settings updated");
+      toast.success(t('settings_updated'));
       onRefresh();
       setOpen(false);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to update settings");
+      toast.error(t('failed_update_settings'));
     } finally {
       setLoading(false);
     }
@@ -72,7 +72,7 @@ export function PublicSettingsDialog({ event, onRefresh }: PublicSettingsDialogP
 
   const copyLink = () => {
     navigator.clipboard.writeText(publicUrl);
-    toast.success("Public link copied!");
+    toast.success(t('link_copied'));
   };
 
   return (

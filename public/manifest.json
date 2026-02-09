@@ -1,0 +1,16 @@
+{
+  "name": "Banhchi - Digital Event Companion",
+  "short_name": "Banhchi",
+  "description": "Modern event contribution tracking for Khmer weddings and ceremonies.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#eab308",
+  "icons": [
+    {
+      "src": "/file.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

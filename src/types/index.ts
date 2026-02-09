@@ -14,9 +14,10 @@ export interface Event {
   galleryUrls?: string[];
   passcode?: string;
   showGuestList?: boolean;
+  category?: string;
 }
 
-export type PaymentMethod = 'cash' | 'qr';
+export type PaymentMethod = string;
 
 export interface Guest {
   id: string;
@@ -24,6 +25,7 @@ export interface Guest {
   amountUsd: number;
   amountKhr: number;
   paymentMethod: PaymentMethod;
+  location?: string;
   note?: string;
   createdAt: Timestamp | Date;
 }

@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -58,6 +59,7 @@ export function GuestHistoryDialog({ eventId, guest }: GuestHistoryDialogProps) 
              </div>
              History for {guest.name}
           </DialogTitle>
+          <DialogDescription className="sr-only">Audit log of contributions and changes for {guest.name}.</DialogDescription>
         </DialogHeader>
 
         <ScrollArea className="h-100 p-8 pt-0">

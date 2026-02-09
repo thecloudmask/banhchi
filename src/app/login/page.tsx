@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/providers/auth-provider";
 import { useLanguage } from "@/providers/language-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Chrome, Phone } from "lucide-react";
+import { Loader2, Chrome } from "lucide-react";
 import { toast } from "sonner";
 
 export default function LoginPage() {
@@ -22,16 +22,12 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      toast.error("Please fill in all fields");
-      return;
-    }
+    if (!email || !password) return;
 
     try {
       setLoading(true);
       await signIn(email, password);
       document.cookie = "auth_session=true; path=/; max-age=86400; SameSite=Strict";
-      toast.success("Login successful!");
       router.replace("/admin");
     } catch (error: any) {
       console.error(error);
@@ -46,75 +42,57 @@ export default function LoginPage() {
       setGoogleLoading(true);
       await signInWithGoogle();
       document.cookie = "auth_session=true; path=/; max-age=86400; SameSite=Strict";
-      toast.success("Login successful!");
       router.replace("/admin");
     } catch (error: any) {
       console.error(error);
-      toast.error("Google login failed");
+      toast.error("Authentication failed");
     } finally {
       setGoogleLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-secondary/30 p-4 selection:bg-primary/10">
-      <Card className="w-full max-w-md border border-border bg-card rounded-3xl shadow-sm overflow-hidden">
-        <CardHeader className="space-y-6 p-12 pb-8 text-center bg-primary text-primary-foreground">
-          <div className="flex justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-background text-primary font-black text-3xl shadow-sm">
-              B
-            </div>
+    <div className="min-h-screen flex items-center justify-center bg-white p-4">
+      <div className="w-full bg-gray-100 shadow-lg p-4 rounded-lg max-w-sm space-y-8 text-center">
+        <div>
+          <div className="inline-flex h-16 w-16 bg-white border border-zinc-200 shadow-md rounded-2xl items-center justify-center overflow-hidden mb-4 p-2">
+            <img src="/SIDETH-THEAPKA.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
-          <div>
-            <CardTitle className="text-4xl font-black tracking-tight leading-tight italic">Admin Portal</CardTitle>
-            <CardDescription className="text-primary-foreground/60 text-base font-medium mt-2">
-              Management access for Banhchi
-            </CardDescription>
-          </div>
-        </CardHeader>
+          <h1 className="text-2xl font-black text-zinc-900 tracking-tight">Admin Access</h1>
+        </div>
 
-        <CardContent className="p-12 space-y-10">
-          {/* Quick Login for Elders */}
-          <div className="space-y-4">
-             <Button 
-               type="button" 
-               variant="outline" 
-               className="w-full h-14 rounded-xl text-base font-bold gap-3 border-border hover:bg-secondary group"
-               onClick={handleGoogleLogin}
-               disabled={googleLoading || loading}
-             >
-               {googleLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : (
-                 <>
-                   <div className="h-10 w-10 flex items-center justify-center bg-secondary rounded-xl group-hover:bg-white transition-colors">
-                      <Chrome className="h-6 w-6 text-red-500" />
-                   </div>
-                   Continue with Google
-                 </>
-               )}
-             </Button>
+        <div className="space-y-6">
+          <Button 
+            onClick={handleGoogleLogin}
+            disabled={googleLoading || loading}
+            variant="outline"
+            className="w-full h-11 border-zinc-300 rounded-lg font-bold text-zinc-900 hover:bg-zinc-50 transition-none shadow-none"
+          >
+            {googleLoading ? <Loader2 className="h-4 w-4 animate-spin text-zinc-600" /> : "Sign in with Google"}
+          </Button>
 
-             <div className="relative py-4">
-                <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
-                <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest"><span className="bg-card px-4 text-muted-foreground/40">Or Email Access</span></div>
-             </div>
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-zinc-200" /></div>
+            <div className="relative flex justify-center text-xs"><span className="bg-gray-100 px-3 text-zinc-600 font-bold uppercase tracking-wider">or sign in with email</span></div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-4 text-left">
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">Email Address</Label>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-black uppercase tracking-widest text-zinc-900 ml-0.5">Email</Label>
                 <Input
                   type="email"
-                  placeholder="admin@banhchi.com"
+                  placeholder="admin@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={loading || googleLoading}
                   required
-                  className="h-14 rounded-2xl border-border bg-secondary/20 focus:bg-background transition-all px-6 font-bold"
+                  className="h-11 rounded-lg border-zinc-300 shadow-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary text-zinc-900 font-medium placeholder:text-zinc-400"
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">Secret Password</Label>
+              
+              <div className="space-y-1.5">
+                <Label className="text-xs font-black uppercase tracking-widest text-zinc-900 ml-0.5">Password</Label>
                 <Input
                   type="password"
                   placeholder="••••••••"
@@ -122,21 +100,23 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={loading || googleLoading}
                   required
-                  className="h-14 rounded-2xl border-border bg-secondary/20 focus:bg-background transition-all px-6 font-bold"
+                  className="h-11 rounded-lg border-zinc-300 shadow-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary text-zinc-900 font-medium placeholder:text-zinc-400"
                 />
               </div>
             </div>
             
-            <Button type="submit" className="w-full h-14 rounded-xl text-lg font-black shadow-sm" disabled={loading || googleLoading}>
-              {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : "Sign In to Dashboard"}
+            <Button type="submit" className="w-full h-11 rounded-lg font-black text-sm uppercase tracking-widest shadow-md shadow-primary/10" disabled={loading || googleLoading}>
+              {loading ? <Loader2 className="h-4 w-4 animate-spin text-white" /> : "Authorize Access"}
             </Button>
           </form>
+        </div>
 
-          <p className="text-center text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-40">
-             Elder Friendly Edition
-          </p>
-        </CardContent>
-      </Card>
+        <div className="pt-6">
+          <Link href="/" className="text-xs font-black uppercase tracking-widest text-zinc-600 hover:text-primary transition-colors">
+            ← Registry
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

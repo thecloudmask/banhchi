@@ -9,9 +9,36 @@ export interface EventTemplate {
 
 export const EVENT_TEMPLATES: EventTemplate[] = [
   {
+    id: 'merit_making',
+    name: 'Merit Making',
+    description: 'Flower ceremony or general merit making.',
+    schema: [
+      { key: 'usd', label: 'USD', type: 'money_usd' },
+      { key: 'khr', label: 'KHR', type: 'money_khr' },
+    ]
+  },
+  {
+    id: 'memorial',
+    name: 'Memorial Service',
+    description: 'Traditional Dakshinanupadana memorial service.',
+    schema: [
+      { key: 'usd', label: 'USD', type: 'money_usd' },
+      { key: 'khr', label: 'KHR', type: 'money_khr' },
+    ]
+  },
+  {
+    id: 'inauguration',
+    name: 'Temple Inauguration',
+    description: 'Inauguration of temple structures.',
+    schema: [
+      { key: 'usd', label: 'USD', type: 'money_usd' },
+      { key: 'khr', label: 'KHR', type: 'money_khr' },
+    ]
+  },
+  {
     id: 'wedding',
     name: 'Wedding',
-    description: 'Standard wedding template with USD and KHR.',
+    description: 'Standard wedding template.',
     schema: [
       { key: 'usd', label: 'USD', type: 'money_usd' },
       { key: 'khr', label: 'KHR', type: 'money_khr' },
@@ -19,7 +46,7 @@ export const EVENT_TEMPLATES: EventTemplate[] = [
   },
   {
     id: 'funeral',
-    name: 'Funeral / Ceremony',
+    name: 'Funeral',
     description: 'Includes Money, Rice, and Water contributions.',
     schema: [
       { key: 'usd', label: 'USD', type: 'money_usd' },
@@ -30,7 +57,7 @@ export const EVENT_TEMPLATES: EventTemplate[] = [
   },
   {
     id: 'custom',
-    name: 'Custom',
+    name: 'Other',
     description: 'Start with a blank slate.',
     schema: []
   }

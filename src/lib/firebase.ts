@@ -1,7 +1,6 @@
 import { FirebaseApp, initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { initializeFirestore, enableMultiTabIndexedDbPersistence } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
 import { getAnalytics, isSupported } from "firebase/analytics";
 
 const firebaseConfig = {
@@ -28,7 +27,6 @@ if (isConfigValid) {
 
 export const auth = app ? getAuth(app) : null;
 export const db = app ? initializeFirestore(app, {}) : null;
-export const storage = app ? getStorage(app) : null;
 
 export const isFirebaseConfigured = isConfigValid && !!app;
 

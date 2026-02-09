@@ -1,0 +1,62 @@
+﻿{
+  "status": "success",
+  "result": [
+    {
+      "projectId": "airconwash-service",
+      "projectNumber": "335790459704",
+      "displayName": "airconwash-service",
+      "name": "projects/airconwash-service",
+      "resources": {
+        "hostingSite": "airconwash-service"
+      },
+      "state": "ACTIVE",
+      "etag": "1_b867baa5-084f-454a-b73d-bc00a3c0a84f"
+    },
+    {
+      "projectId": "educheck-7b882",
+      "projectNumber": "133012052765",
+      "displayName": "educheck",
+      "name": "projects/educheck-7b882",
+      "resources": {
+        "hostingSite": "educheck-7b882",
+        "locationId": "us-central"
+      },
+      "state": "ACTIVE",
+      "etag": "1_19fdf241-664a-44c9-960e-1599d6aa62ed"
+    },
+    {
+      "projectId": "educheckstorage",
+      "projectNumber": "514077167969",
+      "displayName": "educheckstorage",
+      "name": "projects/educheckstorage",
+      "resources": {
+        "hostingSite": "educheckstorage",
+        "locationId": "us-central"
+      },
+      "state": "ACTIVE",
+      "etag": "1_59612446-49b4-4ae9-898a-6cc83174a567"
+    },
+    {
+      "projectId": "norea-psms-storage",
+      "projectNumber": "1052438087580",
+      "displayName": "weeding-ticket",
+      "name": "projects/norea-psms-storage",
+      "resources": {
+        "hostingSite": "norea-psms-storage"
+      },
+      "state": "ACTIVE",
+      "etag": "1_99ac88f1-e769-4b96-a334-dbf3c1503508"
+    },
+    {
+      "projectId": "sale-management-system-aa7fc",
+      "projectNumber": "1079899972161",
+      "displayName": "Sale Management System",
+      "name": "projects/sale-management-system-aa7fc",
+      "resources": {
+        "hostingSite": "sale-management-system-aa7fc"
+      },
+      "state": "ACTIVE",
+      "etag": "1_616cce97-7090-4947-b270-65a6965f32cd"
+    }
+  ]
+}

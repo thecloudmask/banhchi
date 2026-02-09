@@ -1,0 +1,245 @@
+﻿
+> banhchi@0.1.0 build
+> next build
+
+Ôû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+node.exe : 
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+    + CategoryInfo           
+   : NotSpecified: (:String  
+  ) [], RemoteException
+    + FullyQualifiedErrorId  
+   : NativeCommandError
+ 
+> Build error occurred
+Error: Turbopack build 
+failed with 2 errors:
+./src/app/(admin)/admin/event
+s/[id]/page.tsx:21:8
+Next.js can't recognize the 
+exported 
+`generateStaticParams` field 
+in route. App pages cannot 
+use both "use client" and 
+export function 
+"generateStaticParams()".
+[0m [90m 19 |[39m 
+[36mimport[39m { [33mDropd
+ownMenu[39m[33m,[39m [33m
+DropdownMenuContent[39m[33m
+,[39m [33mDropdownMenuItem
+[39m[33m,[39m [33mDropdown
+MenuLabel[39m[33m,[39m [3
+3mDropdownMenuSeparator[39m
+[33m,[39m [33mDropdownMenuT
+rigger[39m } [36mfrom[39m 
+[32m"@/components/ui/dropdow
+n-menu"[39m[33m;[39m
+ [90m 20 |[39m
+[31m[1m>[22m[39m[90m 21 
+|[39m [36mexport[39m 
+[36mfunction[39m 
+generateStaticParams() {
+ [90m    |[39m        [31m
+[1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m
+[31m[1m>[22m[39m[90m 22 
+|[39m   [36mreturn[39m 
+[][33m;[39m
+ [90m    |[39m [31m[1m^[
+22m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m
+[31m[1m>[22m[39m[90m 23 
+|[39m }
+ [90m    |[39m [31m[1m^[
+22m[39m[31m[1m^[22m[39m
+ [90m 24 |[39m
+ [90m 25 |[39m 
+[36mexport[39m 
+[36mdefault[39m 
+[36mfunction[39m 
+[33mEventDetailPage[39m() {
+ [90m 26 |[39m   
+[36mconst[39m { 
+user[33m,[39m 
+loading[33m:[39m 
+authLoading } [33m=[39m 
+useAuth()[33m;[39m[0m
+
+The exported configuration 
+object in a source file 
+needs to have a very 
+specific format from which 
+some properties can be 
+statically parsed at 
+compiled-time.
+
+Import traces:
+  Client Component Browser:
+    ./src/app/(admin)/admin/e
+vents/[id]/page.tsx [Client 
+Component Browser]
+    ./src/app/(admin)/admin/e
+vents/[id]/page.tsx [Server 
+Component]
+
+  Client Component SSR:
+    ./src/app/(admin)/admin/e
+vents/[id]/page.tsx [Client 
+Component SSR]
+    ./src/app/(admin)/admin/e
+vents/[id]/page.tsx [Server 
+Component]
+
+https://nextjs.org/docs/app/a
+pi-reference/file-conventions
+/route-segment-config
+
+
+./src/app/(public)/event/[id]
+/page.tsx:27:8
+Next.js can't recognize the 
+exported 
+`generateStaticParams` field 
+in route. App pages cannot 
+use both "use client" and 
+export function 
+"generateStaticParams()".
+[0m [90m 25 |[39m }
+ [90m 26 |[39m
+[31m[1m>[22m[39m[90m 27 
+|[39m [36mexport[39m 
+[36mfunction[39m 
+generateStaticParams() {
+ [90m    |[39m        [31m
+[1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m[31m[1m^[
+22m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[31
+m[1m^[22m[39m[31m[1m^[2
+2m[39m[31m[1m^[22m[39m[
+31m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1m
+^[22m[39m[31m[1m^[22m[3
+9m[31m[1m^[22m[39m[31m[
+1m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[22
+m[39m[31m[1m^[22m[39m[3
+1m[1m^[22m[39m
+[31m[1m>[22m[39m[90m 28 
+|[39m   [36mreturn[39m 
+[][33m;[39m
+ [90m    |[39m [31m[1m^[
+22m[39m[31m[1m^[22m[39m
+[31m[1m^[22m[39m[31m[1m^
+[22m[39m[31m[1m^[22m[39
+m[31m[1m^[22m[39m[31m[1
+m^[22m[39m[31m[1m^[22m[
+39m[31m[1m^[22m[39m[31m
+[1m^[22m[39m[31m[1m^[22m
+[39m[31m[1m^[22m[39m
+[31m[1m>[22m[39m[90m 29 
+|[39m }
+ [90m    |[39m [31m[1m^[
+22m[39m[31m[1m^[22m[39m
+ [90m 30 |[39m
+ [90m 31 |[39m 
+[36mexport[39m 
+[36mdefault[39m 
+[36mfunction[39m 
+[33mPublicEventPage[39m() {
+ [90m 32 |[39m   
+[36mconst[39m params 
+[33m=[39m 
+useParams()[33m;[39m[0m
+
+The exported configuration 
+object in a source file 
+needs to have a very 
+specific format from which 
+some properties can be 
+statically parsed at 
+compiled-time.
+
+Import traces:
+  Client Component Browser:
+    ./src/app/(public)/event/
+[id]/page.tsx [Client 
+Component Browser]
+    ./src/app/(public)/event/
+[id]/page.tsx [Server 
+Component]
+
+  Client Component SSR:
+    ./src/app/(public)/event/
+[id]/page.tsx [Client 
+Component SSR]
+    ./src/app/(public)/event/
+[id]/page.tsx [Server 
+Component]
+
+https://nextjs.org/docs/app/a
+pi-reference/file-conventions
+/route-segment-config
+
+
+    at <unknown> (./src/app/(
+admin)/admin/events/[id]/page
+.tsx:21:8)
+    at <unknown> (https://nex
+tjs.org/docs/app/api-referenc
+e/file-conventions/route-segm
+ent-config)
+    at <unknown> (./src/app/(
+public)/event/[id]/page.tsx:2
+7:8)
+    at <unknown> (https://nex
+tjs.org/docs/app/api-referenc
+e/file-conventions/route-segm
+ent-config)
