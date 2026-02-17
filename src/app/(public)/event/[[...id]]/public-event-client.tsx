@@ -238,14 +238,14 @@ export default function PublicEventClient() {
     }
   };
 
-  if (!eventId) return <div className="min-h-screen bg-background flex items-center justify-center p-4"><span className="text-muted-foreground font-medium uppercase tracking-widest text-xs">{t('event_not_found')}</span></div>;
-
   if (loading) return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
       <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
       <span className="text-muted-foreground font-medium">{t('loading')}</span>
     </div>
   );
+
+  if (!eventId) return <div className="min-h-screen bg-background flex items-center justify-center p-4"><span className="text-muted-foreground font-medium uppercase tracking-widest text-xs">{t('event_not_found')}</span></div>;
   
   if (!event || event.status !== 'active') return (
     <div className="min-h-screen bg-secondary/30 flex flex-col items-center justify-center p-4">
