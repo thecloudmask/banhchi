@@ -1,40 +1,54 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import AdminContentsListClient from "../admin-contents-list-client";
 import EditContentClient from "./edit-content-client";
 import CreateContentClient from "./create-content-client";
 
 export default function ContentPage() {
   const params = useParams();
+  const pathname = usePathname();
   const [idValue, setIdValue] = useState<string | undefined>(undefined);
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
     const extractId = () => {
+      // Debug logging
+      if (typeof window !== 'undefined') {
+         console.log('Current Path:', pathname);
+         console.log('Params:', params);
+      }
+
       // 1. Try to get from params
       if (params?.id) {
         const id = Array.isArray(params.id) ? params.id[0] : params.id;
-        if (id && id !== 'index.html') return id;
+        if (id && id !== 'index.html' && id !== 'posts') return id;
       }
 
       // 2. Fallback: extract from URL (essential for static export rewrites)
-      if (typeof window !== 'undefined') {
-        const path = window.location.pathname;
-        const parts = path.split('/').filter(Boolean);
-        const contentsIndex = parts.indexOf('contents');
-        if (contentsIndex !== -1 && parts[contentsIndex + 1]) {
-          const extractedId = parts[contentsIndex + 1];
-          if (extractedId && extractedId !== 'index.html') return extractedId;
+      if (pathname) {
+        const parts = pathname.split('/').filter(Boolean);
+        // Find 'posts' case-insensitively
+        const postsIndex = parts.findIndex(p => p.toLowerCase() === 'posts');
+        
+        if (postsIndex !== -1 && parts[postsIndex + 1]) {
+          const extractedId = parts[postsIndex + 1];
+          if (extractedId && extractedId !== 'index.html') {
+             console.log('Extracted ID from URL:', extractedId);
+             return extractedId;
+          }
         }
       }
       return undefined;
     };
 
-    setIdValue(extractId());
+    const extracted = extractId();
+    if (extracted !== idValue) {
+       setIdValue(extracted);
+    }
     setIsInitializing(false);
-  }, [params]);
+  }, [params, pathname]);
 
   if (isInitializing) return null;
 

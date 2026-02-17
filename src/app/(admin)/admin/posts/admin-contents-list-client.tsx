@@ -91,7 +91,7 @@ export default function AdminContentsListClient() {
             />
           </div>
           <Button 
-            onClick={() => router.push("/admin/contents/create/")}
+            onClick={() => router.push("/admin/posts/create/")}
             className="h-11 rounded-xl cursor-pointer px-6 font-bold shadow-lg shadow-primary/20"
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -114,7 +114,7 @@ export default function AdminContentsListClient() {
             filteredContents.map((content) => (
               <Card key={content.id} className="group border border-zinc-100 bg-white shadow-sm rounded-2xl overflow-hidden flex flex-col hover:shadow-md transition-all p-0">
                 <div 
-                  onClick={() => router.push(`/admin/contents/${content.id}/`)} 
+                  onClick={() => router.push(`/admin/posts/${content.id}/`)} 
                   className="block relative aspect-4/3 overflow-hidden bg-zinc-50 border-b border-zinc-50 cursor-pointer"
                 >
                   {content.thumbnail || (content.images && content.images.length > 0) ? (
@@ -149,7 +149,7 @@ export default function AdminContentsListClient() {
                 
                 <div className="p-6 flex-1 flex flex-col">
                   <div 
-                    onClick={() => router.push(`/admin/contents/${content.id}/`)} 
+                    onClick={() => router.push(`/admin/posts/${content.id}/`)} 
                     className="block group-hover:text-primary transition-colors mb-3 cursor-pointer"
                   >
                     <h3 className="text-lg font-black tracking-tight leading-tight line-clamp-2">
@@ -170,8 +170,8 @@ export default function AdminContentsListClient() {
                       <Button 
                         variant="ghost"
                         size="icon"
-                        onClick={() => router.push(`/admin/contents/${content.id}/`)}
-                        className="h-8 w-8 rounded-lg flex items-center justify-center text-zinc-300 hover:text-primary hover:bg-zinc-50 transition-colors"
+                        onClick={() => router.push(`/admin/posts/${content.id}/`)}
+                        className="h-8 w-8 rounded-lg cursor-pointer flex items-center justify-center text-zinc-300 hover:text-primary hover:bg-zinc-50 transition-colors"
                         title={t('edit')}
                       >
                         <Pencil className="h-4 w-4" />

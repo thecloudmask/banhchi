@@ -23,6 +23,8 @@ interface AddExpenseDialogProps {
 }
 
 export function AddExpenseDialog({ event, expenseToEdit, onClose, trigger, onSuccess }: AddExpenseDialogProps) {
+
+
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { t } = useLanguage();
@@ -80,14 +82,16 @@ export function AddExpenseDialog({ event, expenseToEdit, onClose, trigger, onSuc
     setDisplayActual(formatWithCommas(cleanValue));
   };
 
-  const resetForm = () => {
+  const resetForm = (full = true) => {
     setName("");
     setActualAmount("");
     setDisplayActual("");
     setInvoiceNumber("");
-    setCurrency("USD");
-    setPaymentMethod("cash");
     setNote("");
+    if (full) {
+      setCurrency("USD");
+      setPaymentMethod("cash");
+    }
   };
 
   const generateInvoice = () => {
@@ -99,7 +103,7 @@ export function AddExpenseDialog({ event, expenseToEdit, onClose, trigger, onSuc
   const handleOpenChange = (val: boolean) => {
     setOpen(val);
     if (!val) {
-      resetForm();
+      resetForm(true);
       if (onClose) onClose();
     }
   };
@@ -147,7 +151,15 @@ export function AddExpenseDialog({ event, expenseToEdit, onClose, trigger, onSuc
     e.preventDefault();
     const success = await saveData();
     if (success) {
-      handleOpenChange(false);
+      if (expenseToEdit) {
+        handleOpenChange(false);
+      } else {
+        // For new items, keep dialog open and partial reset
+        resetForm(false);
+        setTimeout(() => {
+          nameInputRef.current?.focus();
+        }, 100);
+      }
     }
   };
 
@@ -161,6 +173,8 @@ export function AddExpenseDialog({ event, expenseToEdit, onClose, trigger, onSuc
     { value: "PiPay", label: "PiPay", icon: Smartphone },
     { value: "Other Bank", label: t('other_bank'), icon: Building2 },
   ];
+
+
 
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>

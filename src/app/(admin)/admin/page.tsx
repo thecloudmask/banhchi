@@ -93,12 +93,12 @@ export default function AdminDashboard() {
             />
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
-            <Link href="/admin/contents/" className="flex-1 sm:flex-none">
-              <Button variant="outline" className="h-11 rounded-xl px-4 border-zinc-200 font-bold bg-white text-zinc-700 hover:bg-zinc-50 shadow-sm w-full">
+            <Button asChild variant="outline" className="h-11 cursor-pointer rounded-xl px-4 border-zinc-200 font-bold bg-white text-zinc-700 hover:bg-zinc-50 shadow-sm w-full sm:w-auto flex-1 sm:flex-none">
+              <Link href="/admin/posts/" onClick={() => console.log("Manage contents clicked")}>
                 <FileText className="mr-2 h-4 w-4 text-zinc-400" />
                 {t('manage_contents')}
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             <div className="flex-1 sm:flex-none">
               <CreateEventDialog />
             </div>
@@ -194,11 +194,11 @@ export default function AdminDashboard() {
                       </AlertDialog>
                     </div>
                     
-                    <Link href={`/admin/events/${event.id}/`}>
-                      <Button variant="outline" className="h-9 rounded-lg px-4 font-black text-[10px] uppercase tracking-widest border-zinc-200 hover:bg-zinc-50">
+                    <Button asChild variant="outline" className="h-9 rounded-lg px-4 font-black text-[10px] uppercase tracking-widest border-zinc-200 hover:bg-zinc-50">
+                      <Link href={`/admin/events/${event.id}/`}>
                         {t('manage')}
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
                   </div>
                 </div>
               </Card>

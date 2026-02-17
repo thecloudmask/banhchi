@@ -30,6 +30,9 @@ export const db = app ? initializeFirestore(app, {}) : null;
 
 export const isFirebaseConfigured = isConfigValid && !!app;
 
+// Persistence can cause "Failed to obtain primary lease" errors in dev with multiple tabs.
+// Uncomment if offline support is strictly required.
+/*
 if (typeof window !== "undefined" && db) {
   enableMultiTabIndexedDbPersistence(db).catch((err) => {
     if (err.code == 'failed-precondition') {
@@ -39,6 +42,7 @@ if (typeof window !== "undefined" && db) {
     }
   });
 }
+*/
 
 let analytics: any = null;
 // Initialize Analytics only on the client side

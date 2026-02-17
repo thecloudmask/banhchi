@@ -11,18 +11,6 @@
     "trailingSlash": true,
     "rewrites": [
       {
-        "source": "/admin/events/**",
-        "destination": "/admin/events/index.html"
-      },
-      {
-        "source": "/admin/contents/**",
-        "destination": "/admin/contents/index.html"
-      },
-      {
-        "source": "/event/**",
-        "destination": "/event/index.html"
-      },
-      {
         "source": "**",
         "destination": "/index.html"
       }

@@ -38,6 +38,10 @@ export function AddGuestDialog({ event, guestToEdit, onClose, trigger, onSuccess
 
   const nameInputRef = useRef<HTMLInputElement>(null);
 
+
+
+
+
   // Payment method options
   const paymentOptions = [
     { value: "cash", label: t('cash'), icon: Wallet },
@@ -163,6 +167,8 @@ export function AddGuestDialog({ event, guestToEdit, onClose, trigger, onSuccess
       }
     }
   };
+
+
 
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>

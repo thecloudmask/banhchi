@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { getEventById } from "@/services/event.service";
 import { getContentsByEventId, getContentById, Content } from "@/services/content.service";
 import { useAuth } from "@/providers/auth-provider";
@@ -32,6 +32,7 @@ interface TimeLeft {
 export default function PublicEventClient() {
   const { user } = useAuth();
   const params = useParams();
+  const pathname = usePathname();
   
   // Robustly determine eventId using both params and window location (fallback for static export)
   const [eventId, setEventId] = useState<string | null>(null);
@@ -45,9 +46,8 @@ export default function PublicEventClient() {
       }
       
       // 2. Fallback: extract from URL
-      if (typeof window !== 'undefined') {
-         const path = window.location.pathname;
-         const parts = path.split('/').filter(Boolean);
+      if (pathname) {
+         const parts = pathname.split('/').filter(Boolean);
          const eventIndex = parts.indexOf('event');
          if (eventIndex !== -1 && parts[eventIndex + 1]) {
             const extractedId = parts[eventIndex + 1];
@@ -64,7 +64,7 @@ export default function PublicEventClient() {
       // If we are at /event with no ID, maybe we are still loading or it's a direct visit
       // We'll wait a bit or let the error catch it later
     }
-  }, [params]);
+  }, [params, pathname]);
 
   const { t, language } = useLanguage();
   
@@ -342,7 +342,7 @@ export default function PublicEventClient() {
 
           <main className={cn(
             "container mx-auto px-4 py-8 sm:py-12",
-            isAgenda ? "max-w-3xl" : "max-w-4xl"
+            isAgenda ? "max-w-5xl" : "max-w-5xl"
           )}>
              
              {isAgenda ? (
@@ -401,7 +401,7 @@ export default function PublicEventClient() {
                         </div>
 
                         {content.body && (
-                          <div className="text-blue-900/90 text-left w-full px-4 sm:px-8 relative z-20">
+                          <div className="text-blue-900/90 text-justify w-full px-4 sm:px-8 relative z-20">
                              <div 
                                className="content-body text-base sm:text-lg leading-loose font-medium"
                                dangerouslySetInnerHTML={{ __html: content.body }} 
@@ -415,15 +415,34 @@ export default function PublicEventClient() {
                                  {t('agenda_schedule')}
                               </h2>
                               
-                              <div className="space-y-6 text-left max-w-xl mx-auto">
-                                 {(content.agenda[0]?.items || []).map((item, idx) => (
-                                    <div key={idx} className="flex gap-6 items-start text-blue-900 group">
-                                       <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-900 flex items-center justify-center text-xs font-black shrink-0 shadow-sm border border-blue-100 group-hover:bg-blue-900 group-hover:text-white transition-colors">
-                                          {idx + 1}
-                                       </div>
-                                       <div className="pt-2">
-                                          <div className="font-black text-lg mb-1 leading-none">{item.time}</div>
-                                          <div className="font-medium text-blue-900/70">{item.description}</div>
+                              <div className="space-y-10 text-left w-full max-w-7xl mx-auto">
+                                 {content.agenda.map((day, dayIdx) => (
+                                    <div key={dayIdx} className="mb-8 last:mb-0">
+                                       {day.date && (
+                                          <div className="mb-4 pl-2">
+                                             <h3 className="text-base sm:text-lg font-black text-blue-900 font-moul leading-relaxed">
+                                                {day.date}
+                                             </h3>
+                                          </div>
+                                       )}
+                                       <div className={cn("space-y-4", day.date ? "pl-8 border-l-2 border-blue-200/60 ml-2 py-1" : "")}>
+                                          {(day.items || []).map((item, itemIdx) => (
+                                             <div key={itemIdx} className="flex gap-4 sm:gap-6 items-start text-blue-900 group relative">
+                                                {day.date && (
+                                                   <div className="absolute -left-[39px] top-1.5 h-3.5 w-3.5 rounded-full border-[3px] border-white bg-blue-500 shadow-sm group-hover:scale-110 transition-transform" />
+                                                )}
+                                                <div className="w-[140px] sm:w-[160px] shrink-0 pt-0.5">
+                                                   <div className="font-bold text-xs sm:text-xs leading-relaxed text-blue-700 bg-blue-50/50 px-2 py-2 rounded-lg text-center border border-blue-100/50 group-hover:border-blue-200 transition-colors w-full break-words">
+                                                      {item.time}
+                                                   </div>
+                                                </div>
+                                                <div className="flex-1 pt-0.5 min-w-0">
+                                                   <div className="font-medium text-sm sm:text-base leading-relaxed text-slate-700 group-hover:text-blue-900 transition-colors text-left break-words">
+                                                      {item.description}
+                                                   </div>
+                                                </div>
+                                             </div>
+                                          ))}
                                        </div>
                                     </div>
                                  ))}
@@ -432,20 +451,20 @@ export default function PublicEventClient() {
                         )}
 
                          {content.committee && content.committee.length > 0 && (
-                            <div className="w-full pt-8 pb-12">
-                               <h2 className="text-2xl font-black text-blue-900 mb-10 inline-block border-b-2 border-blue-900/30 pb-2 px-10 font-moul">
+                            <div className="w-full pt-12 pb-16">
+                               <h2 className="text-2xl font-black text-blue-900 mb-12 inline-block border-b-2 border-blue-900/10 pb-2 px-10 font-moul">
                                   {t('committee_organizers')}
                                </h2>
                                
-                               <div className="grid sm:grid-cols-2 gap-x-12 gap-y-10 text-blue-900 text-left max-w-2xl mx-auto">
+                               <div className="grid md:grid-cols-2 gap-x-12 gap-y-6 text-left w-full max-w-5xl mx-auto px-4">
                                   {content.committee.map((group, idx) => (
-                                     <div key={idx} className="space-y-3 p-6 rounded-2xl bg-zinc-50/50 border border-zinc-100">
-                                        <h3 className="font-black text-lg text-blue-900 font-moul border-b border-blue-100 pb-2">
+                                     <div key={idx} className="flex flex-row gap-2 items-baseline border-b border-dashed border-blue-100/50 pb-2 sm:border-none sm:pb-0">
+                                        <h3 className="font-moul text-blue-900 text-sm sm:text-base shrink-0 whitespace-nowrap">
                                            {group.role}
                                         </h3>
-                                        <p className="font-bold leading-relaxed text-zinc-600">
+                                        <div className="text-slate-800 font-bold text-sm sm:text-base leading-relaxed">
                                            {group.members.join(", ")}
-                                        </p>
+                                        </div>
                                      </div>
                                   ))}
                                </div>
@@ -469,7 +488,7 @@ export default function PublicEventClient() {
                                                 )}
                                             >
                                                 <Image 
-                                                    src={compressImage(img, isFeatured ? 'banner' : 'large')} 
+                                                    src={compressImage(img, isFeatured ? 'banner' : 'thumbnail')} 
                                                     alt="" 
                                                     fill 
                                                     className="object-cover transition-transform duration-700 group-hover:scale-110" 
@@ -569,7 +588,7 @@ export default function PublicEventClient() {
                                                 )}
                                             >
                                                 <Image 
-                                                    src={compressImage(img, isFeatured ? 'banner' : 'large')} 
+                                                    src={compressImage(img, isFeatured ? 'banner' : 'thumbnail')} 
                                                     alt="" 
                                                     fill 
                                                     className="object-cover transition-transform duration-700 group-hover:scale-110" 
@@ -637,7 +656,7 @@ export default function PublicEventClient() {
       <main className="container mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-24 relative z-10">
         <div className="space-y-6 sm:space-y-24">
           
-          <section className="relative group">
+          <section className="relative group animate-in fade-in slide-in-from-bottom-8 duration-700">
             <div className="absolute inset-x-0 -top-20 -bottom-20 bg-zinc-50/50 rounded-[4rem] -z-10" />
             <div className="relative p-2 overflow-hidden rounded-[2.5rem] bg-white border border-zinc-100 shadow-sm">
                <div className="aspect-16/10 sm:aspect-video w-full rounded-[2rem] overflow-hidden shadow-sm relative">
@@ -670,20 +689,20 @@ export default function PublicEventClient() {
                   </h1>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
-                      <div className="p-6 rounded-2xl bg-zinc-50/50 border border-zinc-100/50 flex flex-col items-center hover:bg-zinc-50 transition-colors">
-                         <Calendar className="h-4 w-4 text-primary mb-3" />
+                      <div className="p-6 rounded-2xl bg-zinc-50/50 border border-zinc-100/50 flex flex-col items-center hover:bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-default group/card">
+                         <Calendar className="h-8 w-8 text-primary/20 mb-3 group-hover/card:text-primary group-hover/card:scale-110 transition-all duration-300" />
                          <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1">{t('event_date')}</span>
-                         <span className="text-base font-black">{formatDate(event.eventDate, language)}</span>
+                         <span className="text-base font-black text-zinc-700 group-hover/card:text-zinc-900 transition-colors">{formatDate(event.eventDate, language)}</span>
                       </div>
-                      <div className="p-6 rounded-2xl bg-zinc-50/50 border border-zinc-100/50 flex flex-col items-center hover:bg-zinc-50 transition-colors">
-                         <Clock className="h-4 w-4 text-primary mb-3" />
+                      <div className="p-6 rounded-2xl bg-zinc-50/50 border border-zinc-100/50 flex flex-col items-center hover:bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-default group/card">
+                         <Clock className="h-8 w-8 text-primary/20 mb-3 group-hover/card:text-primary group-hover/card:scale-110 transition-all duration-300" />
                          <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1">{t('start_time')}</span>
-                         <span className="text-base font-black">{event.eventTime || t('tba')}</span>
+                         <span className="text-base font-black text-zinc-700 group-hover/card:text-zinc-900 transition-colors">{event.eventTime || t('tba')}</span>
                       </div>
-                      <div className="p-6 rounded-2xl bg-zinc-50/50 border border-zinc-100/50 flex flex-col items-center hover:bg-zinc-50 transition-colors">
-                         <MapPin className="h-4 w-4 text-primary mb-3" />
+                      <div className="p-6 rounded-2xl bg-zinc-50/50 border border-zinc-100/50 flex flex-col items-center hover:bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-default group/card">
+                         <MapPin className="h-8 w-8 text-primary/20 mb-3 group-hover/card:text-primary group-hover/card:scale-110 transition-all duration-300" />
                          <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1">{t('location')}</span>
-                         <span className="text-base font-black truncate w-full text-center px-2">{event.location || t('tba')}</span>
+                         <span className="text-base font-black truncate w-full text-center px-2 text-zinc-700 group-hover/card:text-zinc-900 transition-colors">{event.location || t('tba')}</span>
                       </div>
                    </div>
 
@@ -707,7 +726,7 @@ export default function PublicEventClient() {
 
           {/* Countdown */}
           {!timeLeft.isExpired && event.status === 'active' && (
-            <section className="relative p-12 sm:p-20 rounded-[3rem] bg-zinc-900 text-white shadow-xl text-center overflow-hidden">
+            <section className="relative p-12 sm:p-20 rounded-[3rem] bg-zinc-900 text-white shadow-xl text-center overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-150 fill-mode-backwards">
                <div className="absolute inset-0 bg-linear-to-br from-primary/10 to-transparent pointer-events-none" />
                <div className="relative z-10">
                   <div className={cn(
@@ -741,7 +760,7 @@ export default function PublicEventClient() {
 
           {/* Event Gallery */}
           {event.galleryUrls && event.galleryUrls.length > 0 && (
-             <section className="space-y-12">
+             <section className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300 fill-mode-backwards">
                 <div className="text-center space-y-4">
                   <h2 className="text-3xl font-black tracking-tight text-zinc-900">{t('event_gallery')}</h2>
                   <div className="h-1 w-12 bg-primary mx-auto rounded-full" />
@@ -760,7 +779,7 @@ export default function PublicEventClient() {
                           )}
                         >
                           <Image 
-                            src={compressImage(url, isFeatured ? 'banner' : 'large')} 
+                            src={compressImage(url, isFeatured ? 'banner' : 'thumbnail')} 
                             alt="" 
                             fill 
                             className="object-cover transition-all duration-700 group-hover:scale-110 group-hover:rotate-1" 
@@ -815,14 +834,16 @@ export default function PublicEventClient() {
                 <div className="inline-block relative">
                    <div className="absolute -inset-4 bg-zinc-50 rounded-[3rem] -z-10" />
                    <div className="p-10 bg-white rounded-[2.5rem] shadow-sm border border-zinc-100">
-                      <div className="relative h-60 w-60 mx-auto">
-                         <Image 
-                           src={compressImage(event.bankQrUrl, 'thumbnail')} 
-                           alt="Bank QR" 
-                           fill
-                           className="rounded-2xl object-contain mx-auto" 
-                         />
-                         <div className="absolute inset-0 border border-zinc-100/50 rounded-2xl pointer-events-none" />
+                      <div className="relative aspect-3/4 w-full max-w-sm mx-auto p-2">
+                         <div className="relative w-full h-full rounded-2xl overflow-hidden">
+                           <Image 
+                             src={event.bankQrUrl} 
+                             alt="Bank QR"
+                             fill
+                             className="object-cover" 
+                           />
+                         </div>
+                         <div className="absolute inset-0 border border-zinc-100/50 rounded-3xl pointer-events-none" />
                        </div>
                       <div className="mt-8 flex flex-col items-center">
                         <div className="h-10 px-6 bg-zinc-50 rounded-full flex items-center justify-center border border-zinc-100">

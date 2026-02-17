@@ -10,21 +10,55 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { addContent, Content } from "@/services/content.service";
+import { updateContent, getContentById, Content, deleteField } from "@/services/content.service";
 import { getEvents } from "@/services/event.service";
 import { Event } from "@/types";
 import { Loader2, ArrowLeft, Plus, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { uploadToCloudinary, uploadMultipleToCloudinary } from "@/lib/cloudinary";
 import Image from "next/image";
+import { useParams } from "next/navigation";
 import RichTextEditor from "@/components/rich-text-editor";
+import { compressImage } from "@/lib/cloudinary";
 
-export default function CreateContentClient() {
+export default function EditContentClient() {
   const { user } = useAuth();
   const router = useRouter();
+  const params = useParams();
+  
+  // Robustly determine ID using both params and window location (fallback for static export)
+  const [id, setId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // 1. Try to get from params
+    if (params?.id) {
+       const extractedId = Array.isArray(params.id) ? params.id[0] : params.id;
+       if (extractedId) {
+         setId(extractedId);
+         return;
+       }
+    }
+    
+      // 2. Fallback: extract from URL if params is empty (happens with static export rewrites)
+      if (typeof window !== 'undefined') {
+         const path = window.location.pathname;
+         // Expected path: /admin/posts/[ID]
+         const parts = path.split('/').filter(Boolean);
+         const postsIndex = parts.indexOf('posts');
+         if (postsIndex !== -1 && parts[postsIndex + 1]) {
+            const extractedId = parts[postsIndex + 1];
+            // simple validation to avoid picking up sub-routes incorrectly if any
+            if (extractedId && extractedId !== 'index.html' && extractedId !== 'create') {
+               setId(extractedId);
+            }
+         }
+      }
+  }, [params]);
+
   const { t } = useLanguage();
   
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
   
   // Form State
@@ -34,99 +68,156 @@ export default function CreateContentClient() {
   const [customType, setCustomType] = useState("");
   const [eventId, setEventId] = useState<string>("none");
   const [body, setBody] = useState("");
-  const [images, setImages] = useState<File[]>([]);
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [currentImageUrls, setCurrentImageUrls] = useState<string[]>([]);
+  const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
+  const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
 
   // Dynamic Fields
-  const [agendaItems, setAgendaItems] = useState<{ time: string; description: string }[]>([{ time: "", description: "" }]);
+  // Dynamic Fields
+  const [agendaGroups, setAgendaGroups] = useState<{ date: string; items: { time: string; description: string }[] }[]>([{ date: "", items: [{ time: "", description: "" }] }]);
   const [committeeItems, setCommitteeItems] = useState<{ role: string; members: string }[]>([{ role: "", members: "" }]);
 
   useEffect(() => {
-    const loadEvents = async () => {
+    const init = async () => {
+      if (!id) return;
       try {
-        const data = await getEvents();
-        setEvents(data);
+        setLoading(true);
+        const [eventsData, contentData] = await Promise.all([
+          getEvents(),
+          getContentById(id)
+        ]);
+        
+        setEvents(eventsData);
+
+          if (contentData) {
+            setTitle(contentData.title);
+            setDescription(contentData.description || "");
+            
+            // Handle custom type
+            const isStandardType = ['article', 'agenda', 'announcement', 'poster'].includes(contentData.type);
+            if (isStandardType) {
+              setType(contentData.type);
+              setCustomType("");
+            } else {
+              setType("custom");
+              setCustomType(contentData.type);
+            }
+          setEventId(contentData.eventId || "none");
+          setBody(contentData.body || "");
+          
+          // Improved multiple image handling
+          if (contentData.images && contentData.images.length > 0) {
+              setCurrentImageUrls(contentData.images);
+          } else if (contentData.thumbnail) {
+              setCurrentImageUrls([contentData.thumbnail]);
+          }
+
+          if (contentData.agenda && contentData.agenda.length > 0) {
+             setAgendaGroups(contentData.agenda.map(g => ({
+                date: g.date || "",
+                items: g.items || []
+             })));
+          } else {
+             setAgendaGroups([{ date: "", items: [{ time: "", description: "" }] }]);
+          }
+
+          if (contentData.committee) {
+             setCommitteeItems(contentData.committee.map(c => ({
+                role: c.role,
+                members: c.members.join(", ")
+             })));
+          } else {
+             setCommitteeItems([{ role: "", members: "" }]);
+          }
+        } else {
+            toast.error(t('error'));
+            router.push("/admin/posts");
+        }
       } catch (error) {
-        console.error("Failed to load events");
+        console.error("Failed to load data", error);
+        toast.error(t('error'));
+      } finally {
+        setLoading(false);
       }
     };
-    if (user) loadEvents();
-  }, [user]);
+
+    if (user && id) init();
+  }, [user, id, router, t]);
 
   const handleImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
-      setImages(prev => [...prev, ...newFiles]);
+      const files = Array.from(e.target.files);
+      setNewImageFiles(prev => [...prev, ...files]);
       
-      const newPreviews = newFiles.map(file => URL.createObjectURL(file));
-      setImagePreviews(prev => [...prev, ...newPreviews]);
+      const previews = files.map(file => URL.createObjectURL(file));
+      setNewImagePreviews(prev => [...prev, ...previews]);
     }
   };
 
-  const removeImage = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
-    setImagePreviews(prev => {
+  const removeCurrentImage = (index: number) => {
+    setCurrentImageUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeNewImage = (index: number) => {
+    setNewImageFiles(prev => prev.filter((_, i) => i !== index));
+    setNewImagePreviews(prev => {
       URL.revokeObjectURL(prev[index]);
       return prev.filter((_, i) => i !== index);
     });
   };
 
   const handleSave = async () => {
-    if (!title.trim()) {
+    if (!title || !id) {
         toast.error(t('title_required'));
         return;
     }
 
-    if (type === 'custom' && !customType.trim()) {
-        toast.error(t('enter_custom_category') || "Please enter custom category");
-        return;
-    }
-
     try {
-      setLoading(true);
+      setSaving(true);
       
-      const uploadedImageUrls = await uploadMultipleToCloudinary(images, "banhchi/contents");
+      const uploadedImageUrls = await uploadMultipleToCloudinary(newImageFiles, "banhchi/posts");
 
-      // Filter empty items
-      const cleanAgenda = agendaItems.filter(item => item.time.trim() || item.description.trim());
+      const finalImages = [...currentImageUrls, ...uploadedImageUrls];
+
+      // Filter empty items in groups
+      const cleanAgenda = agendaGroups.map(group => ({
+        date: group.date,
+        items: group.items.filter(item => item.time || item.description)
+      })).filter(group => group.items.length > 0 || group.date);
+
       const cleanCommittee = committeeItems
-        .filter(item => item.role.trim() || item.members.trim())
-        .map(item => ({ 
-          role: item.role.trim(), 
-          members: item.members.split(',').map(m => m.trim()).filter(Boolean) 
-        }));
+        .filter(item => item.role || item.members)
+        .map(item => ({ role: item.role, members: item.members.split(',').map(m => m.trim()) }));
 
-      const newItem: Omit<Content, "id" | "createdAt" | "updatedAt"> = {
-        title: title.trim(),
-        description: description.trim(),
+      const updateData: any = {
+        title,
+        description,
         body,
-        type: type === 'custom' ? customType.trim() : type,
-        ...(eventId !== "none" ? { eventId } : {}),
-        ...(uploadedImageUrls.length > 0 ? { 
-            thumbnail: uploadedImageUrls[0],
-            images: uploadedImageUrls 
-        } : {}),
-        status: "published",
-        author: {
-            name: user?.displayName || "Admin",
-            ...(user?.photoURL ? { photoURL: user.photoURL } : {})
-        },
-        ...(cleanAgenda.length > 0 ? { agenda: [{ items: cleanAgenda }] } : {}),
-        ...(cleanCommittee.length > 0 ? { committee: cleanCommittee } : {})
+        type: type === 'custom' ? customType : type,
+        eventId: eventId !== "none" ? eventId : deleteField(),
+        thumbnail: finalImages[0] || "",
+        images: finalImages,
+        
+        agenda: cleanAgenda.length > 0 ? cleanAgenda : [],
+        committee: cleanCommittee.length > 0 ? cleanCommittee : []
       };
 
-      await addContent(newItem);
-      toast.success(t('content_created'));
-      router.push("/admin/contents/");
+      await updateContent(id, updateData);
+      toast.success(t('content_updated'));
+      router.push("/admin/posts");
     } catch (error) {
       console.error(error);
-      toast.error(t('failed_create_content'));
+      toast.error(t('failed_update_content'));
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
-  if (!user) return null;
+  if (!user || loading) return (
+      <div className="flex justify-center py-20">
+          <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
+      </div>
+  );
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-20">
@@ -135,8 +226,8 @@ export default function CreateContentClient() {
            <ArrowLeft className="h-5 w-5 text-zinc-500" />
         </Button>
         <div>
-           <h1 className="text-2xl font-black tracking-tight">{t('create_content')}</h1>
-           <p className="text-sm font-medium text-zinc-400">{t('create_content_desc')}</p>
+           <h1 className="text-2xl font-black tracking-tight">{t('edit_content')}</h1>
+           <p className="text-sm font-medium text-zinc-400">{t('edit_content_desc')}</p>
         </div>
       </div>
 
@@ -180,12 +271,12 @@ export default function CreateContentClient() {
                                         <span className="text-xs text-zinc-400">{t('announcement_desc')}</span>
                                     </div>
                                 </SelectItem>
-                                {/* <SelectItem value="poster">
+                                <SelectItem value="poster">
                                     <div className="flex flex-col items-start gap-1 py-1">
                                         <span className="font-bold">{t('poster')}</span>
                                         <span className="text-xs text-zinc-400">{t('poster_desc')}</span>
                                     </div>
-                                </SelectItem> */}
+                                </SelectItem>
                                 <SelectItem value="custom">
                                     <div className="flex flex-col items-start gap-1 py-1">
                                         <span className="font-bold">{t('custom')}</span>
@@ -196,7 +287,7 @@ export default function CreateContentClient() {
                         </Select>
 
                         {type === 'custom' && (
-                            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
                                 <Input 
                                     placeholder={t('enter_custom_category')} 
                                     className="h-12 border-primary/20 border-2 rounded-xl font-bold px-4"
@@ -234,17 +325,31 @@ export default function CreateContentClient() {
                 <div className="space-y-4">
                     <Label className="font-bold">{t('content_images') || 'Images'}</Label>
                     <p className="text-xs text-zinc-400">{t('thumbnail_desc')}</p>
-                    
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {imagePreviews.map((preview, index) => (
-                            <div key={index} className="relative aspect-video bg-zinc-100 rounded-xl overflow-hidden border border-zinc-200 group">
-                                <Image src={preview} alt={`Preview ${index}`} fill className="object-cover" />
+                        {/* Current Images */}
+                        {currentImageUrls.map((url, index) => (
+                            <div key={`current-${index}`} className="relative aspect-video bg-zinc-100 rounded-xl overflow-hidden border border-zinc-200 group">
+                                <Image src={url} alt={`Current ${index}`} fill className="object-cover" />
                                 <button 
-                                    onClick={() => removeImage(index)} 
+                                    onClick={() => removeCurrentImage(index)} 
                                     className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all"
                                 >
                                     <X className="h-4 w-4" />
                                 </button>
+                            </div>
+                        ))}
+                        
+                        {/* New Image Previews */}
+                        {newImagePreviews.map((preview, index) => (
+                            <div key={`new-${index}`} className="relative aspect-video bg-zinc-100 rounded-xl overflow-hidden border border-primary/30 group">
+                                <Image src={preview} alt={`New Preview ${index}`} fill className="object-cover" />
+                                <button 
+                                    onClick={() => removeNewImage(index)} 
+                                    className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                                <div className="absolute bottom-1 right-1 bg-primary text-[8px] text-white px-1 rounded uppercase font-bold">New</div>
                             </div>
                         ))}
                         
@@ -272,44 +377,86 @@ export default function CreateContentClient() {
                     <CardTitle className="text-lg font-black uppercase tracking-widest text-zinc-400">{t('agenda_schedule')}</CardTitle>
                     <CardDescription>{t('agenda_desc')}</CardDescription>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => setAgendaItems([...agendaItems, { time: "", description: "" }])} className="rounded-lg">
-                    <Plus className="h-4 w-4 mr-2" /> {t('add_item')}
+                <Button variant="outline" size="sm" onClick={() => setAgendaGroups([...agendaGroups, { date: "", items: [{ time: "", description: "" }] }])} className="rounded-lg">
+                    <Plus className="h-4 w-4 mr-2" /> {t('add_day') || "Add Day"}
                 </Button>
             </CardHeader>
-            <CardContent className="space-y-4">
-                {agendaItems.map((item, index) => (
-                    <div key={index} className="flex gap-4 items-start">
-                        <Input 
-                           placeholder={t('time_placeholder')}
-                           value={item.time} 
-                           onChange={(e) => {
-                               const newItems = [...agendaItems];
-                               newItems[index].time = e.target.value;
-                               setAgendaItems(newItems);
-                           }} 
-                           className="w-40 rounded-xl"
-                        />
-                        <Input 
-                           placeholder={t('activity_desc')}
-                           value={item.description} 
-                           onChange={(e) => {
-                               const newItems = [...agendaItems];
-                               newItems[index].description = e.target.value;
-                               setAgendaItems(newItems);
-                           }} 
-                           className="flex-1 rounded-xl"
-                        />
+            <CardContent className="space-y-8">
+                {agendaGroups.map((group, groupIndex) => (
+                    <div key={groupIndex} className="bg-zinc-50 p-6 rounded-2xl border border-zinc-100 relative group/day">
                         <Button 
                             variant="ghost" 
                             size="icon" 
                             onClick={() => {
-                                const newItems = agendaItems.filter((_, i) => i !== index);
-                                setAgendaItems(newItems);
+                                const newGroups = agendaGroups.filter((_, i) => i !== groupIndex);
+                                setAgendaGroups(newGroups);
                             }}
-                            className="text-zinc-400 hover:text-destructive"
+                            className="absolute top-2 right-2 text-zinc-400 hover:text-destructive opacity-0 group-hover/day:opacity-100 transition-opacity"
                         >
                             <Trash2 className="h-4 w-4" />
                         </Button>
+
+                        <div className="space-y-4">
+                             <div className="space-y-2">
+                                 <Label className="text-xs uppercase font-bold text-zinc-400">{t('date_header') || "Date / Header"}</Label>
+                                 <Input 
+                                    placeholder={t('date_placeholder') || "e.g. Day 1 - Morning"}
+                                    value={group.date} 
+                                    onChange={(e) => {
+                                        const newGroups = [...agendaGroups];
+                                        newGroups[groupIndex].date = e.target.value;
+                                        setAgendaGroups(newGroups);
+                                    }} 
+                                    className="rounded-xl font-bold bg-white"
+                                 />
+                             </div>
+
+                             <div className="space-y-3 pl-4 border-l-2 border-zinc-200">
+                                 {group.items.map((item, itemIndex) => (
+                                     <div key={itemIndex} className="flex gap-4 items-start">
+                                         <Input 
+                                            placeholder={t('time_placeholder')}
+                                            value={item.time} 
+                                            onChange={(e) => {
+                                                const newGroups = [...agendaGroups];
+                                                newGroups[groupIndex].items[itemIndex].time = e.target.value;
+                                                setAgendaGroups(newGroups);
+                                            }} 
+                                            className="w-32 sm:w-40 rounded-xl bg-white"
+                                         />
+                                         <Input 
+                                            placeholder={t('activity_desc')}
+                                            value={item.description} 
+                                            onChange={(e) => {
+                                                const newGroups = [...agendaGroups];
+                                                newGroups[groupIndex].items[itemIndex].description = e.target.value;
+                                                setAgendaGroups(newGroups);
+                                            }} 
+                                            className="flex-1 rounded-xl bg-white"
+                                         />
+                                         <Button 
+                                             variant="ghost" 
+                                             size="icon" 
+                                             onClick={() => {
+                                                 const newGroups = [...agendaGroups];
+                                                 newGroups[groupIndex].items = newGroups[groupIndex].items.filter((_, i) => i !== itemIndex);
+                                                 setAgendaGroups(newGroups);
+                                             }}
+                                             className="text-zinc-400 hover:text-destructive"
+                                         >
+                                             <Trash2 className="h-4 w-4" />
+                                         </Button>
+                                     </div>
+                                 ))}
+                                 <Button variant="ghost" size="sm" onClick={() => {
+                                     const newGroups = [...agendaGroups];
+                                     newGroups[groupIndex].items.push({ time: "", description: "" });
+                                     setAgendaGroups(newGroups);
+                                 }} className="rounded-lg text-zinc-500 hover:text-primary">
+                                     <Plus className="h-3 w-3 mr-2" /> {t('add_item')}
+                                 </Button>
+                             </div>
+                        </div>
                     </div>
                 ))}
             </CardContent>
@@ -381,12 +528,12 @@ export default function CreateContentClient() {
                 <CardDescription>{t('full_content_desc')}</CardDescription>
             </CardHeader>
             <CardContent>
-                 <RichTextEditor 
+                  <RichTextEditor 
                     value={body} 
                     onChange={setBody} 
                     placeholder={t('full_content_desc')} 
-                     className="min-h-100" 
-                 />
+                    className="min-h-100" 
+                  />
             </CardContent>
         </Card>
 
@@ -394,10 +541,10 @@ export default function CreateContentClient() {
              <Button variant="ghost" type="button" onClick={() => router.back()} className="h-12 px-8 rounded-xl font-bold text-zinc-500">
                 {t('cancel')}
              </Button>
-             <Button onClick={handleSave} disabled={loading} className="h-12 px-8 rounded-xl font-bold text-lg min-w-50">
-                {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
-                {loading ? t('saving_content') : t('publish_content')}
-             </Button>
+              <Button onClick={handleSave} disabled={saving} className="h-12 px-8 rounded-xl font-bold text-lg min-w-50">
+                {saving ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
+                {saving ? t('updating_content') : t('update_content_btn')}
+              </Button>
         </div>
       </div>
     </div>

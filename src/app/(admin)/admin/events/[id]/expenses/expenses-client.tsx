@@ -172,52 +172,52 @@ export default function ExpensesClient() {
              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 -mr-16 -mt-16 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
              <div className="relative z-10 flex items-start justify-between">
                 <div className="space-y-6">
-                   <div className="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center">
-                      <div className="text-lg font-black text-white">៛</div>
-                   </div>
-                   <div>
-                      <div className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">{t('spending_khr')}</div>
-                      <div className="text-3xl sm:text-4xl font-black">{formatKhr(totals.actualKhr)}</div>
-                   </div>
-                </div>
-                <div className="text-right">
-                   <TrendingDown className="h-8 w-8 text-white/20" />
-                </div>
-             </div>
-          </Card>
+                     <div className="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center">
+                       <div className="text-2xl font-black text-white">៛</div>
+                    </div>
+                    <div>
+                       <div className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">{t('spending_khr')}</div>
+                       <div className="text-3xl sm:text-4xl font-black">{formatKhr(totals.actualKhr)}</div>
+                    </div>
+                 </div>
+                 <div className="text-right">
+                    <TrendingDown className="h-8 w-8 text-white/20" />
+                 </div>
+              </div>
+           </Card>
 
-          {/* Cash Subtotal */}
-          <Card className="p-8 sm:p-10 rounded-[2.5rem] border-none shadow-sm bg-orange-500 text-white relative overflow-hidden group">
-             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 -mr-16 -mt-16 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
-             <div className="relative z-10 flex items-start justify-between">
-                <div className="space-y-6">
-                   <div className="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center">
-                      <Wallet className="h-5 w-5 text-white" />
-                   </div>
-                   <div>
-                      <div className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">{t('cash_subtotal')}</div>
-                      <div className="text-3xl sm:text-4xl font-black">{formatUsd(totals.cashUsd)}</div>
-                      <div className="text-[10px] font-bold opacity-40 mt-1 uppercase tracking-tighter italic">{formatKhr(totals.cashKhr)}</div>
-                   </div>
-                </div>
-                <div className="text-right">
-                   <TrendingDown className="h-8 w-8 text-white/20" />
-                </div>
-             </div>
-          </Card>
+           {/* Cash Subtotal */}
+           <Card className="p-8 sm:p-10 rounded-[2.5rem] border-none shadow-sm bg-orange-500 text-white relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 -mr-16 -mt-16 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
+              <div className="relative z-10 flex items-start justify-between">
+                 <div className="space-y-6">
+                    <div className="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center">
+                       <Wallet className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                       <div className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">{t('cash_subtotal')}</div>
+                       <div className="text-3xl sm:text-4xl font-black">{formatUsd(totals.cashUsd)}</div>
+                       <div className="text-2xl font-black opacity-90 mt-1">{formatKhr(totals.cashKhr)}</div>
+                    </div>
+                 </div>
+                 <div className="text-right">
+                    <TrendingDown className="h-8 w-8 text-white/20" />
+                 </div>
+              </div>
+           </Card>
 
-          {/* Bank Subtotal */}
-          <Card className="p-8 sm:p-10 rounded-[2.5rem] border-none shadow-sm bg-indigo-500 text-white relative overflow-hidden group">
-             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 -mr-16 -mt-16 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
-             <div className="relative z-10 flex items-start justify-between">
-                <div className="space-y-6">
-                   <div className="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center">
-                      <Building2 className="h-5 w-5 text-white" />
-                   </div>
-                   <div>
-                      <div className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">{t('bank_subtotal')}</div>
-                      <div className="text-3xl sm:text-4xl font-black">{formatUsd(totals.bankUsd)}</div>
-                      <div className="text-[10px] font-bold opacity-40 mt-1 uppercase tracking-tighter italic">{formatKhr(totals.bankKhr)}</div>
+           {/* Bank Subtotal */}
+           <Card className="p-8 sm:p-10 rounded-[2.5rem] border-none shadow-sm bg-indigo-500 text-white relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 -mr-16 -mt-16 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
+              <div className="relative z-10 flex items-start justify-between">
+                 <div className="space-y-6">
+                    <div className="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center">
+                       <Building2 className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                       <div className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">{t('bank_subtotal')}</div>
+                       <div className="text-3xl sm:text-4xl font-black">{formatUsd(totals.bankUsd)}</div>
+                       <div className="text-2xl font-black opacity-90 mt-1">{formatKhr(totals.bankKhr)}</div>
                    </div>
                 </div>
                 <div className="text-right">
@@ -294,7 +294,7 @@ export default function ExpensesClient() {
                         </div>
                         <div className="space-y-0.5">
                           <div className="font-bold text-gray-900 text-sm sm:text-base">{expense.name}</div>
-                          {expense.note && <div className="text-[10px] font-medium text-gray-400 italic line-clamp-1">{expense.note}</div>}
+                          {expense.note && <div className="text-[14px] font-medium text-gray-400 italic line-clamp-1">{expense.note}</div>}
                         </div>
                       </div>
                     </TableCell>

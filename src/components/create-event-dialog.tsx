@@ -19,6 +19,8 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, Dr
 export function CreateEventDialog() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+
+
   const { t } = useLanguage();
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
@@ -93,6 +95,8 @@ export function CreateEventDialog() {
   };
 
   const isMobile = useIsMobile();
+  
+
 
   const renderFormContent = () => (
     <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">

@@ -17,61 +17,82 @@ export function SystemInfoDialog() {
           <span className="sr-only">{t('system_info')}</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-100 p-0 overflow-hidden border-0 shadow-2xl rounded-3xl">
+      <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden border-0 shadow-2xl rounded-3xl">
         {/* Header Section */}
-        <div className="bg-zinc-900 text-white p-8 flex flex-col items-center justify-center text-center">
-            <div className="h-16 w-16 bg-white rounded-2xl flex items-center justify-center text-zinc-900 mb-4 shadow-lg shadow-white/10">
-                <span className="text-3xl font-black">B</span>
+        <div className="bg-zinc-900 text-white pt-6 pb-4 px-6 flex flex-col items-center justify-center text-center relative border-b border-white/10">
+             <div className="flex items-center gap-3 mb-2">
+                <div className="h-8 w-8 bg-white rounded-lg flex items-center justify-center text-zinc-900 shadow-md shadow-white/10">
+                    <span className="text-lg font-black">B</span>
+                </div>
+                <DialogTitle className="text-lg font-black tracking-tight">{t('banhchi_system')}</DialogTitle>
+                <div className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-zinc-800 text-zinc-400 border border-zinc-700 ml-1">
+                    v1.0.0
+                </div>
             </div>
-            <DialogTitle className="text-2xl font-black tracking-tight mb-2">{t('banhchi_system')}</DialogTitle>
-            <DialogDescription className="sr-only">Support and system information for Banhchi.</DialogDescription>
-            <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-zinc-800 text-zinc-300 border border-zinc-700">
-                v1.0.0
-            </div>
+            <DialogDescription className="text-zinc-400 text-[10px] uppercase tracking-widest font-medium">Digital Event Companion</DialogDescription>
         </div>
 
-        <div className="p-6 space-y-6 bg-white">
+        <div className="p-5 bg-white space-y-5">
             {/* Ownership Section */}
-            <div className="text-center space-y-2">
-                <p className="text-sm text-muted-foreground font-medium">
+            <div className="text-center">
+                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1">
                     {t('developed_for')}
                 </p>
-                <h3 className="font-bold text-lg text-primary">
+                <h3 className="font-black text-base text-primary">
                     {t('client_name_placeholder')}
                 </h3>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                    © 2026 {t('all_rights_reserved')}
-                </p>
             </div>
 
-            <Separator />
+            <Separator className="bg-zinc-100" />
 
-            {/* Support Section */}
-            <div className="space-y-4">
-                <div className="flex items-center gap-2 text-zinc-900">
-                    <div className="h-8 w-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
-                        <Smartphone className="h-4 w-4" />
+            {/* Support Section - Side by Side */}
+            <div className="space-y-3">
+                <div className="flex items-center gap-2 text-zinc-900 justify-center">
+                    <Smartphone className="h-4 w-4 text-blue-600" />
+                    <h4 className="font-black text-xs uppercase tracking-wide">{t('tech_support')}</h4>
+                </div>
+
+                <div className="flex flex-row items-center gap-4 bg-zinc-50 rounded-2xl p-4 border border-zinc-100">
+                    {/* QR Code Column */}
+                    <div className="flex flex-col items-center gap-2 shrink-0">
+                        <div className="bg-white p-1.5 rounded-xl border border-zinc-100 shadow-sm">
+                            <img 
+                                src="/mengley.svg" 
+                                alt="Support" 
+                                className="w-20 h-20"
+                            />
+                        </div>
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 text-center leading-tight w-20">{t('scan')}</span>
                     </div>
-                    <h4 className="font-bold text-sm uppercase tracking-wide">{t('tech_support')}</h4>
+
+                    {/* Contact Info Column */}
+                    <div className="flex-1 space-y-3 min-w-0">
+                        <div className="flex items-center gap-3">
+                            <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+                                <Phone className="h-4 w-4 text-blue-600" />
+                            </div>
+                            <div className="overflow-hidden">
+                                <div className="text-[10px] text-zinc-400 font-bold uppercase">{t('phone') || "Phone"}</div>
+                                <div className="text-sm font-black text-zinc-800 font-mono truncate">098 943 324</div>
+                            </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                            <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+                                <MessageCircle className="h-4 w-4 text-blue-600" />
+                            </div>
+                            <div className="overflow-hidden">
+                                <div className="text-[10px] text-zinc-400 font-bold uppercase">Telegram</div>
+                                <a href="https://t.me/mengley_support" target="_blank" rel="noopener noreferrer" className="text-sm font-black text-blue-600 hover:underline truncate block">@mengley_support</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
-                <p className="text-xs text-muted-foreground leading-relaxed pl-10">
-                    {t('support_desc')}
-                </p>
-
-                <div className="bg-zinc-50 rounded-2xl p-4 space-y-3 border border-zinc-100 ml-2">
-                    <div className="flex items-center gap-3">
-                        <Phone className="h-4 w-4 text-zinc-400" />
-                        <span className="text-sm font-bold text-zinc-700 font-mono">012 345 678</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <MessageCircle className="h-4 w-4 text-zinc-400" />
-                        <a href="#" className="text-sm font-bold text-blue-600 hover:underline">@BanhchiDev</a>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <Clock className="h-4 w-4 text-zinc-400" />
-                        <span className="text-sm font-medium text-zinc-600">{t('working_hours')}: Mon-Sun, 8:00 AM - 8:00 PM</span>
-                    </div>
+                <div className="text-center">
+                    <p className="text-[10px] text-zinc-300 uppercase tracking-widest font-bold">
+                        {t('working_hours')}: 8AM - 8PM
+                    </p>
                 </div>
             </div>
         </div>

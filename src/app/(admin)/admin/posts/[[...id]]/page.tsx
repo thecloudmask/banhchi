@@ -1,7 +1,7 @@
 import ContentPageClient from "./content-page-client";
 
 export function generateStaticParams() {
-  return [{ id: [] }];
+  return [{ id: [] }, { id: ['create'] }];
 }
 
 export default function Page() {
