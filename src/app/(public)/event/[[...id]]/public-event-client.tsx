@@ -39,9 +39,12 @@ export default function PublicEventClient() {
 
   useEffect(() => {
     const extractId = () => {
+      console.log('[Event Route Debug] params:', params, 'pathname:', pathname);
+      
       // 1. Try to get from params
       if (params?.id) {
          const id = Array.isArray(params.id) ? params.id[0] : params.id;
+         console.log('[Event Route Debug] Extracted from params:', id);
          if (id && id !== 'index.html') return id;
       }
       
@@ -51,19 +54,18 @@ export default function PublicEventClient() {
          const eventIndex = parts.indexOf('event');
          if (eventIndex !== -1 && parts[eventIndex + 1]) {
             const extractedId = parts[eventIndex + 1];
+            console.log('[Event Route Debug] Extracted from pathname:', extractedId);
             if (extractedId && extractedId !== 'index.html') return extractedId;
          }
       }
+      console.log('[Event Route Debug] No ID found, returning null');
       return null;
     };
 
     const id = extractId();
-    if (id) {
-      setEventId(id);
-    } else {
-      // If we are at /event with no ID, maybe we are still loading or it's a direct visit
-      // We'll wait a bit or let the error catch it later
-    }
+    console.log('[Event Route Debug] Final eventId:', id);
+    // Always update eventId, even if null, to trigger re-renders on route changes
+    setEventId(id);
   }, [params, pathname]);
 
   const { t, language } = useLanguage();

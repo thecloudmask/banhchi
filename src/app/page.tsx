@@ -56,7 +56,7 @@ function FeedCard({ item, language, t }: { item: Event | Content, language: stri
   };
 
   return (
-    <Link href={`/event/${item.id}/`} key={item.id} className="group block h-full">
+    <Link href={`/event/${item.id}`} key={item.id} className="group block h-full">
       <Card className="h-full overflow-hidden border-border bg-white rounded-3xl shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 p-0">
         <div className="aspect-4/3 w-full overflow-hidden bg-secondary relative">
           {banner ? (
