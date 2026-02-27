@@ -10,7 +10,7 @@ import { useLanguage } from "@/providers/language-provider";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Calendar, MapPin, ArrowLeft, Clock, Share2, Navigation, Image as ImageIcon, Smartphone, Plus, Lock, ArrowRight, ShieldCheck, Users, FileText, LayoutDashboard, X } from "lucide-react";
+import { Loader2, Calendar, MapPin, ArrowLeft, Clock, Share2, Navigation, Image as ImageIcon, Smartphone, Plus, Lock, ArrowRight, ShieldCheck, Users, FileText, LayoutDashboard, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatDate, cn } from "@/lib/utils";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
@@ -78,7 +78,18 @@ export default function PublicEventClient() {
   const [isLocked, setIsLocked] = useState(false);
   const [pin, setPin] = useState("");
   const [unlocking, setUnlocking] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [photoIndex, setPhotoIndex] = useState<number | null>(null);
+  const [photoList, setPhotoList] = useState<string[]>([]);
+
+  const handlePrev = () => {
+    if (photoIndex === null) return;
+    setPhotoIndex(prev => prev! > 0 ? prev! - 1 : photoList.length - 1);
+  };
+
+  const handleNext = () => {
+    if (photoIndex === null) return;
+    setPhotoIndex(prev => prev! < photoList.length - 1 ? prev! + 1 : 0);
+  };
 
   useEffect(() => {
     if (eventId) {
@@ -323,10 +334,16 @@ export default function PublicEventClient() {
          <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-100">
             <div className="container mx-auto max-w-5xl h-14 sm:h-16 flex items-center justify-between px-4 sm:px-6">
               <Link href="/" className="flex items-center gap-2 group">
-                <div className="h-10 w-32 items-center justify-center overflow-hidden">
-                  <img src="/SIDETH-THEAPKA.png" alt="Logo" className="w-full h-full object-contain object-left" />
+                <div className="h-10 w-32 relative items-center justify-center overflow-hidden">
+                  <Image 
+                    src="/SIDETH-THEAPKA.png" 
+                    alt="Logo" 
+                    width={128} 
+                    height={40} 
+                    className="object-contain object-left" 
+                    priority
+                  />
                 </div>
-                {/* <span className="font-black text-base sm:text-lg tracking-tight text-blue-900 uppercase">{t('app_name')}</span> */}
               </Link>
               <div className="flex items-center gap-3 sm:gap-4">
                 {user && (
@@ -473,31 +490,27 @@ export default function PublicEventClient() {
                             </div>
                          )}
 
-                         {/* Optional Gallery for Agenda */}
                          {content.images && content.images.length > 0 && (
                             <div className="w-full pt-12 pb-8 border-t border-blue-50/50">
                                 <h3 className="text-sm font-black uppercase tracking-[0.2em] text-blue-900/40 mb-8">{t('gallery')}</h3>
-                                <div className="grid grid-cols-2 gap-4 auto-rows-[120px] sm:auto-rows-[180px]">
-                                    {content.images.map((img, idx) => {
-                                        const isFeatured = idx % 5 === 0;
-                                        return (
-                                            <div 
-                                                key={idx} 
-                                                onClick={() => setSelectedImage(img)}
-                                                className={cn(
-                                                    "relative rounded-xl sm:rounded-2xl overflow-hidden border border-blue-100 bg-blue-50/30 group cursor-zoom-in transition-all duration-500",
-                                                    isFeatured ? "col-span-2 row-span-2" : "col-span-1 row-span-1"
-                                                )}
-                                            >
-                                                <Image 
-                                                    src={compressImage(img, isFeatured ? 'banner' : 'thumbnail')} 
-                                                    alt="" 
-                                                    fill 
-                                                    className="object-cover transition-transform duration-700 group-hover:scale-110" 
-                                                />
+                                <div className="columns-2 sm:columns-3 gap-4 space-y-4">
+                                    {content.images.map((img, idx) => (
+                                        <div 
+                                            key={idx} 
+                                            onClick={() => { setPhotoList(content.images || []); setPhotoIndex(idx); }}
+                                            className="break-inside-avoid relative rounded-2xl overflow-hidden border border-blue-100/50 bg-white/50 backdrop-blur-sm group cursor-zoom-in transition-all duration-700 hover:shadow-2xl hover:shadow-blue-900/10 hover:-translate-y-1"
+                                        >
+                                            <div className={cn("relative w-full", idx % 3 === 0 ? "aspect-3/4" : idx % 3 === 1 ? "aspect-square" : "aspect-4/5")}>
+                                              <Image 
+                                                  src={compressImage(img, 'large')} 
+                                                  alt="" 
+                                                  fill 
+                                                  className="object-cover transition-transform duration-1000 group-hover:scale-110" 
+                                              />
                                             </div>
-                                        );
-                                    })}
+                                            <div className="absolute inset-0 bg-blue-900/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                          )}
@@ -516,8 +529,14 @@ export default function PublicEventClient() {
                                  <div className="h-px w-8 bg-blue-100" />
                               </div>
                               <div className="flex items-center justify-center gap-3">
-                                 <div className="h-12 w-36 items-center justify-center overflow-hidden">
-                                    <img src="/SIDETH-THEAPKA.png" alt="Logo" className="w-full h-full object-contain object-left" />
+                                 <div className="h-12 w-36 relative items-center justify-center overflow-hidden">
+                                    <Image 
+                                      src="/SIDETH-THEAPKA.png" 
+                                      alt="Logo" 
+                                      width={144} 
+                                      height={48} 
+                                      className="object-contain object-left" 
+                                    />
                                  </div>
                                  <div className="text-left leading-none">
                                     {/* <div className="font-black text-xs tracking-tight text-blue-900 uppercase">BANHCHI</div> */}
@@ -573,36 +592,30 @@ export default function PublicEventClient() {
                            dangerouslySetInnerHTML={{ __html: content.body }} 
                          />
 
-                         {/* Content Gallery */}
                          {content.images && content.images.length > 0 && (
                             <div className="space-y-6 pt-12 border-t border-zinc-50">
                                 <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">{t('gallery')}</h3>
-                                <div className="grid grid-cols-2 gap-4 auto-rows-[150px] sm:auto-rows-[250px]">
-                                    {content.images.map((img, idx) => {
-                                        const isFeatured = idx % 3 === 0;
-                                        return (
-                                            <div 
-                                                key={idx} 
-                                                onClick={() => setSelectedImage(img)}
-                                                className={cn(
-                                                    "relative rounded-3xl overflow-hidden bg-zinc-50 border border-zinc-100 group cursor-zoom-in transition-all duration-500 hover:shadow-xl hover:shadow-zinc-200/50",
-                                                    isFeatured ? "col-span-2 row-span-2" : "col-span-1 row-span-1"
-                                                )}
-                                            >
-                                                <Image 
-                                                    src={compressImage(img, isFeatured ? 'banner' : 'thumbnail')} 
-                                                    alt="" 
-                                                    fill 
-                                                    className="object-cover transition-transform duration-700 group-hover:scale-110" 
-                                                />
-                                                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                    <div className="h-10 w-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center scale-90 group-hover:scale-100 transition-all">
-                                                        <Plus className="h-5 w-5 text-white" />
-                                                    </div>
-                                                </div>
+                                <div className="columns-2 md:columns-3 gap-6 space-y-6">
+                                    {content.images.map((img, idx) => (
+                                        <div 
+                                            key={idx} 
+                                            onClick={() => { setPhotoList(content.images || []); setPhotoIndex(idx); }}
+                                            className="break-inside-avoid relative rounded-[2rem] overflow-hidden bg-white border border-zinc-100 group cursor-zoom-in transition-all duration-700 hover:shadow-2xl hover:shadow-zinc-200/50 hover:-translate-y-2"
+                                        >
+                                            <div className={cn("relative w-full", idx % 4 === 0 ? "aspect-4/5" : idx % 4 === 1 ? "aspect-square" : idx % 4 === 2 ? "aspect-2/3" : "aspect-3/4")}>
+                                              <Image 
+                                                  src={compressImage(img, 'large')} 
+                                                  alt="" 
+                                                  fill 
+                                                  className="object-cover transition-transform duration-1000 group-hover:scale-110" 
+                                              />
                                             </div>
-                                        );
-                                    })}
+                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
+                                            <div className="absolute bottom-4 right-4 h-10 w-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0 shadow-lg">
+                                                <Plus className="h-5 w-5 text-white" />
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                          )}
@@ -641,10 +654,16 @@ export default function PublicEventClient() {
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-100 transition-colors">
         <div className="container mx-auto max-w-7xl h-16 sm:h-20 flex items-center justify-between px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="h-10 w-32 sm:h-12 sm:w-40 items-center justify-center overflow-hidden transition-transform">
-              <img src="/SIDETH-THEAPKA.png" alt="Logo" className="w-full h-full object-contain object-left" />
+            <div className="h-10 w-32 sm:h-12 sm:w-40 relative items-center justify-center overflow-hidden transition-transform">
+              <Image 
+                src="/SIDETH-THEAPKA.png" 
+                alt="Logo" 
+                width={160} 
+                height={48} 
+                className="object-contain object-left" 
+                priority
+              />
             </div>
-            {/* <span className="font-black text-lg sm:text-xl tracking-tighter uppercase">BANHCHI</span> */}
           </Link>
           <div className="flex items-center gap-3 sm:gap-4">
             <LanguageSwitcher />
@@ -762,65 +781,88 @@ export default function PublicEventClient() {
 
           {/* Event Gallery */}
           {event.galleryUrls && event.galleryUrls.length > 0 && (
-             <section className="space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300 fill-mode-backwards">
+             <section className="space-y-16 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300 fill-mode-backwards">
                 <div className="text-center space-y-4">
-                  <h2 className="text-3xl font-black tracking-tight text-zinc-900">{t('event_gallery')}</h2>
-                  <div className="h-1 w-12 bg-primary mx-auto rounded-full" />
+                  <h2 className={`text-4xl font-black tracking-tight text-zinc-900 ${language === 'kh' ? 'font-moul' : ''}`}>
+                    {t('event_gallery')}
+                  </h2>
+                  <div className="h-1.5 w-16 bg-primary mx-auto rounded-full" />
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-6 auto-rows-[150px] sm:auto-rows-[200px]">
-                  {event.galleryUrls.map((url, idx) => {
-                    // Feature every 5th image (0, 5, 10...)
-                    const isFeatured = idx % 5 === 0;
-                    return (
-                        <div 
-                          key={idx} 
-                          onClick={() => setSelectedImage(url)}
-                          className={cn(
-                            "relative rounded-[1.5rem] sm:rounded-[2.5rem] overflow-hidden border border-zinc-100 bg-zinc-50 group cursor-zoom-in transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10",
-                            isFeatured ? "col-span-2 row-span-2" : "col-span-1 row-span-1"
-                          )}
-                        >
+                
+                <div className="columns-2 md:columns-3 lg:columns-4 gap-4 sm:gap-8 space-y-4 sm:space-y-8">
+                  {event.galleryUrls.map((url, idx) => (
+                      <div 
+                        key={idx} 
+                        onClick={() => { setPhotoList(event.galleryUrls || []); setPhotoIndex(idx); }}
+                        className="break-inside-avoid relative rounded-[2rem] sm:rounded-[3rem] overflow-hidden border border-zinc-100 bg-white group cursor-zoom-in transition-all duration-700 hover:shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] hover:-translate-y-2"
+                      >
+                        <div className={cn(
+                          "relative w-full overflow-hidden",
+                          idx % 5 === 0 ? "aspect-3/4" : idx % 5 === 1 ? "aspect-square" : idx % 5 === 2 ? "aspect-4/5" : idx % 5 === 3 ? "aspect-2/3" : "aspect-3/5"
+                        )}>
                           <Image 
-                            src={compressImage(url, isFeatured ? 'banner' : 'thumbnail')} 
+                            src={compressImage(url, 'large')} 
                             alt="" 
                             fill 
-                            className="object-cover transition-all duration-700 group-hover:scale-110 group-hover:rotate-1" 
+                            className="object-cover transition-all duration-1000 group-hover:scale-110 group-hover:rotate-1" 
                           />
-                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center scale-75 group-hover:scale-100 transition-all duration-500">
-                                  <Plus className="h-5 w-5 text-white" />
-                              </div>
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-700" />
+                          <div className="absolute top-6 right-6 h-12 w-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100 shadow-xl border border-white/20">
+                              <Plus className="h-5 w-5 text-white" />
                           </div>
                         </div>
-                    );
-                  })}
+                      </div>
+                  ))}
                 </div>
              </section>
           )}
 
           {/* Lightbox / Image Preview Modal */}
-          {selectedImage && (
+          {photoIndex !== null && (
             <div 
-              className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 sm:p-10 animate-in fade-in duration-300"
-              onClick={() => setSelectedImage(null)}
+              className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 sm:p-10 animate-in fade-in duration-500"
+              onClick={() => setPhotoIndex(null)}
             >
               <button 
-                className="absolute top-6 right-6 h-12 w-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors z-10"
-                onClick={(e) => { e.stopPropagation(); setSelectedImage(null); }}
+                className="absolute top-6 right-6 h-12 w-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all z-110 active:scale-90 shadow-2xl scale-125"
+                onClick={(e) => { e.stopPropagation(); setPhotoIndex(null); }}
               >
                 <X className="h-6 w-6" />
               </button>
+
+              {photoList.length > 1 && (
+                <>
+                  <button 
+                    className="absolute left-4 sm:left-10 top-1/2 -translate-y-1/2 h-16 w-16 sm:h-24 sm:w-24 rounded-full bg-white/5 hover:bg-white/10 text-white flex items-center justify-center transition-all z-110 active:scale-90 group"
+                    onClick={(e) => { e.stopPropagation(); handlePrev(); }}
+                  >
+                    <ChevronLeft className="h-8 w-8 sm:h-12 sm:w-12 group-hover:-translate-x-2 transition-transform" />
+                  </button>
+                  <button 
+                    className="absolute right-4 sm:right-10 top-1/2 -translate-y-1/2 h-16 w-16 sm:h-24 sm:w-24 rounded-full bg-white/5 hover:bg-white/10 text-white flex items-center justify-center transition-all z-110 active:scale-90 group"
+                    onClick={(e) => { e.stopPropagation(); handleNext(); }}
+                  >
+                    <ChevronRight className="h-8 w-8 sm:h-12 sm:w-12 group-hover:translate-x-2 transition-transform" />
+                  </button>
+                </>
+              )}
               
-              <div className="relative w-full h-full max-w-6xl max-h-[85vh] flex items-center justify-center">
-                <img 
-                  src={selectedImage} 
-                  alt="Gallery Preview" 
-                  className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl animate-in zoom-in-95 duration-500"
-                />
-              </div>
-              
-              <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/40 text-[10px] font-black uppercase tracking-[0.4em]">
-                {t('app_name')} • {t('event_gallery')}
+              <div className="relative w-full h-full max-w-7xl max-h-[85vh] flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                <div className="relative w-full h-full">
+                  <Image 
+                    src={photoList[photoIndex]} 
+                    alt="Gallery Preview" 
+                    fill
+                    className="object-contain rounded-3xl shadow-[0_0_100px_rgba(255,255,255,0.1)] animate-in zoom-in-95 duration-700 ease-out"
+                    unoptimized
+                  />
+                </div>
+                
+                {photoList.length > 1 && (
+                  <div className="mt-12 px-8 py-3 rounded-full bg-white/5 backdrop-blur-xl border border-white/10 text-white/50 text-xs font-black uppercase tracking-[0.5em] shadow-2xl">
+                    <span className="text-white">{photoIndex + 1}</span> / {photoList.length}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -859,8 +901,14 @@ export default function PublicEventClient() {
           )}
 
           <footer className="pt-24 text-center space-y-10 border-t border-zinc-100">
-              <Link href="/" className="inline-flex h-16 w-48 items-center justify-center overflow-hidden hover:scale-105 transition-transform">
-                <img src="/SIDETH-THEAPKA.png" alt="Logo" className="w-full h-full object-contain" />
+              <Link href="/" className="inline-flex relative h-16 w-48 items-center justify-center overflow-hidden hover:scale-105 transition-transform">
+                <Image 
+                  src="/SIDETH-THEAPKA.png" 
+                  alt="Logo" 
+                  width={192} 
+                  height={64} 
+                  className="object-contain" 
+                />
               </Link>
               <div className="flex flex-col items-center gap-2">
                 <p className="text-zinc-400 font-bold text-[10px] uppercase tracking-[0.4em]">{t('all_rights_reserved')}</p>
