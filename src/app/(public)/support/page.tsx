@@ -160,10 +160,21 @@ export default function SupportPage() {
       </section>
 
       {/* Footer minimal */}
-      <footer className="py-12 text-center border-t border-border">
-        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">
-          © {new Date().getFullYear()} — Banhchi Digital Event Companion
-        </p>
+      <footer className="py-24 text-center space-y-12 border-t border-zinc-100">
+        <Link href="/" className="inline-flex relative items-center justify-center transition-transform hover:scale-105">
+          <div className="relative h-24 w-64 sm:h-32 sm:w-80">
+            <Image 
+              src="/SIDETH-THEAPKA.png" 
+              alt="Logo" 
+              fill
+              className="object-contain" 
+            />
+          </div>
+        </Link>
+        <div className="flex flex-col items-center gap-4">
+          <p className="text-zinc-400 font-bold text-[10px] uppercase tracking-[0.4em]">{t('all_rights_reserved')}</p>
+          <div className="h-1 w-12 bg-zinc-100 rounded-full" />
+        </div>
       </footer>
     </div>
   );

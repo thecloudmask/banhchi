@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, usePathname } from "next/navigation";
 import { getEventById } from "@/services/event.service";
 import { getContentsByEventId, getContentById, Content } from "@/services/content.service";
@@ -10,7 +10,7 @@ import { useLanguage } from "@/providers/language-provider";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Calendar, MapPin, ArrowLeft, Clock, Share2, Navigation, Image as ImageIcon, Smartphone, Plus, Lock, ArrowRight, ShieldCheck, Users, FileText, LayoutDashboard, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, Calendar, MapPin, ArrowLeft, Clock, Share2, Navigation, Image as ImageIcon, Smartphone, Plus, Lock, ArrowRight, ShieldCheck, Users, FileText, LayoutDashboard, X, ChevronLeft, ChevronRight, Heart } from "lucide-react";
 import { formatDate, cn } from "@/lib/utils";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,16 +18,83 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import { compressImage } from "@/lib/cloudinary";
+import { Toaster } from "@/components/ui/sonner";
 
 interface TimeLeft {
-// ... existing interface ...
-// (Note: Skipping to the component body because I need to replace a large block)
   days: number;
   hours: number;
   minutes: number;
   seconds: number;
   isExpired: boolean;
 }
+
+const getCategoryTheme = (category?: string) => {
+  const themes: Record<string, {
+    primary: string,
+    accent: string,
+    bg: string,
+    card: string,
+    badge: string,
+    icon: string,
+    button: string,
+  }> = {
+    wedding: {
+      primary: "text-rose-600",
+      accent: "bg-rose-50",
+      bg: "bg-rose-50/20",
+      card: "bg-white border-rose-100 hover:border-rose-200 shadow-sm hover:shadow-md",
+      badge: "bg-rose-500 text-white",
+      icon: "text-rose-400 group-hover:text-rose-600",
+      button: "bg-rose-600 hover:bg-rose-700 shadow-rose-200",
+    },
+    funeral: {
+      primary: "text-zinc-900",
+      accent: "bg-zinc-100",
+      bg: "bg-zinc-50",
+      card: "bg-white border-zinc-200 hover:border-zinc-300 shadow-sm hover:shadow-md",
+      badge: "bg-zinc-800 text-white",
+      icon: "text-zinc-500 group-hover:text-zinc-900",
+      button: "bg-zinc-900 hover:bg-zinc-800 shadow-zinc-200",
+    },
+    merit_making: {
+      primary: "text-orange-600",
+      accent: "bg-orange-50",
+      bg: "bg-orange-50/20",
+      card: "bg-white border-orange-100 hover:border-orange-200 shadow-sm hover:shadow-md",
+      badge: "bg-orange-500 text-white",
+      icon: "text-orange-400 group-hover:text-orange-600",
+      button: "bg-orange-600 hover:bg-orange-700 shadow-orange-200",
+    },
+    inauguration: {
+      primary: "text-indigo-600",
+      accent: "bg-indigo-50",
+      bg: "bg-indigo-50/20",
+      card: "bg-white border-indigo-100 hover:border-indigo-200 shadow-sm hover:shadow-md",
+      badge: "bg-indigo-600 text-white",
+      icon: "text-indigo-400 group-hover:text-indigo-600",
+      button: "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200",
+    },
+    memorial: {
+      primary: "text-slate-600",
+      accent: "bg-slate-50",
+      bg: "bg-slate-50/20",
+      card: "bg-white border-slate-100 hover:border-slate-200 shadow-sm hover:shadow-md",
+      badge: "bg-slate-500 text-white",
+      icon: "text-slate-400 group-hover:text-slate-600",
+      button: "bg-slate-600 hover:bg-slate-700 shadow-slate-200",
+    },
+  };
+
+  return themes[category || "default"] || {
+    primary: "text-blue-600",
+    accent: "bg-blue-50",
+    bg: "bg-zinc-50/50",
+    card: "bg-white border-zinc-100 hover:border-zinc-200 shadow-sm hover:shadow-md",
+    badge: "bg-zinc-900 text-white",
+    icon: "text-zinc-300 group-hover:text-primary",
+    button: "bg-zinc-900 hover:bg-zinc-800 shadow-zinc-200",
+  };
+};
 
 export default function PublicEventClient() {
   const { user } = useAuth();
@@ -80,6 +147,10 @@ export default function PublicEventClient() {
   const [unlocking, setUnlocking] = useState(false);
   const [photoIndex, setPhotoIndex] = useState<number | null>(null);
   const [photoList, setPhotoList] = useState<string[]>([]);
+
+  const photoListMemo = useRef<string[]>([]);
+  const giftRef = useRef<HTMLDivElement>(null);
+  const theme = getCategoryTheme(event?.category);
 
   const handlePrev = () => {
     if (photoIndex === null) return;
@@ -232,6 +303,10 @@ export default function PublicEventClient() {
     window.open(url, "_blank");
   };
 
+  const scrollToGift = () => {
+    giftRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   const handleShare = async () => {
     if (navigator.share) {
       try {
@@ -325,341 +400,21 @@ export default function PublicEventClient() {
     );
   }
 
-  // --- CONTENT VIEW MODE (Poster / Invitation Style) ---
-  if (content) {
-    const isAgenda = content.type === 'agenda';
-
-    return (
-      <div className="min-h-screen bg-zinc-50 text-zinc-900 selection:bg-blue-100 overflow-x-hidden font-sans pb-20">
-         <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-100">
-            <div className="container mx-auto max-w-5xl h-14 sm:h-16 flex items-center justify-between px-4 sm:px-6">
-              <Link href="/" className="flex items-center gap-2 group">
-                <div className="h-10 w-32 relative items-center justify-center overflow-hidden">
-                  <Image 
-                    src="/SIDETH-THEAPKA.png" 
-                    alt="Logo" 
-                    width={128} 
-                    height={40} 
-                    className="object-contain object-left" 
-                    priority
-                  />
-                </div>
-              </Link>
-              <div className="flex items-center gap-3 sm:gap-4">
-                {user && (
-                    <Link href="/admin">
-                        <Button variant="ghost" size="sm" className="h-9 sm:h-10 rounded-xl gap-2 font-bold text-xs text-blue-900/60 hover:text-blue-900 border border-blue-900/10 hover:bg-blue-50">
-                            <LayoutDashboard className="h-4 w-4" />
-                            <span className="hidden sm:inline">{t('dashboard') || 'Dashboard'}</span>
-                        </Button>
-                    </Link>
-                )}
-                <LanguageSwitcher />
-              </div>
-            </div>
-          </header>
-
-          <main className={cn(
-            "container mx-auto px-4 py-8 sm:py-12",
-            isAgenda ? "max-w-5xl" : "max-w-5xl"
-          )}>
-             
-             {isAgenda ? (
-               /* THE POSTER CARD */
-               <div className="bg-white p-2 sm:p-5 rounded-2xl shadow-2xl relative">
-                  <div className="border-[1.5px] border-blue-900/20 p-1.5 rounded-xl">
-                    <div className="border-[6px] border-double border-blue-900 p-6 sm:p-14 relative overflow-hidden bg-white paper-texture min-h-225 flex flex-col items-center rounded-lg">
-                       
-                       {/* Enhanced Ornamental Corners (Kbach Style Simulation) */}
-                       {/* Top Left */}
-                       <div className="absolute top-4 left-4 w-12 h-12 border-t-[5px] border-l-[5px] border-blue-900 rounded-tl-2xl z-20" />
-                       <div className="absolute top-6 left-6 w-5 h-5 border-t-[3px] border-l-[3px] border-blue-500 rounded-tl-lg z-20 opacity-40" />
-                       
-                       {/* Top Right */}
-                       <div className="absolute top-4 right-4 w-12 h-12 border-t-[5px] border-r-[5px] border-blue-900 rounded-tr-2xl z-20" />
-                       <div className="absolute top-6 right-6 w-5 h-5 border-t-[3px] border-r-[3px] border-blue-500 rounded-tr-lg z-20 opacity-40" />
-                       
-                       {/* Bottom Left */}
-                       <div className="absolute bottom-4 left-4 w-12 h-12 border-b-[5px] border-l-[5px] border-blue-900 rounded-bl-2xl z-20" />
-                       <div className="absolute bottom-6 left-6 w-5 h-5 border-b-[3px] border-l-[3px] border-blue-500 rounded-bl-lg z-20 opacity-40" />
-
-                       {/* Bottom Right */}
-                       <div className="absolute bottom-4 right-4 w-12 h-12 border-b-[5px] border-r-[5px] border-blue-900 rounded-br-2xl z-20" />
-                       <div className="absolute bottom-6 right-6 w-5 h-5 border-b-[3px] border-r-[3px] border-blue-500 rounded-br-lg z-20 opacity-40" />
-
-                       {/* Decorative Side Accents */}
-                       <div className="absolute top-1/2 left-2 -translate-y-1/2 w-1 h-32 bg-linear-to-b from-transparent via-blue-900/20 to-transparent rounded-full" />
-                       <div className="absolute top-1/2 right-2 -translate-y-1/2 w-1 h-32 bg-linear-to-b from-transparent via-blue-900/20 to-transparent rounded-full" />
-
-                     {/* Subtle Background Mark */}
-                     {content.thumbnail && (
-                        <div className="absolute inset-0 z-0 opacity-[0.03]">
-                           <Image 
-                             src={compressImage(content.thumbnail, 'banner')} 
-                             alt="" 
-                             fill 
-                             className="object-cover" 
-                           />
-                        </div>
-                     )}
-
-                     <div className="relative z-10 w-full text-center space-y-12">
-                        <div className="space-y-6">
-                           <h1 className={cn(
-                             "text-3xl sm:text-5xl font-black text-blue-900 leading-normal tracking-wide drop-shadow-sm",
-                             language === 'kh' ? 'font-moul tracking-normal' : ''
-                           )}>
-                             {content.title}
-                           </h1>
-
-                           {content.description && (
-                              <div className="text-blue-800 text-lg sm:text-xl font-bold max-w-2xl mx-auto leading-relaxed italic opacity-90 border-y py-4 border-blue-100/50">
-                                 {content.description}
-                              </div>
-                           )}
-                        </div>
-
-                        {content.body && (
-                          <div className="text-blue-900/90 text-justify w-full px-4 sm:px-8 relative z-20">
-                             <div 
-                               className="content-body text-base sm:text-lg leading-loose font-medium"
-                               dangerouslySetInnerHTML={{ __html: content.body }} 
-                             />
-                          </div>
-                        )}
-
-                        {content.agenda && content.agenda.length > 0 && (
-                           <div className="w-full pt-8">
-                              <h2 className="text-2xl font-black text-blue-900 mb-8 inline-block border-b-2 border-blue-900/30 pb-2 px-10 font-moul">
-                                 {t('agenda_schedule')}
-                              </h2>
-                              
-                              <div className="space-y-10 text-left w-full max-w-7xl mx-auto">
-                                 {content.agenda.map((day, dayIdx) => (
-                                    <div key={dayIdx} className="mb-8 last:mb-0">
-                                       {day.date && (
-                                          <div className="mb-4 pl-2">
-                                             <h3 className="text-base sm:text-lg font-black text-blue-900 font-moul leading-relaxed">
-                                                {day.date}
-                                             </h3>
-                                          </div>
-                                       )}
-                                       <div className={cn("space-y-4", day.date ? "pl-8 border-l-2 border-blue-200/60 ml-2 py-1" : "")}>
-                                          {(day.items || []).map((item, itemIdx) => (
-                                             <div key={itemIdx} className="flex gap-4 sm:gap-6 items-start text-blue-900 group relative">
-                                                {day.date && (
-                                                   <div className="absolute -left-[39px] top-1.5 h-3.5 w-3.5 rounded-full border-[3px] border-white bg-blue-500 shadow-sm group-hover:scale-110 transition-transform" />
-                                                )}
-                                                <div className="w-[140px] sm:w-[160px] shrink-0 pt-0.5">
-                                                   <div className="font-bold text-xs sm:text-xs leading-relaxed text-blue-700 bg-blue-50/50 px-2 py-2 rounded-lg text-center border border-blue-100/50 group-hover:border-blue-200 transition-colors w-full break-words">
-                                                      {item.time}
-                                                   </div>
-                                                </div>
-                                                <div className="flex-1 pt-0.5 min-w-0">
-                                                   <div className="font-medium text-sm sm:text-base leading-relaxed text-slate-700 group-hover:text-blue-900 transition-colors text-left break-words">
-                                                      {item.description}
-                                                   </div>
-                                                </div>
-                                             </div>
-                                          ))}
-                                       </div>
-                                    </div>
-                                 ))}
-                              </div>
-                           </div>
-                        )}
-
-                         {content.committee && content.committee.length > 0 && (
-                            <div className="w-full pt-12 pb-16">
-                               <h2 className="text-2xl font-black text-blue-900 mb-12 inline-block border-b-2 border-blue-900/10 pb-2 px-10 font-moul">
-                                  {t('committee_organizers')}
-                               </h2>
-                               
-                               <div className="grid md:grid-cols-2 gap-x-12 gap-y-6 text-left w-full max-w-5xl mx-auto px-4">
-                                  {content.committee.map((group, idx) => (
-                                     <div key={idx} className="flex flex-row gap-2 items-baseline border-b border-dashed border-blue-100/50 pb-2 sm:border-none sm:pb-0">
-                                        <h3 className="font-moul text-blue-900 text-sm sm:text-base shrink-0 whitespace-nowrap">
-                                           {group.role}
-                                        </h3>
-                                        <div className="text-slate-800 font-bold text-sm sm:text-base leading-relaxed">
-                                           {group.members.join(", ")}
-                                        </div>
-                                     </div>
-                                  ))}
-                               </div>
-                            </div>
-                         )}
-
-                         {content.images && content.images.length > 0 && (
-                            <div className="w-full pt-12 pb-8 border-t border-blue-50/50">
-                                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-blue-900/40 mb-8">{t('gallery')}</h3>
-                                <div className="columns-2 sm:columns-3 gap-4 space-y-4">
-                                    {content.images.map((img, idx) => (
-                                        <div 
-                                            key={idx} 
-                                            onClick={() => { setPhotoList(content.images || []); setPhotoIndex(idx); }}
-                                            className="break-inside-avoid relative rounded-2xl overflow-hidden border border-blue-100/50 bg-white/50 backdrop-blur-sm group cursor-zoom-in transition-all duration-700 hover:shadow-2xl hover:shadow-blue-900/10 hover:-translate-y-1"
-                                        >
-                                            <div className={cn("relative w-full", idx % 3 === 0 ? "aspect-3/4" : idx % 3 === 1 ? "aspect-square" : "aspect-4/5")}>
-                                              <Image 
-                                                  src={compressImage(img, 'large')} 
-                                                  alt="" 
-                                                  fill 
-                                                  className="object-cover transition-transform duration-1000 group-hover:scale-110" 
-                                              />
-                                            </div>
-                                            <div className="absolute inset-0 bg-blue-900/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                         )}
-
-                        <div className="pt-12 w-full border-t border-blue-100 text-blue-800/60 text-[10px] font-black uppercase tracking-[0.3em]">
-                           {event.location && (
-                              <div className="flex items-center justify-center gap-2 mb-4">
-                                 <MapPin className="h-4 w-4" />
-                                 {event.location}
-                              </div>
-                           )}
-                           <div className="flex flex-col items-center gap-4">
-                              <div className="flex items-center gap-3">
-                                 <div className="h-px w-8 bg-blue-100" />
-                                 <span>{t('thank_you')}</span>
-                                 <div className="h-px w-8 bg-blue-100" />
-                              </div>
-                              <div className="flex items-center justify-center gap-3">
-                                 <div className="h-12 w-36 relative items-center justify-center overflow-hidden">
-                                    <Image 
-                                      src="/SIDETH-THEAPKA.png" 
-                                      alt="Logo" 
-                                      width={144} 
-                                      height={48} 
-                                      className="object-contain object-left" 
-                                    />
-                                 </div>
-                                 <div className="text-left leading-none">
-                                    {/* <div className="font-black text-xs tracking-tight text-blue-900 uppercase">BANHCHI</div> */}
-                                    <div className="text-[8px] font-bold text-zinc-400">{t('digital_companion')}</div>
-                                 </div>
-                              </div>
-                           </div>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-              </div>
-             ) : (
-               /* ARTICLE / BLOG LAYOUT */
-               <article className="bg-white rounded-[2.5rem] shadow-sm border border-zinc-100 overflow-hidden">
-                  {content.thumbnail && (
-                    <div className="aspect-video w-full relative">
-                       <Image 
-                         src={compressImage(content.thumbnail, 'banner')} 
-                         alt={content.title} 
-                         fill 
-                         className="object-cover" 
-                       />
-                    </div>
-                  )}
-                  <div className="p-8 sm:p-16 space-y-10">
-                     <div className="space-y-6 text-center">
-                        <Badge variant="outline" className="rounded-full px-4 py-1 text-[10px] font-black uppercase tracking-widest text-zinc-400">
-                           {content.type}
-                        </Badge>
-                        <h1 className={cn(
-                          "text-3xl sm:text-5xl font-black text-zinc-900 leading-tight tracking-tighter",
-                          language === 'kh' ? 'font-moul' : ''
-                        )}>
-                          {content.title}
-                        </h1>
-                        <div className="flex items-center justify-center gap-4 text-zinc-400 text-xs font-bold uppercase tracking-widest">
-                           <span>{formatDate(content.createdAt, language)}</span>
-                           <span className="h-1 w-1 bg-zinc-200 rounded-full" />
-                           <span>{t('written_by')} {content.author?.name || "Admin"}</span>
-                        </div>
-                     </div>
-
-                      <div className="max-w-2xl mx-auto">
-                         {content.description && (
-                            <div className="text-xl font-medium text-zinc-500 leading-relaxed italic mb-12 border-l-4 border-zinc-100 pl-8">
-                               {content.description}
-                            </div>
-                         )}
-
-                         <div 
-                           className="content-body prose prose-zinc max-w-none mb-16"
-                           dangerouslySetInnerHTML={{ __html: content.body }} 
-                         />
-
-                         {content.images && content.images.length > 0 && (
-                            <div className="space-y-6 pt-12 border-t border-zinc-50">
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">{t('gallery')}</h3>
-                                <div className="columns-2 md:columns-3 gap-6 space-y-6">
-                                    {content.images.map((img, idx) => (
-                                        <div 
-                                            key={idx} 
-                                            onClick={() => { setPhotoList(content.images || []); setPhotoIndex(idx); }}
-                                            className="break-inside-avoid relative rounded-[2rem] overflow-hidden bg-white border border-zinc-100 group cursor-zoom-in transition-all duration-700 hover:shadow-2xl hover:shadow-zinc-200/50 hover:-translate-y-2"
-                                        >
-                                            <div className={cn("relative w-full", idx % 4 === 0 ? "aspect-4/5" : idx % 4 === 1 ? "aspect-square" : idx % 4 === 2 ? "aspect-2/3" : "aspect-3/4")}>
-                                              <Image 
-                                                  src={compressImage(img, 'large')} 
-                                                  alt="" 
-                                                  fill 
-                                                  className="object-cover transition-transform duration-1000 group-hover:scale-110" 
-                                              />
-                                            </div>
-                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
-                                            <div className="absolute bottom-4 right-4 h-10 w-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0 shadow-lg">
-                                                <Plus className="h-5 w-5 text-white" />
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                         )}
-                      </div>
-
-                     <div className="pt-16 border-t border-zinc-50 flex flex-col items-center gap-8">
-                        <div className="flex items-center gap-4 p-6 rounded-3xl bg-zinc-50 border border-zinc-100">
-                           <div className="h-12 w-12 bg-zinc-200 rounded-2xl overflow-hidden relative">
-                              {content.author?.photoURL ? (
-                                <Image src={content.author.photoURL} alt="" fill className="object-cover" />
-                              ) : (
-                                <Users className="h-6 w-6 m-3 text-zinc-400" />
-                              )}
-                           </div>
-                           <div>
-                              <div className="text-xs font-black uppercase tracking-widest text-zinc-400 mb-0.5">{t('written_by')}</div>
-                              <div className="font-black text-zinc-900">{content.author?.name || "Banhchi Admin"}</div>
-                           </div>
-                        </div>
-                        <Button variant="ghost" className="rounded-xl h-12 text-zinc-400 font-bold" onClick={handleShare}>
-                           <Share2 className="h-4 w-4 mr-2" /> {t('share_article')}
-                        </Button>
-                     </div>
-                  </div>
-               </article>
-             )}
-          </main>
-      </div>
-    );
-  }
+  const isAgenda = content?.type === 'agenda';
+  const isArticle = content?.type === 'article';
 
   // --- DEFAULT EVENT VIEW MODE ---
   return (
     <div className="min-h-screen bg-white text-zinc-900 selection:bg-primary/10 overflow-x-hidden">
 
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-100 transition-colors">
+      <header className="sticky top-0 z-50 bg-white border-b border-zinc-100">
         <div className="container mx-auto max-w-7xl h-16 sm:h-20 flex items-center justify-between px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="h-10 w-32 sm:h-12 sm:w-40 relative items-center justify-center overflow-hidden transition-transform">
+            <div className="h-10 w-48 sm:h-12 sm:w-64 relative items-center justify-center overflow-hidden transition-transform group-hover:scale-[1.02]">
               <Image 
                 src="/SIDETH-THEAPKA.png" 
                 alt="Logo" 
-                width={160} 
-                height={48} 
+                fill
                 className="object-contain object-left" 
                 priority
               />
@@ -667,111 +422,212 @@ export default function PublicEventClient() {
           </Link>
           <div className="flex items-center gap-3 sm:gap-4">
             <LanguageSwitcher />
-            <Button variant="ghost" size="icon" onClick={handleShare} className="rounded-xl h-9 w-9 sm:h-10 sm:w-10 bg-zinc-50 border border-zinc-100 hover:bg-zinc-100 shadow-sm transition-all">
+            <Button variant="ghost" size="icon" onClick={handleShare} className="rounded-xl h-9 w-9 sm:h-10 sm:w-10 bg-zinc-50 border border-zinc-100 hover:bg-zinc-100 transition-all">
               <Share2 className="h-4 w-4" />
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-24 relative z-10">
-        <div className="space-y-6 sm:space-y-24">
+      <main className="container mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-16 relative z-10">
+        <div className="space-y-6 sm:space-y-16">
           
-          <section className="relative group animate-in fade-in slide-in-from-bottom-8 duration-700">
-            <div className="absolute inset-x-0 -top-20 -bottom-20 bg-zinc-50/50 rounded-[4rem] -z-10" />
-            <div className="relative p-2 overflow-hidden rounded-[2.5rem] bg-white border border-zinc-100 shadow-sm">
-               <div className="aspect-16/10 sm:aspect-video w-full rounded-[2rem] overflow-hidden shadow-sm relative">
-                  {event.bannerUrl ? (
-                    <Image 
-                      src={compressImage(event.bannerUrl, 'banner')} 
-                      alt="" 
-                      fill
-                      priority
-                      className="object-cover" 
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-zinc-100 flex items-center justify-center">
-                       <ImageIcon className="h-20 w-20 text-zinc-300" />
-                    </div>
-                  )}
-                  <div className="absolute top-6 right-6">
-                     <Badge className="bg-white/90 backdrop-blur-sm text-zinc-900 border border-zinc-100 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm">
-                        {event.status === 'active' ? t('active') : t('completed')}
-                     </Badge>
-                  </div>
-               </div>
+          <section className="relative group animate-in fade-in duration-300">
+             <div className="relative overflow-hidden rounded-[2.5rem] sm:rounded-[3.5rem] bg-zinc-50 shadow-md transition-all duration-300">
+                <div className="aspect-3/2 sm:aspect-video w-full relative">
+                   {event.bannerUrl ? (
+                     <Image 
+                       src={compressImage(event.bannerUrl, 'banner')} 
+                       alt={event.title}
+                       fill
+                       priority
+                       className="object-cover transition-transform duration-500 group-hover:scale-105" 
+                     />
+                   ) : (
+                     <div className="w-full h-full flex items-center justify-center bg-zinc-50">
+                        <ImageIcon className="h-24 w-24 text-zinc-200" />
+                     </div>
+                   )}
+                   <div className="absolute inset-0 bg-black/0 group-hover/hero:bg-black/10 transition-colors duration-1000" />
+                   <div className="absolute top-6 right-6 sm:top-10 sm:right-10 z-10 transition-all duration-700 group-hover/hero:scale-110">
+                      <Badge className="bg-white/40 backdrop-blur-3xl text-zinc-900 border border-white/40 px-6 sm:px-10 py-3 sm:py-4 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.5em] shadow-2xl">
+                         {event.status === 'active' ? t('active') : t('completed')}
+                      </Badge>
+                   </div>
+                </div>
+             </div>
 
-               <div className="p-6 sm:p-16 text-center">
+            <div className="p-10 sm:p-20 text-center">
                   <h1 className={cn(
-                    "text-3xl sm:text-6xl font-black text-zinc-900 leading-[1.1] sm:leading-tight tracking-tight sm:tracking-tighter mb-6 sm:mb-10",
+                    "text-4xl sm:text-7xl font-black text-zinc-900 leading-[1.05] sm:leading-tight tracking-tighter mb-8 sm:mb-12",
                     language === 'kh' ? 'font-moul tracking-normal' : ''
                   )}>
                     {event.title}
                   </h1>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
-                      <div className="p-6 rounded-2xl bg-zinc-50/50 border border-zinc-100/50 flex flex-col items-center hover:bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-default group/card">
-                         <Calendar className="h-8 w-8 text-primary/20 mb-3 group-hover/card:text-primary group-hover/card:scale-110 transition-all duration-300" />
-                         <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1">{t('event_date')}</span>
-                         <span className="text-base font-black text-zinc-700 group-hover/card:text-zinc-900 transition-colors">{formatDate(event.eventDate, language)}</span>
-                      </div>
-                      <div className="p-6 rounded-2xl bg-zinc-50/50 border border-zinc-100/50 flex flex-col items-center hover:bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-default group/card">
-                         <Clock className="h-8 w-8 text-primary/20 mb-3 group-hover/card:text-primary group-hover/card:scale-110 transition-all duration-300" />
-                         <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1">{t('start_time')}</span>
-                         <span className="text-base font-black text-zinc-700 group-hover/card:text-zinc-900 transition-colors">{event.eventTime || t('tba')}</span>
-                      </div>
-                      <div className="p-6 rounded-2xl bg-zinc-50/50 border border-zinc-100/50 flex flex-col items-center hover:bg-white hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-default group/card">
-                         <MapPin className="h-8 w-8 text-primary/20 mb-3 group-hover/card:text-primary group-hover/card:scale-110 transition-all duration-300" />
-                         <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1">{t('location')}</span>
-                         <span className="text-base font-black truncate w-full text-center px-2 text-zinc-700 group-hover/card:text-zinc-900 transition-colors">{event.location || t('tba')}</span>
-                      </div>
-                   </div>
-
-                   <div className="flex flex-wrap justify-center gap-4">
-                      <Button size="xl" onClick={addToCalendar} className="h-14 rounded-2xl font-black px-10 shadow-sm hover:scale-[1.02] active:scale-95 transition-all">
+                   <div className="flex flex-wrap justify-center gap-6">
+                      <Button size="xl" onClick={addToCalendar} className={cn("h-16 rounded-2xl font-black px-12 shadow-md hover:scale-[1.02] active:scale-95 transition-all text-white border-none", theme.button)}>
                          <Plus className="h-5 w-5 mr-3" />
                          {t('save_to_calendar')}
                       </Button>
+                      <Button size="xl" variant="outline" onClick={scrollToGift} className="h-16 rounded-2xl border-zinc-200 bg-white font-black px-12 hover:bg-zinc-50 transition-all shadow-sm">
+                         <Heart className="h-5 w-5 mr-3 text-rose-500" />
+                         {t('digital_gift_khqr')}
+                      </Button>
                       {(event.location || event.mapUrl) && (
-                        <Button size="xl" variant="outline" asChild className="h-14 rounded-2xl border-zinc-200 bg-white font-black px-10 hover:bg-zinc-50 hover:scale-[1.02] active:scale-95 transition-all">
+                        <Button size="xl" variant="outline" asChild className="hidden lg:flex h-16 rounded-2xl border-zinc-200 bg-white font-black px-12 hover:bg-zinc-50 transition-all shadow-sm">
                           <a href={event.mapUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location || "")}`} target="_blank">
-                            <Navigation className="h-5 w-5 mr-3" />
+                            <Navigation className="h-5 w-5 mr-3 text-primary" />
                             {t('get_directions')}
                           </a>
                         </Button>
                       )}
                    </div>
-               </div>
-            </div>
-          </section>
+                </div>
+            </section>
 
-          {/* Countdown */}
+          {/* Unified Content Section (Agenda or Article) */}
+          {content && (
+             <section className="animate-in fade-in duration-500 delay-150">
+                {isAgenda ? (
+                   /* ENHANCED KBACH POSTER SECTION */
+                   <div className="bg-white p-2 sm:p-5 rounded-[2.5rem] sm:rounded-[3.5rem] shadow-xl relative border border-zinc-100">
+                      <div className="border-[1.5px] border-blue-900/20 p-1.5 rounded-[2rem] sm:rounded-[3rem]">
+                        <div className="border-[6px] border-double border-blue-900 p-8 sm:p-20 relative overflow-hidden bg-white paper-texture min-h-75 flex flex-col items-center rounded-[1.5rem] sm:rounded-[2.5rem]">
+                           {/* Kbach Style Corners */}
+                           <div className="absolute top-4 left-4 w-12 h-12 border-t-[5px] border-l-[5px] border-blue-900 rounded-tl-2xl z-20" />
+                           <div className="absolute top-4 right-4 w-12 h-12 border-t-[5px] border-r-[5px] border-blue-900 rounded-tr-2xl z-20" />
+                           <div className="absolute bottom-4 left-4 w-12 h-12 border-b-[5px] border-l-[5px] border-blue-900 rounded-bl-2xl z-20" />
+                           <div className="absolute bottom-4 right-4 w-12 h-12 border-b-[5px] border-r-[5px] border-blue-900 rounded-br-2xl z-20" />
+
+                           <div className="relative z-10 w-full text-center space-y-12">
+                              <h2 className={cn("text-3xl sm:text-5xl font-black text-blue-900 font-moul", language === 'kh' ? '' : 'text-center')}>
+                                 {content.title}
+                              </h2>
+
+                              {content.description && (
+                                 <div className="text-blue-800 text-lg font-bold max-w-2xl mx-auto italic opacity-90 border-y py-4 border-blue-100/50">
+                                    {content.description}
+                                 </div>
+                              )}
+
+                              {content.body && (
+                                <div className="text-blue-900/90 text-justify w-full px-4 relative z-20">
+                                   <div className="content-body text-base sm:text-lg leading-loose font-medium" dangerouslySetInnerHTML={{ __html: content.body }} />
+                                </div>
+                              )}
+
+                              {content.agenda && content.agenda.length > 0 && (
+                                 <div className="w-full pt-8">
+                                    <h3 className="text-2xl font-black text-blue-900 mb-8 inline-block border-b-2 border-blue-900/30 pb-2 px-10 font-moul">
+                                       {t('agenda_schedule')}
+                                    </h3>
+                                    <div className="space-y-10 text-left w-full max-w-4xl mx-auto">
+                                       {content.agenda.map((day, idx) => (
+                                          <div key={idx} className="mb-8">
+                                             {day.date && <div className="mb-4 pl-2"><h4 className="text-lg font-black text-blue-900 font-moul">{day.date}</h4></div>}
+                                             <div className={cn("space-y-4", day.date ? "pl-8 border-l-2 border-blue-200/60 ml-2" : "")}>
+                                                {day.items?.map((item, i) => (
+                                                   <div key={i} className="flex gap-4 items-start text-blue-900 group">
+                                                      <div className="w-30 shrink-0 font-bold text-xs leading-relaxed text-blue-700 bg-blue-50/50 px-2 py-2 rounded-lg text-center border border-blue-100/50">{item.time}</div>
+                                                      <div className="flex-1 text-sm sm:text-base leading-relaxed text-slate-700 font-medium">{item.description}</div>
+                                                   </div>
+                                                ))}
+                                             </div>
+                                          </div>
+                                       ))}
+                                    </div>
+                                 </div>
+                              )}
+
+                              {content.committee && content.committee.length > 0 && (
+                                 <div className="w-full pt-8">
+                                    <h3 className="text-2xl font-black text-blue-900 mb-8 inline-block border-b-2 border-blue-900/30 pb-2 px-10 font-moul">
+                                       {t('committee_organizers')}
+                                    </h3>
+                                    <div className="grid sm:grid-cols-2 gap-6 text-left max-w-4xl mx-auto">
+                                       {content.committee.map((group, idx) => (
+                                          <div key={idx} className="flex flex-row gap-3 items-baseline">
+                                             <span className="font-moul text-blue-900 text-xs sm:text-sm shrink-0">{group.role}</span>
+                                             <span className="text-slate-800 font-bold text-sm sm:text-base">{group.members.join(", ")}</span>
+                                          </div>
+                                       ))}
+                                    </div>
+                                 </div>
+                              )}
+                           </div>
+                        </div>
+                      </div>
+                   </div>
+                ) : (
+                   /* ARTICLE SECTION */
+                   <div className="bg-zinc-50 rounded-[3rem] p-8 sm:p-20 border border-zinc-100">
+                      <div className="max-w-3xl mx-auto space-y-10">
+                         <div className="text-center space-y-6">
+                            <h2 className={cn("text-3xl sm:text-5xl font-black text-zinc-900", language === 'kh' ? 'font-moul' : '')}>{content.title}</h2>
+                            <div className="flex items-center justify-center gap-4 text-zinc-400 text-xs font-bold uppercase tracking-widest">
+                               <span>{formatDate(content.createdAt, language)}</span>
+                               <span className="h-1 w-1 bg-zinc-200 rounded-full" />
+                               <span>{t('written_by')} {content.author?.name || "Admin"}</span>
+                            </div>
+                         </div>
+                         {content.description && <div className="text-xl font-medium text-zinc-500 italic border-l-4 border-zinc-200 pl-8 leading-relaxed">{content.description}</div>}
+                         <div className="content-body prose prose-zinc max-w-none text-zinc-800" dangerouslySetInnerHTML={{ __html: content.body }} />
+                      </div>
+                   </div>
+                )}
+             </section>
+          )}
+
+          {/* Countdown Section - High Contrast Premium White */}
           {!timeLeft.isExpired && event.status === 'active' && (
-            <section className="relative p-12 sm:p-20 rounded-[3rem] bg-zinc-900 text-white shadow-xl text-center overflow-hidden animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-150 fill-mode-backwards">
-               <div className="absolute inset-0 bg-linear-to-br from-primary/10 to-transparent pointer-events-none" />
-               <div className="relative z-10">
-                  <div className={cn(
-                    "inline-flex items-center gap-3 text-[10px] font-black uppercase text-white/40 mb-12",
-                    language === 'kh' ? 'tracking-normal' : 'tracking-[0.4em]'
-                  )}>
-                     <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                     {t('countdown_title')}
+            <section className="relative p-8 sm:p-20 rounded-[3rem] sm:rounded-[4rem] bg-gray-200 text-zinc-900 shadow-[0_30px_70px_-20px_rgba(0,0,0,0.12)] text-center overflow-hidden border-2 border-zinc-50 animate-in fade-in zoom-in-95 duration-1000 delay-200">
+               {/* Background Decorative Glows - Soft Primary Tints */}
+               <div className="absolute inset-0 z-0">
+                  <div className="absolute -top-32 -left-32 w-96 h-96 bg-primary/5 blur-[120px] rounded-full opacity-60" />
+                  <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-rose-500/5 blur-[120px] rounded-full opacity-40" />
+               </div>
+
+               <div className="relative z-10 space-y-12">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className={cn(
+                      "inline-flex items-center gap-3 px-6 py-2 rounded-full bg-zinc-50 border border-zinc-200/60 shadow-xs",
+                      theme.primary
+                    )}>
+                       <div className={cn("h-1.5 w-1.5 rounded-full animate-pulse shadow-[0_0_8px_rgba(0,0,0,0.1)]", theme.badge)} />
+                       <span className={cn(
+                         "text-xs sm:text-sm font-black uppercase tracking-[0.2em] text-zinc-600",
+                         language === 'kh' ? 'font-moul tracking-normal pt-1' : ''
+                       )}>
+                        {t('countdown_title')}
+                       </span>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-12">
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8">
                      {[
                        { label: t('days'), value: timeLeft.days },
                        { label: t('hours'), value: timeLeft.hours },
                        { label: t('minutes'), value: timeLeft.minutes },
                        { label: t('seconds'), value: timeLeft.seconds }
                      ].map((item, idx) => (
-                       <div key={idx} className="flex flex-col items-center">
-                         <span className={cn(
-                           "text-5xl sm:text-7xl font-black text-white tabular-nums mb-2",
-                           language === 'kh' ? 'tracking-normal' : 'tracking-tighter'
-                         )}>
-                           {String(item.value).padStart(2, '0')}
-                         </span>
-                         <span className="text-[10px] font-black uppercase tracking-widest text-white/30">{item.label}</span>
+                       <div key={idx} className="group relative">
+                          <div className="absolute inset-0 bg-primary/20 rounded-[2.5rem] blur-2xl opacity-0 group-hover:opacity-40 transition-all duration-700" />
+                          <div className="relative bg-zinc-50/50 border border-zinc-100 p-6 sm:p-10 rounded-[2rem] sm:rounded-[2.5rem] shadow-xs transition-all duration-500 hover:scale-[1.05] hover:bg-white hover:border-primary/30 hover:shadow-2xl">
+                            <span className={cn(
+                              "block text-4xl sm:text-6xl font-black tabular-nums mb-3 transition-colors duration-500",
+                              language === 'kh' ? 'tracking-normal' : 'tracking-tighter',
+                              "text-primary group-hover:text-primary-dark"
+                            )}>
+                              {String(item.value).padStart(2, '0')}
+                            </span>
+                            <span className={cn(
+                              "text-xs sm:text-sm font-bold uppercase tracking-widest text-zinc-400 group-hover:text-zinc-600 transition-colors",
+                              language === 'kh' ? 'font-moul text-xs' : ''
+                            )}>
+                              {item.label}
+                            </span>
+                          </div>
                        </div>
                      ))}
                   </div>
@@ -804,10 +660,10 @@ export default function PublicEventClient() {
                             src={compressImage(url, 'large')} 
                             alt="" 
                             fill 
-                            className="object-cover transition-all duration-1000 group-hover:scale-110 group-hover:rotate-1" 
+                            className="object-cover transition-transform duration-300 group-hover:scale-105" 
                           />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-700" />
-                          <div className="absolute top-6 right-6 h-12 w-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100 shadow-xl border border-white/20">
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+                          <div className="absolute top-6 right-6 h-12 w-12 rounded-full bg-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100 shadow-lg border border-white/20">
                               <Plus className="h-5 w-5 text-white" />
                           </div>
                         </div>
@@ -820,11 +676,11 @@ export default function PublicEventClient() {
           {/* Lightbox / Image Preview Modal */}
           {photoIndex !== null && (
             <div 
-              className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 sm:p-10 animate-in fade-in duration-500"
+              className="fixed inset-0 z-100 bg-black/95 flex items-center justify-center p-4 sm:p-10 animate-in fade-in duration-300"
               onClick={() => setPhotoIndex(null)}
             >
               <button 
-                className="absolute top-6 right-6 h-12 w-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all z-110 active:scale-90 shadow-2xl scale-125"
+                className="absolute top-6 right-6 h-12 w-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all z-110 active:scale-95 shadow-lg scale-110"
                 onClick={(e) => { e.stopPropagation(); setPhotoIndex(null); }}
               >
                 <X className="h-6 w-6" />
@@ -853,13 +709,13 @@ export default function PublicEventClient() {
                     src={photoList[photoIndex]} 
                     alt="Gallery Preview" 
                     fill
-                    className="object-contain rounded-3xl shadow-[0_0_100px_rgba(255,255,255,0.1)] animate-in zoom-in-95 duration-700 ease-out"
+                    className="object-contain rounded-2xl shadow-lg animate-in zoom-in-95 duration-300 ease-out"
                     unoptimized
                   />
                 </div>
                 
                 {photoList.length > 1 && (
-                  <div className="mt-12 px-8 py-3 rounded-full bg-white/5 backdrop-blur-xl border border-white/10 text-white/50 text-xs font-black uppercase tracking-[0.5em] shadow-2xl">
+                  <div className="mt-8 px-6 py-2 rounded-full bg-white/10 border border-white/10 text-white/50 text-[10px] font-black uppercase tracking-[0.4em]">
                     <span className="text-white">{photoIndex + 1}</span> / {photoList.length}
                   </div>
                 )}
@@ -869,7 +725,7 @@ export default function PublicEventClient() {
 
           {/* Bank QR */}
           {event.bankQrUrl && (
-            <section className="text-center space-y-12">
+            <section ref={giftRef} className="text-center space-y-12 animate-in fade-in duration-700">
                 <div className="max-w-md mx-auto space-y-4">
                   <h2 className="text-3xl font-black tracking-tight text-zinc-900">{t('digital_gift_khqr')}</h2>
                   <p className="text-zinc-500 font-medium text-sm">{t('digital_gift_desc')}</p>
@@ -900,23 +756,46 @@ export default function PublicEventClient() {
             </section>
           )}
 
-          <footer className="pt-24 text-center space-y-10 border-t border-zinc-100">
-              <Link href="/" className="inline-flex relative h-16 w-48 items-center justify-center overflow-hidden hover:scale-105 transition-transform">
-                <Image 
-                  src="/SIDETH-THEAPKA.png" 
-                  alt="Logo" 
-                  width={192} 
-                  height={64} 
-                  className="object-contain" 
-                />
+          <footer className="pt-24 pb-16 text-center space-y-12 border-t border-zinc-100">
+              <Link href="/" className="inline-flex relative items-center justify-center transition-transform hover:scale-105">
+                <div className="relative h-24 w-64 sm:h-32 sm:w-80">
+                  <Image 
+                    src="/SIDETH-THEAPKA.png" 
+                    alt="Logo" 
+                    fill
+                    className="object-contain" 
+                  />
+                </div>
               </Link>
-              <div className="flex flex-col items-center gap-2">
+              <div className="flex flex-col items-center gap-4">
                 <p className="text-zinc-400 font-bold text-[10px] uppercase tracking-[0.4em]">{t('all_rights_reserved')}</p>
                 <div className="h-1 w-12 bg-zinc-100 rounded-full" />
               </div>
           </footer>
         </div>
       </main>
+
+      <Toaster position="top-center" />
+
+      {/* Mobile Action Dock */}
+      <div className="sm:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md">
+        <div className="bg-white border border-zinc-200 rounded-3xl p-2.5 shadow-xl flex items-center justify-between gap-1.5">
+            {(event?.location || event?.mapUrl) && (
+              <Button asChild title={t('directions')} className={cn("flex-1 h-14 rounded-2xl font-black text-xs uppercase tracking-widest text-white border-none shadow-md", theme.button)}>
+                <a href={event?.mapUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event?.location || "")}`} target="_blank">
+                  <Navigation className="h-4 w-4 mr-2" />
+                  {t('directions')}
+                </a>
+              </Button>
+            )}
+            <Button onClick={scrollToGift} variant="secondary" title={t('digital_gift_khqr')} className="h-14 w-14 rounded-2xl bg-rose-50 border-rose-100 text-rose-600 shrink-0">
+               <Heart className="h-5 w-5" />
+            </Button>
+            <Button onClick={handleShare} variant="secondary" title={t('share_event')} className="h-14 w-14 rounded-2xl bg-zinc-50 border-zinc-100 text-zinc-900 shrink-0">
+              <Share2 className="h-5 w-5" />
+            </Button>
+        </div>
+      </div>
     </div>
   );
 }

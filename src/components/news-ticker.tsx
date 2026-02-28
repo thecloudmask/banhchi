@@ -57,8 +57,8 @@ export function NewsTicker({ items }: NewsTickerProps) {
                 </span>
                 
                 <span className={cn(
-                  "text-sm font-bold tracking-tight text-white group-hover:text-white transition-opacity",
-                  language === 'kh' ? 'text-xs leading-relaxed' : ''
+                  "text-xs font-bold tracking-tight text-white transition-all group-hover:scale-[1.02] whitespace-nowrap",
+                  language === 'kh' ? 'text-xs leading-normal' : ''
                 )}>
                   {item.title}
                 </span>

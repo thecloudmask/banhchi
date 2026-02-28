@@ -8,7 +8,7 @@ import { SystemInfoDialog } from "@/components/system-info-dialog";
 import { useLanguage } from "@/providers/language-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
-import { LogOut, Loader2, Calendar, Globe } from "lucide-react";
+import { LogOut, Loader2, Calendar, Globe, ExternalLink, Languages } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 
@@ -54,23 +54,31 @@ export default function AdminLayout({
     <div className="min-h-screen bg-zinc-50/50 text-zinc-900 selection:bg-primary/10">
       <header className="sticky top-0 z-50 w-full border-b border-zinc-200 bg-white backdrop-blur-xl">
         <div className="container mx-auto max-w-7xl flex h-16 items-center justify-between px-4 sm:px-6">
-          <Link href="/admin" className="flex items-center gap-2">
-            <div className="flex h-10 w-32 items-center justify-center overflow-hidden">
+          <Link href="/admin" className="flex items-center gap-3 transition-opacity hover:opacity-80">
+            <div className="flex h-10 w-48 items-center justify-center overflow-hidden">
               <img src="/SIDETH-THEAPKA.png" alt="Logo" className="w-full h-full object-contain object-left" />
             </div>
-            <span className="text-xl font-black tracking-tighter hidden xs:inline-block">{t('admin') || "ADMIN"}</span>
+            <div className="hidden xs:flex flex-col items-start leading-none gap-0.5">
+              <span className="text-sm font-black tracking-tighter uppercase text-zinc-900">{t('admin') || "ADMIN"}</span>
+              <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">{t('dashboard')}</span>
+            </div>
           </Link>
 
           <div className="flex items-center gap-1 sm:gap-2">
-            <div className="hidden sm:flex items-center gap-1 sm:gap-2">
-              <Link href="/" target="_blank">
-                <Button variant="ghost" size="sm" className="h-9 sm:h-10 rounded-xl gap-2 font-bold text-xs text-zinc-500 hover:text-primary">
-                    <Globe className="h-4 w-4" />
-                    <span className="hidden lg:inline">{t('view_website')}</span>
+            <div className="flex items-center gap-1.5 sm:gap-3 mr-2 sm:mr-4">
+              <a href="/" className="group">
+                <Button variant="ghost" size="sm" className="h-9 sm:h-10 rounded-xl gap-2 font-bold text-[10px] uppercase tracking-widest text-zinc-500 hover:bg-zinc-50 border border-transparent hover:border-zinc-200 transition-all duration-300">
+                    <div className="relative">
+                      <Globe className="h-3.5 w-3.5 group-hover:rotate-12 transition-transform duration-500" />
+                      <span className="absolute -top-1 -right-1 h-1.5 w-1.5 rounded-full bg-emerald-500 border border-white animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                    </div>
+                    <span className="hidden sm:inline">{t('view_website')}</span>
                 </Button>
-              </Link>
-              <div className="h-4 w-px bg-zinc-200" />
-              <SystemInfoDialog />
+              </a>
+              <div className="hidden md:block h-6 w-px bg-zinc-100" />
+              <div className="hidden sm:block">
+                <SystemInfoDialog />
+              </div>
             </div>
             
             <LanguageSwitcher />

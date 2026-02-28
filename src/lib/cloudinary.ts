@@ -134,7 +134,7 @@ export const compressImage = (url: string, size: 'thumbnail' | 'large' | 'banner
    if (!url) return "";
    switch (size) {
       case 'thumbnail': return getOptimizedCloudinaryUrl(url, 400, 300, 'auto:eco');
-      case 'banner': return getOptimizedCloudinaryUrl(url, 1200, 600, 'auto:eco');
-      default: return getOptimizedCloudinaryUrl(url, 800, 0, 'auto:eco');
+      case 'banner': return getOptimizedCloudinaryUrl(url, 1600, 0, 'auto:eco');
+      default: return getOptimizedCloudinaryUrl(url, 1000, 0, 'auto:eco');
    }
 };

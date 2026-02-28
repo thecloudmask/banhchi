@@ -85,7 +85,7 @@ function FeedCard({ item, language, t }: { item: Event | Content, language: stri
           </div>
         </div>
         <div className="p-4 sm:p-10">
-          <CardTitle className="text-lg sm:text-2xl font-black text-foreground line-clamp-2 group-hover:text-primary transition-colors mb-2 sm:mb-6 leading-tight sm:leading-[1.3]">
+          <CardTitle className="text-base sm:text-xl font-black text-foreground line-clamp-2 group-hover:text-primary transition-colors mb-2 sm:mb-4 leading-tight sm:leading-[1.3]">
             {item.title}
           </CardTitle>
           <div className="flex items-center justify-between mt-auto pt-4 sm:pt-6 border-t border-border/50">
@@ -192,8 +192,8 @@ export default function Home() {
       {!loading && items.length > 0 && <NewsTicker items={items} />}
       <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur-md border-b border-border shadow-xs">
         <div className="container mx-auto max-w-7xl flex h-16 sm:h-20 items-center justify-between px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-12 w-32 sm:h-16 sm:w-48 items-center justify-center overflow-hidden transition-transform">
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="flex h-10 w-48 sm:h-12 sm:w-64 items-center justify-center overflow-hidden transition-transform group-hover:scale-105">
               <img src="/SIDETH-THEAPKA.png" alt="Logo" className="w-full h-full object-contain object-left" />
             </div>
             <span className="text-lg sm:text-2xl font-black tracking-tighter text-foreground uppercase hidden xs:inline-block">
@@ -305,8 +305,8 @@ export default function Home() {
                 </div>
 
                 <h1 className={cn(
-                  "text-3xl sm:text-7xl lg:text-8xl font-black mb-6 sm:mb-10 leading-[1.2] sm:leading-[1.05] tracking-tighter text-white drop-shadow-2xl animate-in slide-in-from-left-12 duration-1000 delay-200",
-                  language === 'kh' ? 'font-moul tracking-normal leading-[1.6] sm:leading-[1.4] text-3xl sm:text-6xl' : ''
+                  "text-xl sm:text-4xl lg:text-5xl font-black mb-6 sm:mb-8 leading-[1.3] sm:leading-[1.1] tracking-tighter text-white drop-shadow-2xl animate-in slide-in-from-left-12 duration-1000 delay-200 line-clamp-3 max-w-3xl",
+                  language === 'kh' ? 'font-moul tracking-normal leading-[1.7] sm:leading-normal text-xl sm:text-4xl' : ''
                 )}>
                   {featuredItem.title}
                 </h1>
