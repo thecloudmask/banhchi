@@ -39,6 +39,37 @@ export interface Content {
     role: string;
     members: string[];
   }[];
+  contentData?: {
+    groom?: {
+      name: string;
+      father: string;
+      mother: string;
+    };
+    bride?: {
+      name: string;
+      father: string;
+      mother: string;
+    };
+    location?: {
+      name: string;
+      address: string;
+      mapUrl: string;
+    };
+    schedule?: {
+      id: string;
+      dayLabel: string;
+      groups: {
+        id: string;
+        groupTitle: string;
+        activities: {
+          time: string;
+          title: string;
+          description: string;
+        }[];
+      }[];
+    }[];
+    footerContent?: string;
+  };
   createdAt: string;
   updatedAt: string;
 }

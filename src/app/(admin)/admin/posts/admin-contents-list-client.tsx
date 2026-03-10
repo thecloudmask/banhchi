@@ -133,11 +133,15 @@ export default function AdminContentsListClient() {
                     <span className={cn(
                       "px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest shadow-sm",
                       content.type === 'agenda' ? "bg-purple-500 text-white" : 
+                      content.type === 'wedding' ? "bg-rose-500 text-white" :
+                      content.type === 'funeral' ? "bg-zinc-600 text-white" :
                       content.type === 'announcement' ? "bg-amber-500 text-white" : 
                       content.type === 'poster' ? "bg-pink-600 text-white" : "bg-blue-500 text-white"
                     )}>
                       {content.type === 'article' ? t('article_blog') : 
                        content.type === 'agenda' ? t('agenda_poster') : 
+                       content.type === 'wedding' ? t('wedding_style') :
+                       content.type === 'funeral' ? t('funeral_style') :
                        content.type === 'announcement' ? t('announcement') : 
                        t('poster')}
                     </span>

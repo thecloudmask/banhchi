@@ -10,6 +10,8 @@ const ReactQuill = dynamic(() => import('react-quill-new'), {
   loading: () => <div className="h-64 w-full bg-zinc-50 animate-pulse rounded-xl border border-zinc-200" />
 }) as any;
 
+import { uploadToCloudinary } from '@/lib/cloudinary';
+
 interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
@@ -19,6 +21,32 @@ interface RichTextEditorProps {
 
 export default function RichTextEditor({ value, onChange, placeholder, className }: RichTextEditorProps) {
   
+  const imageHandler = () => {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (file) {
+        try {
+          // You might want to show a loading state here
+          const url = await uploadToCloudinary(file, 'banhchi/editor', 'gallery');
+          
+          // Get the quill instance from the ref
+          const quill = (window as any).QuillInstance; 
+          if (quill) {
+            const range = quill.getSelection();
+            quill.insertEmbed(range.index, 'image', url);
+          }
+        } catch (error) {
+          console.error('Editor image upload failed:', error);
+        }
+      }
+    };
+  };
+
   const modules = useMemo(() => ({
     toolbar: {
       container: [
@@ -29,6 +57,9 @@ export default function RichTextEditor({ value, onChange, placeholder, className
         [{ 'align': [] }],
         ['clean']
       ],
+      handlers: {
+        image: imageHandler
+      }
     }
   }), []);
 
@@ -65,6 +96,9 @@ export default function RichTextEditor({ value, onChange, placeholder, className
         }
       `}</style>
       <ReactQuill 
+        ref={(el: any) => {
+           if (el) (window as any).QuillInstance = el.getEditor();
+        }}
         theme="snow" 
         value={value} 
         onChange={onChange}

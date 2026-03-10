@@ -51,6 +51,8 @@ function FeedCard({ item, language, t }: { item: Event | Content, language: stri
     switch (item.type) {
       case 'article': return "bg-blue-600/90 text-white shadow-blue-600/20";
       case 'agenda': return "bg-emerald-600/90 text-white shadow-emerald-600/20";
+      case 'wedding': return "bg-rose-500/90 text-white shadow-rose-500/20";
+      case 'funeral': return "bg-zinc-800/90 text-white shadow-zinc-800/20";
       default: return "bg-primary/90 text-white shadow-primary/20";
     }
   };
@@ -383,6 +385,8 @@ export default function Home() {
                       { id: 'event', label: t('filter_events') || (language === 'kh' ? 'កម្មវិធី' : 'Events') },
                       { id: 'article', label: t('filter_articles') || (language === 'kh' ? 'អត្ថបទ' : 'Articles') },
                       { id: 'agenda', label: t('filter_agendas') || (language === 'kh' ? 'កម្មវិធីការងារ' : 'Agendas') },
+                      { id: 'wedding', label: t('wedding') || (language === 'kh' ? 'អាពាហ៍ពិពាហ៍' : 'Wedding') },
+                      { id: 'funeral', label: t('funeral') || (language === 'kh' ? 'បុណ្យសព' : 'Funeral') },
                     ].map((filter) => (
                       <Button
                         key={filter.id}

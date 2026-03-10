@@ -19,6 +19,8 @@ import { Input } from "@/components/ui/input";
 import Image from "next/image";
 import { compressImage } from "@/lib/cloudinary";
 import { Toaster } from "@/components/ui/sonner";
+import { AgendaRenderer } from "../components/rendering/agenda-renderer";
+import { ArticleRenderer } from "../components/rendering/article-renderer";
 
 interface TimeLeft {
   days: number;
@@ -400,7 +402,7 @@ export default function PublicEventClient() {
     );
   }
 
-  const isAgenda = content?.type === 'agenda';
+  const isAgenda = content?.type === 'agenda' || content?.type === 'wedding' || content?.type === 'funeral';
   const isArticle = content?.type === 'article';
 
   // --- DEFAULT EVENT VIEW MODE ---
@@ -457,124 +459,89 @@ export default function PublicEventClient() {
                 </div>
              </div>
 
-            <div className="p-10 sm:p-20 text-center">
-                  <h1 className={cn(
-                    "text-4xl sm:text-7xl font-black text-zinc-900 leading-[1.05] sm:leading-tight tracking-tighter mb-8 sm:mb-12",
-                    language === 'kh' ? 'font-moul tracking-normal' : ''
-                  )}>
-                    {event.title}
-                  </h1>
+            {/* Premium Header / Invitation Intro */}
+            <div className="p-10 sm:p-24 text-center relative overflow-hidden rounded-[3rem] sm:rounded-[5rem] bg-white border border-amber-500/10 shadow-inner group/header">
+                  {/* Subtle Royal Aura Background */}
+                  <div className="absolute -top-32 -left-32 w-80 h-80 bg-amber-100/20 rounded-full blur-[100px] pointer-events-none" />
+                  <div className="absolute -bottom-32 -right-32 w-80 h-80 bg-rose-100/10 rounded-full blur-[100px] pointer-events-none" />
+                  
+                  {/* Title Section */}
+                  <div className="relative space-y-12">
+                     <div className="space-y-4">
+                        <div className="flex items-center justify-center gap-4 mb-4">
+                           <div className="h-px w-12 bg-linear-to-r from-transparent via-amber-400 to-transparent" />
+                           <Heart className="h-5 w-5 text-amber-500 fill-amber-500 animate-pulse" />
+                           <div className="h-px w-12 bg-linear-to-l from-transparent via-amber-400 to-transparent" />
+                        </div>
+                        <h1 className={cn(
+                          "text-xl sm:text-2xl font-black text-amber-950 leading-[1.05] sm:leading-tight tracking-tight drop-shadow-sm",
+                          language === 'kh' ? 'font-moul tracking-normal' : ''
+                        )}>
+                          {event.title}
+                        </h1>
+                     </div>
 
-                   <div className="flex flex-wrap justify-center gap-6">
-                      <Button size="xl" onClick={addToCalendar} className={cn("h-16 rounded-2xl font-black px-12 shadow-md hover:scale-[1.02] active:scale-95 transition-all text-white border-none", theme.button)}>
-                         <Plus className="h-5 w-5 mr-3" />
-                         {t('save_to_calendar')}
-                      </Button>
-                      <Button size="xl" variant="outline" onClick={scrollToGift} className="h-16 rounded-2xl border-zinc-200 bg-white font-black px-12 hover:bg-zinc-50 transition-all shadow-sm">
-                         <Heart className="h-5 w-5 mr-3 text-rose-500" />
-                         {t('digital_gift_khqr')}
-                      </Button>
-                      {(event.location || event.mapUrl) && (
-                        <Button size="xl" variant="outline" asChild className="hidden lg:flex h-16 rounded-2xl border-zinc-200 bg-white font-black px-12 hover:bg-zinc-50 transition-all shadow-sm">
-                          <a href={event.mapUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location || "")}`} target="_blank">
-                            <Navigation className="h-5 w-5 mr-3 text-primary" />
-                            {t('get_directions')}
-                          </a>
-                        </Button>
-                      )}
-                   </div>
-                </div>
-            </section>
-
-          {/* Unified Content Section (Agenda or Article) */}
-          {content && (
-             <section className="animate-in fade-in duration-500 delay-150">
-                {isAgenda ? (
-                   /* ENHANCED KBACH POSTER SECTION */
-                   <div className="bg-white p-2 sm:p-5 rounded-[2.5rem] sm:rounded-[3.5rem] shadow-xl relative border border-zinc-100">
-                      <div className="border-[1.5px] border-blue-900/20 p-1.5 rounded-[2rem] sm:rounded-[3rem]">
-                        <div className="border-[6px] border-double border-blue-900 p-8 sm:p-20 relative overflow-hidden bg-white paper-texture min-h-75 flex flex-col items-center rounded-[1.5rem] sm:rounded-[2.5rem]">
-                           {/* Kbach Style Corners */}
-                           <div className="absolute top-4 left-4 w-12 h-12 border-t-[5px] border-l-[5px] border-blue-900 rounded-tl-2xl z-20" />
-                           <div className="absolute top-4 right-4 w-12 h-12 border-t-[5px] border-r-[5px] border-blue-900 rounded-tr-2xl z-20" />
-                           <div className="absolute bottom-4 left-4 w-12 h-12 border-b-[5px] border-l-[5px] border-blue-900 rounded-bl-2xl z-20" />
-                           <div className="absolute bottom-4 right-4 w-12 h-12 border-b-[5px] border-r-[5px] border-blue-900 rounded-br-2xl z-20" />
-
-                           <div className="relative z-10 w-full text-center space-y-12">
-                              <h2 className={cn("text-3xl sm:text-5xl font-black text-blue-900 font-moul", language === 'kh' ? '' : 'text-center')}>
-                                 {content.title}
-                              </h2>
-
-                              {content.description && (
-                                 <div className="text-blue-800 text-lg font-bold max-w-2xl mx-auto italic opacity-90 border-y py-4 border-blue-100/50">
-                                    {content.description}
-                                 </div>
-                              )}
-
-                              {content.body && (
-                                <div className="text-blue-900/90 text-justify w-full px-4 relative z-20">
-                                   <div className="content-body text-base sm:text-lg leading-loose font-medium" dangerouslySetInnerHTML={{ __html: content.body }} />
-                                </div>
-                              )}
-
-                              {content.agenda && content.agenda.length > 0 && (
-                                 <div className="w-full pt-8">
-                                    <h3 className="text-2xl font-black text-blue-900 mb-8 inline-block border-b-2 border-blue-900/30 pb-2 px-10 font-moul">
-                                       {t('agenda_schedule')}
-                                    </h3>
-                                    <div className="space-y-10 text-left w-full max-w-4xl mx-auto">
-                                       {content.agenda.map((day, idx) => (
-                                          <div key={idx} className="mb-8">
-                                             {day.date && <div className="mb-4 pl-2"><h4 className="text-lg font-black text-blue-900 font-moul">{day.date}</h4></div>}
-                                             <div className={cn("space-y-4", day.date ? "pl-8 border-l-2 border-blue-200/60 ml-2" : "")}>
-                                                {day.items?.map((item, i) => (
-                                                   <div key={i} className="flex gap-4 items-start text-blue-900 group">
-                                                      <div className="w-30 shrink-0 font-bold text-xs leading-relaxed text-blue-700 bg-blue-50/50 px-2 py-2 rounded-lg text-center border border-blue-100/50">{item.time}</div>
-                                                      <div className="flex-1 text-sm sm:text-base leading-relaxed text-slate-700 font-medium">{item.description}</div>
-                                                   </div>
-                                                ))}
-                                             </div>
-                                          </div>
-                                       ))}
-                                    </div>
-                                 </div>
-                              )}
-
-                              {content.committee && content.committee.length > 0 && (
-                                 <div className="w-full pt-8">
-                                    <h3 className="text-2xl font-black text-blue-900 mb-8 inline-block border-b-2 border-blue-900/30 pb-2 px-10 font-moul">
-                                       {t('committee_organizers')}
-                                    </h3>
-                                    <div className="grid sm:grid-cols-2 gap-6 text-left max-w-4xl mx-auto">
-                                       {content.committee.map((group, idx) => (
-                                          <div key={idx} className="flex flex-row gap-3 items-baseline">
-                                             <span className="font-moul text-blue-900 text-xs sm:text-sm shrink-0">{group.role}</span>
-                                             <span className="text-slate-800 font-bold text-sm sm:text-base">{group.members.join(", ")}</span>
-                                          </div>
-                                       ))}
-                                    </div>
-                                 </div>
-                              )}
+                     {/* Groom & Bride Names (Premium Overlay) */}
+                     {content?.type === 'wedding' && content.contentData?.groom && content.contentData?.bride && (
+                        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-14 bg-amber-50/50 py-10 px-12 rounded-[2.5rem] border border-amber-100 shadow-sm transition-all duration-700 hover:shadow-lg group/lineage cursor-default">
+                           <div className="space-y-2 text-center">
+                              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-amber-900/40">{t('wedding_groom') || "Groom"}</span>
+                              <h3 className="text-3xl sm:text-5xl font-moul text-amber-800 transition-colors group-hover/lineage:text-amber-600">{content.contentData.groom.name}</h3>
+                           </div>
+                           <div className="flex flex-col items-center gap-2">
+                              <div className="h-10 w-px bg-amber-200 hidden sm:block" />
+                              <Heart className="h-8 w-8 text-amber-500 fill-amber-500 animate-bounce" />
+                              <div className="h-10 w-px bg-amber-200 hidden sm:block" />
+                           </div>
+                           <div className="space-y-2 text-center">
+                              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-amber-900/40">{t('wedding_bride') || "Bride"}</span>
+                              <h3 className="text-3xl sm:text-5xl font-moul text-amber-800 transition-colors group-hover/lineage:text-amber-600">{content.contentData.bride.name}</h3>
                            </div>
                         </div>
-                      </div>
-                   </div>
+                     )}
+
+                     {/* Action Buttons with High-End Styling */}
+                     <div className="flex flex-wrap justify-center gap-6 pt-8">
+                        <Button 
+                           size="xl" 
+                           onClick={addToCalendar} 
+                           className={cn(
+                              "h-18 rounded-2xl font-black px-12 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.2)] hover:shadow-2xl hover:scale-[1.02] active:scale-95 transition-all text-white border-none bg-zinc-900 hover:bg-black",
+                              event.category === 'wedding' ? "bg-amber-900 hover:bg-amber-950 shadow-amber-900/20" : ""
+                           )}
+                        >
+                           <Plus className="h-5 w-5 mr-3 text-amber-400" />
+                           {t('save_to_calendar')}
+                        </Button>
+                        <Button 
+                           size="xl" 
+                           variant="outline" 
+                           onClick={scrollToGift} 
+                           className="h-18 rounded-2xl border-amber-200 bg-white font-black px-12 hover:bg-amber-50 hover:border-amber-400 transition-all shadow-md group/gift"
+                        >
+                           <Heart className="h-5 w-5 mr-3 text-rose-500 group-hover:scale-125 transition-transform" />
+                           {t('digital_gift_khqr')}
+                        </Button>
+                        {(event.location || event.mapUrl) && (
+                          <Button size="xl" variant="outline" asChild className="hidden lg:flex h-18 rounded-2xl border-amber-200 bg-white font-black px-12 hover:bg-amber-50 hover:border-amber-400 transition-all shadow-md">
+                            <a href={event.mapUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location || "")}`} target="_blank">
+                              <Navigation className="h-5 w-5 mr-3 text-amber-600" />
+                              {t('get_directions')}
+                            </a>
+                          </Button>
+                        )}
+                     </div>
+                  </div>
+               </div>
+            </section>
+
+          {/* Unified Content Section (Dynamic Renderers) */}
+          {content && event && (
+             <section className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
+                {isAgenda ? (
+                   <AgendaRenderer content={content} event={event} theme={theme} />
                 ) : (
-                   /* ARTICLE SECTION */
-                   <div className="bg-zinc-50 rounded-[3rem] p-8 sm:p-20 border border-zinc-100">
-                      <div className="max-w-3xl mx-auto space-y-10">
-                         <div className="text-center space-y-6">
-                            <h2 className={cn("text-3xl sm:text-5xl font-black text-zinc-900", language === 'kh' ? 'font-moul' : '')}>{content.title}</h2>
-                            <div className="flex items-center justify-center gap-4 text-zinc-400 text-xs font-bold uppercase tracking-widest">
-                               <span>{formatDate(content.createdAt, language)}</span>
-                               <span className="h-1 w-1 bg-zinc-200 rounded-full" />
-                               <span>{t('written_by')} {content.author?.name || "Admin"}</span>
-                            </div>
-                         </div>
-                         {content.description && <div className="text-xl font-medium text-zinc-500 italic border-l-4 border-zinc-200 pl-8 leading-relaxed">{content.description}</div>}
-                         <div className="content-body prose prose-zinc max-w-none text-zinc-800" dangerouslySetInnerHTML={{ __html: content.body }} />
-                      </div>
-                   </div>
+                   <ArticleRenderer content={content} event={event} theme={theme} />
                 )}
              </section>
           )}
