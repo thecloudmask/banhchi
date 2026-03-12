@@ -103,46 +103,67 @@
   }
 }
 
-/* Language-specific font optimization */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+    scroll-behavior: smooth;
+  }
+}
+
+/* Premium Typography Optimization */
 :root {
   font-family: var(--font-outfit), var(--font-kantumruy), ui-sans-serif, system-ui, sans-serif;
 }
 
 html[lang="kh"] body {
   font-family: var(--font-kantumruy), var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
-  letter-spacing: normal !important; /* Neutralize tracking for Khmer script */
-}
-
-html[lang="kh"] * {
-  letter-spacing: -0.01em !important; /* Slightly tighter for Khmer to look more cohesive */
-}
-
-html[lang="en"] body {
-  font-family: var(--font-outfit), var(--font-kantumruy), ui-sans-serif, system-ui, sans-serif;
-}
-
-.font-kantumruy {
-  font-family: var(--font-kantumruy) !important;
+  line-height: 1.6;
 }
 
 .font-moul {
   font-family: var(--font-moul), var(--font-kantumruy), cursive;
-  line-height: 1.5;
-  letter-spacing: normal !important;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
 }
 
-.font-outfit {
-  font-family: var(--font-outfit), sans-serif;
+/* Enhanced Glassmorphism */
+.glass {
+  @apply bg-white/70 backdrop-blur-2xl border border-white/40 shadow-xl;
 }
 
-/* Minimalist Shadows */
-.shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.03); }
-.shadow { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05); }
-.shadow-lg { box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.04), 0 4px 6px -4px rgb(0 0 0 / 0.04); }
-.shadow-xl { box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.03), 0 8px 10px -6px rgb(0 0 0 / 0.03); }
-.shadow-2xl { box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.08); }
+.dark .glass {
+  @apply bg-black/40 backdrop-blur-2xl border border-white/10 shadow-2xl;
+}
 
-/* News Ticker Animation */
+/* Ultra-Smooth Transitions */
+.transition-ultra {
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Premium Card Effects */
+.premium-card {
+  @apply bg-white border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 rounded-[2rem] overflow-hidden;
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/10 rounded-full hover:bg-muted-foreground/20 transition-colors;
+}
+
+/* News Ticker Optimization */
 @keyframes ticker {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
@@ -151,64 +172,24 @@ html[lang="en"] body {
 .animate-ticker {
   display: flex;
   white-space: nowrap;
-  animation: ticker 40s linear infinite; /* Faster and smoother */
-  width: max-content;
+  animation: ticker 45s linear infinite;
 }
 
-.animate-ticker:hover {
-  animation-play-state: paused;
+/* Re-normalization for better spacing */
+.container {
+  @apply px-4 sm:px-8 max-w-7xl mx-auto;
 }
 
-/* Modern Glassmorphism Utilities */
-.glass {
-  @apply bg-background/70 backdrop-blur-xl border-white/20;
-}
-
-/* Content Body Styling */
+/* Content Body Refinement */
 .content-body p {
-  @apply text-base sm:text-lg leading-snug sm:leading-relaxed text-muted-foreground/90 mb-4 sm:mb-6;
+  @apply text-base sm:text-lg leading-relaxed text-muted-foreground/90 mb-6;
 }
 
 .content-body h1, .content-body h2, .content-body h3 {
-  @apply text-foreground font-black mt-8 sm:mt-12 mb-4 sm:mb-6 leading-tight;
+  @apply text-foreground font-black mt-12 mb-6 leading-tight tracking-tight;
 }
 
-/* Date & Time Input Normalization for Mobile */
-input[type="date"],
-input[type="time"] {
-  min-height: 3rem; /* h-12 equivalent */
-  appearance: none;
-  -webkit-appearance: none;
-  position: relative;
-  width: 100%;
-}
-
-/* Hide native icons that might overlap with our custom icons */
-input[type="date"]::-webkit-calendar-picker-indicator,
-input[type="time"]::-webkit-calendar-picker-indicator {
-  background: transparent;
-  bottom: 0;
-  color: transparent;
-  cursor: pointer;
-  height: auto;
-  left: 0;
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: auto;
-  z-index: 1;
-}
-
-/* Ensure placeholder and value are consistently styled on iOS */
-input[type="date"]::before,
-input[type="time"]::before {
-  content: attr(data-placeholder);
-  width: 100%;
-}
-
-input[type="date"]:focus::before,
-input[type="time"]:focus::before,
-input[type="date"]:valid::before,
-input[type="time"]:valid::before {
-  display: none;
+/* Fix for Safari flickering on scroll */
+.transform-gpu {
+  transform: translate3d(0,0,0);
 }

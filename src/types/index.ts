@@ -6,6 +6,7 @@ export interface Event {
   eventTime? : string;
   bannerUrl: string;
   eventDate: Timestamp | Date;
+  endDate?: Timestamp | Date;
   location?: string;
   mapUrl?: string;
   status: 'active' | 'completed';
@@ -15,6 +16,8 @@ export interface Event {
   passcode?: string;
   showGuestList?: boolean;
   category?: string;
+  description? : string;
+  extraData? : Record<string, any>;
 }
 
 export type PaymentMethod = string;

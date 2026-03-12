@@ -49,3 +49,21 @@ export function formatDate(date: { seconds?: number } | Date | number | string, 
     day: 'numeric'
   });
 }
+
+export function formatDateRange(startDate: any, endDate: any, locale = 'en-US'): string {
+  if (!startDate) return "";
+  const startStr = formatDate(startDate, locale);
+  if (!endDate) return startStr;
+  
+  // Simplified same-day check
+  const startD = new Date(startDate.seconds ? startDate.seconds * 1000 : startDate);
+  const endD = new Date(endDate.seconds ? endDate.seconds * 1000 : endDate);
+  
+  if (startD.toDateString() === endD.toDateString()) return startStr;
+
+  if (locale === 'kh') {
+    return `${startStr} ដល់ ${formatDate(endDate, locale)}`;
+  }
+
+  return `${startStr} - ${formatDate(endDate, locale)}`;
+}

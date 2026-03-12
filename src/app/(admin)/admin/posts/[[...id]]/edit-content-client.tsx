@@ -16,7 +16,7 @@ import { Event } from "@/types";
 import { Loader2, ArrowLeft, Plus, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import { uploadToCloudinary, uploadMultipleToCloudinary } from "@/lib/cloudinary";
 import Image from "next/image";
 import { useParams } from "next/navigation";
@@ -57,7 +57,7 @@ export default function EditContentClient() {
       }
   }, [params]);
 
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -239,6 +239,56 @@ export default function EditContentClient() {
 
     if (user && id) init();
   }, [user, id, router, t]);
+
+  useEffect(() => {
+    // Only auto-sync if we have a valid selected event and we are not in the initial loading state
+    if (!loading && eventId !== "none" && selectedEvent) {
+      // Auto-fill title if empty
+      if (!title) setTitle(selectedEvent.title);
+      
+      // Auto-fill Location if empty
+      if (selectedEvent.location && !location.name) {
+        setLocation(prev => ({ ...prev, name: selectedEvent.location || "" }));
+      }
+      if (selectedEvent.mapUrl && !location.mapUrl) {
+        setLocation(prev => ({ ...prev, mapUrl: selectedEvent.mapUrl || "" }));
+      }
+
+      // Auto-fill Participants for Wedding
+      if (selectedEvent.category === 'wedding') {
+        const extra = selectedEvent.extraData || {};
+        if (extra.groomName && !groom.name) setGroom(prev => ({ ...prev, name: extra.groomName }));
+        if (extra.brideName && !bride.name) setBride(prev => ({ ...prev, name: extra.brideName }));
+        
+        // Sync parents if they exist
+        if (extra.groomFather && !groom.father) setGroom(prev => ({ ...prev, father: extra.groomFather }));
+        if (extra.groomMother && !groom.mother) setGroom(prev => ({ ...prev, mother: extra.groomMother }));
+        if (extra.brideFather && !bride.father) setBride(prev => ({ ...prev, father: extra.brideFather }));
+        if (extra.brideMother && !bride.mother) setBride(prev => ({ ...prev, mother: extra.brideMother }));
+      }
+      // Auto-fill Date info into Agenda/Schedule
+      const formattedDate = formatDate(selectedEvent.eventDate, language);
+      if (formattedDate) {
+        if (type === 'wedding') {
+            setWeddingSchedule(prev => {
+                const newSchedule = [...prev];
+                if (newSchedule[0] && !newSchedule[0].dayLabel) {
+                    newSchedule[0].dayLabel = formattedDate;
+                }
+                return newSchedule;
+            });
+        } else {
+            setAgendaGroups(prev => {
+                const newGroups = [...prev];
+                if (newGroups[0] && !newGroups[0].date) {
+                    newGroups[0].date = formattedDate;
+                }
+                return newGroups;
+            });
+        }
+      }
+    }
+  }, [eventId, selectedEvent, loading, language, type]);
 
   const handleImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {

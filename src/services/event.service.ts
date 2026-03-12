@@ -71,6 +71,7 @@ export const createEvent = async (
     galleryUrls,
     status: 'active',
     eventDate: Timestamp.fromDate(data.eventDate as Date),
+    endDate: data.endDate ? Timestamp.fromDate(data.endDate as Date) : undefined,
     createdAt: serverTimestamp(),
   });
   return docRef.id;
@@ -106,6 +107,10 @@ export const updateEvent = async (
 
   if (data.eventDate) {
     updateData.eventDate = Timestamp.fromDate(data.eventDate as Date);
+  }
+
+  if (data.endDate) {
+    updateData.endDate = Timestamp.fromDate(data.endDate as Date);
   }
 
   // Remove undefined values to prevent Firebase errors

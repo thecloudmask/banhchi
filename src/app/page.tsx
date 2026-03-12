@@ -24,6 +24,28 @@ function isEvent(item: Event | Content): item is Event {
   return (item as Event).eventDate !== undefined;
 }
 
+// Helper: returns the correct public URL based on item category/type
+function getPublicUrl(item: Event | Content): string {
+  const isEvt = isEvent(item);
+  const id = item.id;
+  if (isEvt) {
+    switch (item.category) {
+      case 'wedding':      return `/wedding/${id}`;
+      case 'funeral':      return `/funeral/${id}`;
+      case 'merit_making': return `/merit-making/${id}`;
+      case 'inauguration': return `/inauguration/${id}`;
+      default:             return `/event/${id}`;
+    }
+  }
+  // Content types
+  switch ((item as Content).type) {
+    case 'wedding':      return `/wedding/${id}`;
+    case 'funeral':      return `/funeral/${id}`;
+    case 'article':      return `/article/${id}`;
+    default:             return `/event/${id}`;
+  }
+}
+
 function FeedCard({ item, language, t }: { item: Event | Content, language: string, t: any }) {
   const isEvt = isEvent(item);
   const rawBanner = isEvt ? item.bannerUrl : item.thumbnail;
@@ -58,27 +80,30 @@ function FeedCard({ item, language, t }: { item: Event | Content, language: stri
   };
 
   return (
-    <Link href={`/event/${item.id}`} key={item.id} className="group block h-full">
-      <Card className="h-full overflow-hidden border-border bg-white rounded-3xl shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 p-0">
-        <div className="aspect-4/3 w-full overflow-hidden bg-secondary relative">
+    <Link href={getPublicUrl(item)} key={item.id} className="group block h-full">
+      <Card className="premium-card h-full p-0 flex flex-col border border-zinc-100/50 rounded-[2rem] overflow-hidden hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-2 transition-all duration-500 bg-white">
+        <div className="aspect-[4/3] w-full overflow-hidden bg-zinc-50 relative group-hover:scale-[1.02] origin-bottom transition-transform duration-700">
           {banner ? (
             <div className="absolute inset-0">
               <Image 
                 src={banner} 
                 alt={item.title} 
                 fill
-                className="object-cover object-top group-hover:scale-110 transition-transform duration-700"
+                className="object-cover object-top group-hover:scale-105 transition-ultra"
               />
             </div>
           ) : (
             <div className="flex items-center justify-center h-full bg-linear-to-br from-primary/5 to-primary/10">
-              {isEvt ? <Calendar className="h-8 w-8 sm:h-12 sm:w-12 text-primary/20" /> : <LayoutDashboard className="h-8 w-8 sm:h-12 sm:w-12 text-primary/20" />}
+              {isEvt ? <Calendar className="h-8 w-8 text-primary/20" /> : <LayoutDashboard className="h-8 w-8 text-primary/20" />}
             </div>
           )}
-          <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-60" />
-          <div className="absolute top-4 right-4">
+          
+          {/* Subtle Gradient Overlay */}
+          <div className="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-ultra" />
+          
+          <div className="absolute top-4 right-4 z-10">
               <Badge className={cn(
-                "backdrop-blur-md border-none px-4 py-2 rounded-full text-[10px] font-black uppercase shadow-xl transition-transform group-hover:scale-110",
+                "backdrop-blur-xl border border-white/30 px-5 py-2.5 rounded-full text-[10px] font-black uppercase shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-500 group-hover:scale-105",
                 getBadgeStyles(),
                 language === 'kh' ? 'tracking-normal' : 'tracking-[0.2em]'
               )}>
@@ -86,20 +111,27 @@ function FeedCard({ item, language, t }: { item: Event | Content, language: stri
               </Badge>
           </div>
         </div>
-        <div className="p-4 sm:p-10">
-          <CardTitle className="text-base sm:text-xl font-black text-foreground line-clamp-2 group-hover:text-primary transition-colors mb-2 sm:mb-4 leading-tight sm:leading-[1.3]">
+        
+        <div className="p-6 sm:p-8 flex flex-col flex-1">
+          <CardTitle 
+            className={cn(
+              "text-lg font-black text-foreground line-clamp-2 group-hover:text-primary transition-colors mb-4 leading-snug",
+              language === 'kh' ? 'font-kantumruy text-base' : ''
+            )}
+          >
             {item.title}
           </CardTitle>
-          <div className="flex items-center justify-between mt-auto pt-4 sm:pt-6 border-t border-border/50">
+          
+          <div className="flex items-center justify-between mt-auto pt-6 border-t border-slate-50">
             <span className={cn(
-               "flex items-center gap-1.5 sm:gap-2 text-[9px] sm:text-[11px] font-black uppercase text-muted-foreground/60 transition-colors group-hover:text-primary/60",
-               language === 'kh' ? 'tracking-normal' : 'tracking-widest sm:tracking-[0.2em]'
+               "flex items-center gap-2 text-[10px] font-black uppercase text-muted-foreground/50 transition-colors group-hover:text-primary/70",
+               language === 'kh' ? 'tracking-normal' : 'tracking-[0.2em]'
             )}>
-               <Calendar className="h-3.5 w-3.5 opacity-60" />
+               <Calendar className="h-3.5 w-3.5 opacity-40 group-hover:opacity-100 transition-opacity" />
                {formatDate(date, language)}
             </span>
-            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-secondary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-500 group-hover:rotate-[-10deg]">
-              <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" />
+            <div className="h-10 w-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-primary group-hover:text-white transition-ultra group-hover:rotate-[-8deg] shadow-inner group-hover:shadow-lg group-hover:shadow-primary/30">
+              <ArrowRight className="h-4 w-4" />
             </div>
           </div>
         </div>
@@ -129,17 +161,16 @@ export default function Home() {
           getAllContents()
         ]);
 
-        const activeEvents = eventsData.filter(e => e.status === 'active');
         const publishedContents = contentsData.filter(c => c.status === 'published');
 
-        // Combine and sort by date (Newest first)
-        const combined = [...activeEvents, ...publishedContents].sort((a, b) => {
-          const dateA = isEvent(a) ? new Date(a.eventDate as any) : new Date(a.createdAt);
-          const dateB = isEvent(b) ? new Date(b.eventDate as any) : new Date(b.createdAt);
+        // Sort by date (Newest first)
+        const sorted = [...publishedContents].sort((a, b) => {
+          const dateA = new Date(a.createdAt);
+          const dateB = new Date(b.createdAt);
           return dateB.getTime() - dateA.getTime();
         });
 
-        setItems(combined); 
+        setItems(sorted); 
       } catch (error) {
         console.error(error);
       } finally {
@@ -190,12 +221,12 @@ export default function Home() {
   });
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground selection:bg-primary/10">
+    <div className="flex min-h-screen flex-col bg-zinc-50 text-foreground selection:bg-primary/20">
       {!loading && items.length > 0 && <NewsTicker items={items} />}
-      <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur-md border-b border-border shadow-xs">
-        <div className="container mx-auto max-w-7xl flex h-16 sm:h-20 items-center justify-between px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="flex h-10 w-48 sm:h-12 sm:w-64 items-center justify-center overflow-hidden transition-transform group-hover:scale-105">
+      <header className="fixed left-0 right-0 z-50 mx-auto w-full max-w-full lg:max-w-full bg-white/95 backdrop-blur-md border border-zinc-200">
+        <div className="flex h-16 sm:h-20 items-center justify-between px-4 sm:px-8">
+          <Link href="/" className="flex items-center gap-2 group shrink-0">
+            <div className="flex h-9 w-32 sm:h-12 sm:w-64 items-center justify-start overflow-hidden transition-transform group-hover:scale-105">
               <img src="/SIDETH-THEAPKA.png" alt="Logo" className="w-full h-full object-contain object-left" />
             </div>
             <span className="text-lg sm:text-2xl font-black tracking-tighter text-foreground uppercase hidden xs:inline-block">
@@ -203,16 +234,16 @@ export default function Home() {
             </span>
           </Link>
           
-          <nav className="hidden lg:flex items-center gap-8 text-sm font-bold uppercase tracking-widest">
-            <Link href="#feed" className="text-muted-foreground hover:text-primary transition-colors">{t('all_events')}</Link>
-            <Link href="/support/" className="text-muted-foreground hover:text-primary transition-colors">{t('tech_support')}</Link>
+          <nav className="hidden lg:flex items-center gap-10 text-xs font-black uppercase tracking-[0.2em]">
+            <Link href="#feed" className="text-zinc-500 hover:text-primary transition-all duration-300 hover:scale-105 active:scale-95">{t('all_events')}</Link>
+            <Link href="/support/" className="text-zinc-500 hover:text-primary transition-all duration-300 hover:scale-105 active:scale-95">{t('tech_support')}</Link>
           </nav>
           
           <div className="flex items-center gap-1 sm:gap-4">
             {user && (
               <Link href="/admin/">
-                <Button variant="ghost" className="h-9 sm:h-11 rounded-xl px-4 border-zinc-200 font-bold bg-white text-zinc-700 hover:bg-zinc-50 shadow-sm transition-all hover:scale-105 active:scale-95 group">
-                   <LayoutDashboard className="h-4 w-4 mr-2 text-primary" />
+                <Button variant="ghost" className="h-9 w-9 sm:h-11 sm:w-auto rounded-full p-0 sm:px-4 flex items-center justify-center border border-zinc-200 font-bold bg-white text-zinc-700 hover:bg-zinc-50 shadow-sm transition-all hover:scale-105 active:scale-95 group">
+                   <LayoutDashboard className="h-4 w-4 sm:mr-2 text-primary" />
                    <span className="hidden sm:inline">{t('dashboard') || 'Dashboard'}</span>
                 </Button>
               </Link>
@@ -231,7 +262,7 @@ export default function Home() {
 
       <main className="flex-1">
         {!loading && items.length > 0 && featuredItem && (
-          <section className="relative h-[80vh] sm:h-212.5 overflow-hidden bg-zinc-900 shadow-2xl">
+          <section className="relative h-svh min-h-150 sm:h-[85vh] sm:min-h-175 overflow-hidden bg-zinc-950 shadow-2xl">
             <div className="absolute inset-0">
               {(isEvent(featuredItem) ? featuredItem.bannerUrl : featuredItem.thumbnail) ? (
                 <Image 
@@ -239,42 +270,42 @@ export default function Home() {
                   alt={featuredItem.title} 
                   fill
                   priority
-                  className="object-cover object-top opacity-90 scale-105 animate-in fade-in zoom-in duration-1000"
+                  className="object-cover object-top opacity-80 scale-100 group-hover:scale-105 transition-ultra animate-in fade-in zoom-in duration-1000"
                 />
               ) : (
-                <div className="h-full w-full bg-linear-to-br from-primary/20 to-primary/5" />
+                <div className="h-full w-full bg-linear-to-br from-primary/30 to-black" />
               )}
-              {/* Subtle Dark Overlay for Legibility */}
-              <div className="absolute inset-0 bg-black/20" />
-              <div className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-black/80 to-transparent" />
+              {/* Simple Dark Overlay for Text Contrast */}
+              <div className="absolute inset-0 bg-black/30 z-10" />
+              <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/90 via-black/50 to-transparent z-10" />
             </div>
 
             {bannerItems.length > 1 && (
               <>
-                <div className="absolute left-4 right-4 bottom-8 sm:left-12 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 z-30 flex sm:flex-col justify-between sm:justify-start gap-4">
+                <div className="absolute right-4 bottom-4 sm:left-16 sm:right-auto sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 z-30 flex sm:flex-col gap-2 sm:gap-6">
                   <button
                     onClick={prevSlide}
-                    className="h-10 w-10 sm:h-14 sm:w-14 rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-2xl text-white hover:bg-primary hover:text-white border border-white/20 flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-2xl group"
+                    className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-black/40 text-white hover:bg-primary border border-white/10 flex items-center justify-center transition-all hover:scale-105 active:scale-95 group"
                   >
-                    <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6 group-hover:-translate-x-1 transition-transform" />
+                    <ChevronLeft className="h-6 w-6 group-hover:-translate-x-1 transition-all" />
                   </button>
                   <button
                     onClick={nextSlide}
-                    className="h-10 w-10 sm:h-14 sm:w-14 rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-2xl text-white hover:bg-primary hover:text-white border border-white/20 flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-2xl group"
+                    className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-black/40 text-white hover:bg-primary border border-white/10 flex items-center justify-center transition-all hover:scale-105 active:scale-95 group"
                   >
-                    <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6 group-hover:translate-x-1 transition-transform" />
+                    <ChevronRight className="h-6 w-6 group-hover:translate-x-1 transition-ultra" />
                   </button>
                 </div>
 
-                {/* Pagination Dots */}
-                <div className="absolute right-4 sm:right-12 bottom-20 sm:top-1/2 sm:-translate-y-1/2 z-30 flex sm:flex-col gap-3">
+                {/* Pagination Indicator */}
+                <div className="absolute left-6 bottom-8 sm:left-auto sm:right-16 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 z-30 flex sm:flex-col gap-2 sm:gap-4 items-center">
                   {bannerItems.map((_, idx) => (
                     <button
                       key={idx}
                       onClick={() => setFeaturedIndex(idx)}
                       className={cn(
-                        "transition-all duration-500 rounded-full",
-                        idx === featuredIndex ? "w-6 sm:w-1.5 h-1.5 sm:h-12 bg-primary shadow-[0_0_15px_rgba(var(--primary),0.5)]" : "w-1.5 h-1.5 bg-white/30 hover:bg-white/60"
+                        "transition-ultra duration-700 rounded-full",
+                        idx === featuredIndex ? "w-8 sm:w-2 h-2 sm:h-16 bg-primary shadow-[0_0_30px_rgba(var(--primary),0.8)]" : "w-2 h-2 bg-white/20 hover:bg-white/50"
                       )}
                     />
                   ))}
@@ -282,23 +313,23 @@ export default function Home() {
               </>
             )}
 
-            <div className="relative h-full container mx-auto max-w-7xl px-4 sm:px-12 flex items-center pt-10 sm:pt-20">
+            <div className="relative h-full container flex items-center pt-20">
               <div className="max-w-4xl" key={featuredIndex}>
-                <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-4 sm:mb-8 animate-in slide-in-from-left-8 duration-700 delay-100">
-                  <div className="inline-flex items-center gap-2 sm:gap-3 bg-primary text-white px-3 sm:px-5 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl border border-white/10 shadow-2xl shadow-primary/20">
-                    <span className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5">
+                <div className="flex flex-wrap items-center gap-3 mb-6 animate-in slide-in-from-left-10 duration-1000 relative z-20">
+                  <div className="inline-flex items-center gap-3 bg-primary text-white px-5 py-2 rounded-full border border-white/10 shadow-sm">
+                    <span className="relative flex h-2.5 w-2.5">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-white"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
                     </span>
-                    <span className="text-[9px] sm:text-[11px] uppercase font-black tracking-[0.2em] leading-none">
+                    <span className="text-[10px] uppercase font-black tracking-[0.2em] leading-none">
                       {isEvent(featuredItem) 
                         ? (featuredItem.status === 'active' ? t('active') : t('completed'))
                         : (t(featuredItem.type) || featuredItem.type)
                       }
                     </span>
                   </div>
-                  <div className="inline-flex items-center gap-2 sm:gap-3 bg-white/5 backdrop-blur-2xl px-3 sm:px-5 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl border border-white/10 shadow-lg text-[9px] sm:text-[11px] uppercase font-black tracking-[0.2em] leading-none text-white/80">
-                    <Calendar className="h-3 sm:h-4 w-3 sm:w-4 opacity-60" />
+                  <div className="inline-flex items-center gap-2 bg-black/50 px-5 py-2 rounded-full border border-white/10 shadow-sm text-[10px] uppercase font-bold tracking-[0.2em] leading-none text-white whitespace-nowrap">
+                    <Calendar className="h-3.5 w-3.5 opacity-70" />
                     {isEvent(featuredItem) 
                       ? formatDate(featuredItem.eventDate, language)
                       : formatDate(featuredItem.createdAt, language)
@@ -307,22 +338,22 @@ export default function Home() {
                 </div>
 
                 <h1 className={cn(
-                  "text-xl sm:text-4xl lg:text-5xl font-black mb-6 sm:mb-8 leading-[1.3] sm:leading-[1.1] tracking-tighter text-white drop-shadow-2xl animate-in slide-in-from-left-12 duration-1000 delay-200 line-clamp-3 max-w-3xl",
-                  language === 'kh' ? 'font-moul tracking-normal leading-[1.7] sm:leading-normal text-xl sm:text-4xl' : ''
+                  "text-4xl sm:text-5xl lg:text-7xl font-black mb-8 leading-tight tracking-tighter text-white drop-shadow-md animate-in slide-in-from-left-16 duration-1000 delay-100 line-clamp-4 sm:line-clamp-3 max-w-3xl relative z-20",
+                  language === 'kh' ? 'font-kantumruy text-2xl sm:text-3xl lg:text-4xl leading-[1.6]' : ''
                 )}>
                   {featuredItem.title}
                 </h1>
 
-                <div className="flex flex-wrap items-center gap-3 sm:gap-6 animate-in slide-in-from-bottom-8 duration-1000 delay-300">
-                  <Button asChild size="xl" className="bg-primary text-white hover:bg-primary/90 font-black h-11 sm:h-20 px-6 sm:px-16 rounded-xl sm:rounded-[2rem] text-[10px] sm:text-base uppercase tracking-widest shadow-2xl shadow-primary/40 transition-all hover:scale-105 active:scale-95 group">
-                    <Link href={`/event/${featuredItem.id}`}>
+                <div className="flex flex-wrap items-center gap-6 animate-in slide-in-from-bottom-12 duration-1000 delay-200 relative z-20">
+                  <Button asChild size="lg" className="bg-primary text-white hover:bg-primary/90 font-bold px-8 py-6 sm:py-4 rounded-full text-[13px] sm:text-base uppercase tracking-widest shadow-md transition-all hover:scale-105 active:scale-95 group w-full sm:w-auto">
+                    <Link href={getPublicUrl(featuredItem)}>
                       {t('view_details')}
-                      <ArrowRight className="ml-2 sm:ml-3 h-4 w-4 sm:h-6 sm:w-6 group-hover:translate-x-2 transition-transform" />
+                      <ArrowRight className="ml-3 h-5 w-5 group-hover:translate-x-1 transition-all" />
                     </Link>
                   </Button>
                   {!isEvent(featuredItem) && (
-                    <div className="hidden sm:flex items-center gap-3 text-white/40 uppercase font-black text-[10px] tracking-[0.3em]">
-                      <div className="h-px w-8 bg-current" />
+                    <div className="hidden lg:flex items-center gap-4 text-white/40 uppercase font-black text-xs tracking-[0.4em]">
+                      <div className="h-px w-12 bg-current" />
                       {t('discover_more')}
                     </div>
                   )}
@@ -347,10 +378,14 @@ export default function Home() {
         )}
 
         {!loading && items.length > 0 && (
-          <section id="feed" className="py-12 sm:py-32 bg-background">
-            <div className="container mx-auto max-w-7xl px-6 lg:px-12">
-              <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-24">
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tighter mb-4 sm:mb-6 uppercase">
+          <section id="feed" className="py-20 sm:py-32 relative bg-zinc-50 mt-12 sm:mt-16">
+            <div className="absolute inset-0 bg-white/40 mask-image-linear-to-b from-transparent to-white" />
+            <div className="container mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
+              <div className="text-center max-w-3xl mx-auto mb-16 sm:mb-24">
+                <h2 className={cn(
+                    "text-3xl sm:text-4xl lg:text-5xl font-black tracking-tighter mb-4 sm:mb-6 uppercase text-zinc-900",
+                    language === 'kh' ? 'font-kantumruy tracking-normal leading-[1.6]' : ''
+                )}>
                   {t('feed_title')}
                 </h2>
                 <p className="text-lg text-muted-foreground/80 leading-relaxed">
@@ -361,10 +396,11 @@ export default function Home() {
               {/* Search & Filter Bar */}
               <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 sm:gap-6 mb-12 sm:mb-16">
                 <div className="relative flex-1 w-full md:max-w-xl group">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                  <div className="absolute inset-0 bg-primary/5 rounded-2xl blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
+                  <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400 group-focus-within:text-primary transition-colors z-10" />
                   <Input 
                     placeholder={t('search_placeholder') || (language === 'kh' ? 'ស្វែងរកកម្មវិធី ឬខ្លឹមសារ...' : 'Search events or content...')}
-                    className="pl-12 h-11 sm:h-14 rounded-xl sm:rounded-2xl bg-white border-border shadow-sm focus:ring-8 focus:ring-primary/5 transition-all font-medium text-sm sm:text-base"
+                    className="pl-14 pr-12 h-14 sm:h-16 rounded-2xl bg-white/80 backdrop-blur-md border border-zinc-200/80 shadow-sm focus:ring-4 focus:ring-primary/10 transition-all duration-300 font-medium text-sm sm:text-base hover:border-primary/30"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -382,7 +418,6 @@ export default function Home() {
                   <div className="flex items-center gap-2 px-1">
                     {[
                       { id: 'all', label: t('filter_all') || (language === 'kh' ? 'ទាំងអស់' : 'All') },
-                      { id: 'event', label: t('filter_events') || (language === 'kh' ? 'កម្មវិធី' : 'Events') },
                       { id: 'article', label: t('filter_articles') || (language === 'kh' ? 'អត្ថបទ' : 'Articles') },
                       { id: 'agenda', label: t('filter_agendas') || (language === 'kh' ? 'កម្មវិធីការងារ' : 'Agendas') },
                       { id: 'wedding', label: t('wedding') || (language === 'kh' ? 'អាពាហ៍ពិពាហ៍' : 'Wedding') },
@@ -393,10 +428,10 @@ export default function Home() {
                         variant={activeFilter === filter.id ? 'default' : 'outline'}
                         onClick={() => setActiveFilter(filter.id)}
                         className={cn(
-                          "rounded-full h-11 px-6 font-black uppercase text-[10px] tracking-widest whitespace-nowrap transition-all",
+                          "rounded-full h-12 px-7 font-black uppercase text-[10px] tracking-widest whitespace-nowrap transition-all duration-300 border",
                           activeFilter === filter.id 
-                            ? "shadow-xl shadow-primary/20 scale-105" 
-                            : "bg-white border-border text-muted-foreground hover:bg-secondary hover:text-foreground"
+                            ? "bg-primary text-white shadow-[0_8px_20px_rgb(var(--primary)/0.25)] border-transparent scale-105" 
+                            : "bg-white border-zinc-200/80 text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 hover:border-zinc-300"
                         )}
                       >
                         {filter.label}
@@ -429,26 +464,7 @@ export default function Home() {
                   </div>
                 ) : (
                   <>
-                    {/* 1. EVENTS SECTION */}
-                    {filteredItems.filter(isEvent).length > 0 && (
-                      <div className="space-y-6 sm:space-y-10 animate-in fade-in duration-700">
-                         <div className="flex items-center gap-3 sm:gap-8">
-                            <div className="h-px bg-border flex-1" />
-                            <h2 className={cn(
-                              "text-sm sm:text-xl font-black text-foreground uppercase shrink-0",
-                              language === 'kh' ? 'font-moul text-xs sm:text-lg tracking-normal' : 'tracking-widest sm:tracking-widest'
-                            )}>
-                              {t('upcoming_celebrations')}
-                            </h2>
-                            <div className="h-px bg-border flex-1" />
-                         </div>
-                         <div className="grid gap-6 sm:gap-10 sm:grid-cols-2 lg:grid-cols-3">
-                            {filteredItems.filter(isEvent).map((item) => (
-                               <FeedCard key={item.id} item={item} language={language} t={t} />
-                            ))}
-                         </div>
-                      </div>
-                    )}
+
 
                     {/* 2. CONTENTS SECTION */}
                     {filteredItems.filter(i => !isEvent(i)).length > 0 && (
@@ -485,70 +501,70 @@ export default function Home() {
         )}
       </main>
 
-      <footer className="border-t border-border bg-white py-20">
-        <div className="container mx-auto max-w-7xl px-6 lg:px-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-16">
-            {/* Branding */}
-            <div className="space-y-6">
-              <Link href="/" className="flex items-center gap-3">
-                <div className="flex h-14 w-40 items-center justify-center overflow-hidden">
-                  <img src="/SIDETH-THEAPKA.png" alt="Logo" className="w-full h-full object-contain object-left" />
+      <footer className="bg-white py-16 sm:py-20 border-t border-zinc-100 mt-auto relative z-10 w-full">
+        <div className="container mx-auto max-w-7xl px-8 lg:px-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
+            
+            {/* Branding - Takes up more space on desktop */}
+            <div className="sm:col-span-2 lg:col-span-4 space-y-6">
+              <Link href="/" className="inline-block hover:opacity-80 transition-opacity">
+                <div className="flex h-12 sm:h-14 items-center justify-start overflow-hidden">
+                  <img src="/SIDETH-THEAPKA.png" alt="Logo" className="h-full w-auto object-contain object-left" />
                 </div>
-                <span className="text-xl font-black tracking-tighter text-foreground uppercase">{t('app_name')}</span>
               </Link>
-              <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
+              <p className="text-sm text-zinc-500 leading-relaxed max-w-xs">
                 {language === 'kh' 
-                  ? "ប្រព័ន្ធគ្រប់គ្រងកម្មវិធីឌីជីថល ផ្តល់នូវបទពិសោធន៍ថ្មីសម្រាប់គ្រប់កម្មវិធីរបស់អ្នក។"
+                  ? "ប្រព័ន្ធគ្រប់គ្រងកម្មវិធីឌីជីថលផ្តល់នូវបទពិសោធន៍ថ្មីសម្រាប់គ្រប់កម្មវិធីរបស់អ្នក។"
                   : "Digital Event Companion providing a seamless experience for all your ceremonies."}
               </p>
             </div>
 
             {/* Support Links */}
-            <div className="space-y-6">
-              <Link href="/support" className="group flex items-center justify-between">
-                <h4 className="text-xs font-black uppercase tracking-[0.2em] text-foreground group-hover:text-primary transition-colors">{t('tech_support')}</h4>
-                <ArrowRight className="h-3 w-3 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-              </Link>
+            <div className="sm:col-span-1 lg:col-span-4 lg:col-start-6 space-y-6">
+              <h4 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-900">{t('tech_support')}</h4>
+              
               <div className="space-y-4">
-                <div className="flex items-center gap-3 group">
-                  <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                    <Phone className="h-4 w-4" />
+                <div className="flex items-center gap-4">
+                  <div className="h-10 w-10 rounded-full bg-zinc-50 flex items-center justify-center text-primary border border-zinc-100 shrink-0">
+                    <Phone className="h-[18px] w-[18px]" />
                   </div>
-                  <span className="text-sm font-bold text-muted-foreground group-hover:text-foreground transition-colors">098 943 324</span>
+                  <span className="text-sm font-bold text-zinc-600">098 943 324</span>
                 </div>
+                
                 <div className="pt-2">
-                  <div className="h-32 w-32 bg-white p-2 rounded-md border border-border shadow-sm overflow-hidden group hover:border-primary transition-colors">
+                  <div className="h-30 w-30 bg-white p-2.5 rounded-[1.2rem] border border-zinc-200/80 shadow-sm overflow-hidden flex items-center justify-center relative group isolate">
+                    <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity z-[-1]" />
                     <Image 
                       src="/mengley.svg" 
                       alt="Support QR" 
-                      width={128} 
-                      height={128} 
+                      width={100} 
+                      height={100} 
                       className="object-contain"
                     />
                   </div>
-                  <p className="text-[10px] font-black text-muted-foreground mt-2 uppercase tracking-widest pl-1">SCAN FOR SUPPORT</p>
+                  <p className="text-[10px] font-bold text-zinc-400 mt-4 uppercase tracking-[0.15em] pl-1">SCAN FOR SUPPORT</p>
                 </div>
               </div>
             </div>
 
             {/* Info */}
-            <div className="space-y-6">
-              <h4 className="text-xs font-black uppercase tracking-[0.2em] text-foreground">System Info</h4>
-              <div className="space-y-2">
-                <p className="text-xs text-muted-foreground font-medium">Version 1.0.0 — Private Client</p>
-                <div className="flex items-center gap-2 text-[10px] text-green-600 font-black uppercase tracking-widest">
-                  <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span>
+            <div className="sm:col-span-1 lg:col-span-3 space-y-6">
+              <h4 className="text-xs font-black uppercase tracking-[0.2em] text-zinc-900">System Info</h4>
+              <div className="space-y-3">
+                <p className="text-xs text-zinc-500 font-medium tracking-wide">Version 1.0.0 — Private Client</p>
+                <div className="flex items-center gap-2 pt-1 text-[10px] text-emerald-600 font-bold uppercase tracking-[0.15em]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse"></span>
                   System Online
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-6">
-            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+          <div className="pt-8 border-t border-zinc-100 flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
+            <p className="text-[11px] font-medium text-zinc-400 tracking-wide">
               © {new Date().getFullYear()} — {t('all_rights_reserved')}
             </p>
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">
+            <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
                Developed for Private Client
             </p>
           </div>
