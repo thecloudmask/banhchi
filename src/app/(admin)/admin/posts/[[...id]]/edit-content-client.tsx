@@ -51,8 +51,8 @@ export default function EditContentClient() {
         setEvents(eventsData);
         
         if (contentData) {
-          setTitle(contentData.title);
-          setDescription(contentData.description);
+          setTitle(contentData.title || "");
+          setDescription(contentData.description || "");
           setBody(contentData.body || "");
           setEventId(contentData.eventId || "none");
           setCurrentImageUrls(contentData.images || []);
