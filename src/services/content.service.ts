@@ -42,13 +42,9 @@ export interface Content {
   contentData?: {
     groom?: {
       name: string;
-      father: string;
-      mother: string;
     };
     bride?: {
       name: string;
-      father: string;
-      mother: string;
     };
     location?: {
       name: string;

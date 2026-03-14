@@ -13,8 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Clock as ClockIcon, User as UserIcon, History as HistoryIcon, Loader2 } from "lucide-react";
 import { getGuestLogs } from "@/services/event.service";
 import { AuditLog, Guest } from "@/types";
-import { formatDate } from "@/lib/utils";
-import { useLanguage } from "@/providers/language-provider";
+import { formatDateTime } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
@@ -26,7 +25,7 @@ interface GuestHistoryDialogProps {
 export function GuestHistoryDialog({ eventId, guest }: GuestHistoryDialogProps) {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(false);
-  const { t } = useLanguage();
+  // No internationalization needed
 
   const fetchLogs = async () => {
     try {
@@ -51,15 +50,15 @@ export function GuestHistoryDialog({ eventId, guest }: GuestHistoryDialogProps) 
           <HistoryIcon className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-xl rounded-2xl p-0 border border-border shadow-lg overflow-hidden">
+      <DialogContent className="sm:max-w-xl rounded-2xl p-0 border border-border bg-background shadow-lg overflow-hidden">
         <DialogHeader className="p-8 pb-4">
-          <DialogTitle className="text-2xl font-black flex items-center gap-3">
-             <div className="h-10 w-10 bg-secondary rounded-xl flex items-center justify-center">
-                <HistoryIcon className="h-5 w-5 opacity-40" />
+          <DialogTitle className="text-2xl font-black flex items-center gap-3 italic">
+             <div className="h-10 w-10 bg-accent rounded-xl flex items-center justify-center">
+                <HistoryIcon className="h-5 w-5 text-muted-foreground/60" />
              </div>
-             History for {guest.name}
+             ប្រវត្តិសម្រាប់ {guest.name}
           </DialogTitle>
-          <DialogDescription className="sr-only">Audit log of contributions and changes for {guest.name}.</DialogDescription>
+          <DialogDescription className="sr-only">ប្រវត្តិប្រតិបត្តិការ និងការផ្លាស់ប្តូរសម្រាប់ {guest.name}។</DialogDescription>
         </DialogHeader>
 
         <ScrollArea className="h-100 p-8 pt-0">
@@ -69,7 +68,7 @@ export function GuestHistoryDialog({ eventId, guest }: GuestHistoryDialogProps) 
             </div>
           ) : logs.length === 0 ? (
             <div className="text-center py-20 text-muted-foreground font-medium opacity-40">
-               No history records found.
+               មិនទាន់មានប្រវត្តិនៅឡើយទេ។
             </div>
           ) : (
             <div className="space-y-6">
@@ -85,18 +84,18 @@ export function GuestHistoryDialog({ eventId, guest }: GuestHistoryDialogProps) 
                   <div className="flex items-center gap-4 mb-2">
                     <span className={cn(
                        "text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded",
-                       log.action === 'CREATE' ? "bg-green-50 text-green-700" : 
-                       log.action === 'UPDATE' ? "bg-blue-50 text-blue-700" : "bg-destructive/10 text-destructive"
+                       log.action === 'CREATE' ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : 
+                       log.action === 'UPDATE' ? "bg-blue-500/10 text-blue-500 border border-blue-500/20" : "bg-rose-500/10 text-rose-500 border border-rose-500/20"
                     )}>
                       {log.action}
                     </span>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
                       <ClockIcon className="h-3 w-3" />
-                      {formatDate(log.timestamp)}
+                      {formatDateTime(log.timestamp)}
                     </div>
                   </div>
 
-                  <div className="bg-secondary/30 rounded-2xl p-4 border border-border/50">
+                  <div className="bg-muted/30 rounded-2xl p-4 border border-border">
                     <p className="text-sm font-bold text-foreground mb-1 leading-relaxed">
                       {log.details}
                     </p>
@@ -104,7 +103,7 @@ export function GuestHistoryDialog({ eventId, guest }: GuestHistoryDialogProps) 
                   
                   <div className="mt-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground opacity-40">
                     <UserIcon className="h-3 w-3" />
-                    By Admin: {log.userId.substring(0, 8)}...
+                    ដោយ Admin: {log.userId.substring(0, 8)}...
                   </div>
                 </div>
               ))}

@@ -9,7 +9,6 @@ import { addGuest, updateGuest } from "@/services/event.service";
 import { Loader2, Plus, User, Wallet, CreditCard, Building2, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { Guest, PaymentMethod, Event } from "@/types";
-import { useLanguage } from "@/providers/language-provider";
 
 interface AddGuestDialogProps {
   event: Event;
@@ -22,7 +21,7 @@ interface AddGuestDialogProps {
 export function AddGuestDialog({ event, guestToEdit, onClose, trigger, onSuccess }: AddGuestDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { t, language } = useLanguage();
+  // No internationalization needed
   
   // Form State
   const [name, setName] = useState("");
@@ -38,19 +37,15 @@ export function AddGuestDialog({ event, guestToEdit, onClose, trigger, onSuccess
 
   const nameInputRef = useRef<HTMLInputElement>(null);
 
-
-
-
-
   // Payment method options
   const paymentOptions = [
-    { value: "cash", label: t('cash'), icon: Wallet },
+    { value: "cash", label: "សាច់ប្រាក់", icon: Wallet },
     { value: "ABA Bank", label: "ABA Bank", icon: Building2 },
     { value: "ACLEDA Bank", label: "ACLEDA Bank", icon: Building2 },
     { value: "Wing", label: "Wing", icon: Smartphone },
     { value: "TrueMoney", label: "TrueMoney", icon: CreditCard },
     { value: "PiPay", label: "PiPay", icon: Smartphone },
-    { value: "Other Bank", label: t('other_bank'), icon: Building2 },
+    { value: "Other Bank", label: "ធនាគារផ្សេងៗ", icon: Building2 },
   ];
 
   useEffect(() => {
@@ -115,7 +110,7 @@ export function AddGuestDialog({ event, guestToEdit, onClose, trigger, onSuccess
 
   const saveData = async () => {
     if (!name.trim()) {
-      toast.error(t('validation_enter_name'));
+      toast.error("សូមបញ្ចូលឈ្មោះភ្ញៀវ");
       nameInputRef.current?.focus();
       return false;
     }
@@ -134,17 +129,17 @@ export function AddGuestDialog({ event, guestToEdit, onClose, trigger, onSuccess
 
       if (guestToEdit) {
         await updateGuest(event.id, guestToEdit.id, data);
-        toast.success(`${t('toast_updated')}: ${name}`);
+        toast.success(`បានកែប្រែដោយជោគជ័យ: ${name}`);
       } else {
         await addGuest(event.id, data);
-        toast.success(`${t('toast_recorded')}: ${name}. Ready for next!`);
+        toast.success(`បានកត់ត្រា៖ ${name}។ រួចរាល់សម្រាប់អ្នកបន្ទាប់!`);
       }
 
       if (onSuccess) onSuccess();
       return true;
     } catch (error) {
       console.error(error);
-      toast.error(t('toast_failed_save'));
+      toast.error("បរាជ័យក្នុងការរក្សាទុក");
       return false;
     } finally {
       setLoading(false);
@@ -168,24 +163,22 @@ export function AddGuestDialog({ event, guestToEdit, onClose, trigger, onSuccess
     }
   };
 
-
-
   return (
     <Drawer open={open} onOpenChange={handleOpenChange}>
       <DrawerTrigger asChild>
         {trigger || (
-          <Button size="lg" className="rounded-xl h-12 px-6 font-bold bg-primary">
-            <Plus className="h-5 w-5 mr-2" />
-            {t('add_guest')}
+          <Button size="sm" className="rounded-md h-9 px-4 font-bold bg-primary hover:bg-primary/90 text-primary-foreground text-xs uppercase tracking-wide">
+            <Plus className="h-4 w-4 mr-1.5" />
+            {"បញ្ចូលភ្ញៀវ"}
           </Button>
         )}
       </DrawerTrigger>
-      <DrawerContent className="inset-x-0 mx-auto max-w-[600px] max-h-[85vh] flex flex-col rounded-t-[10px] border bg-background outline-none">
-        <DrawerHeader>
-          <DrawerTitle className="text-2xl font-black">
-            {guestToEdit ? t('edit_data') : t('record_new_gift')}
+      <DrawerContent className="inset-x-0 mx-auto max-w-150 max-h-[85vh] flex flex-col rounded-t-[2rem] border-border bg-background outline-none">
+        <DrawerHeader className="border-b border-border pb-4">
+          <DrawerTitle className="text-xl font-bold text-foreground">
+            {guestToEdit ? "កែប្រែទিন្នន័យ" : "កត់ត្រាការចងដៃថ្មី"}
           </DrawerTitle>
-          <p className="text-muted-foreground font-medium mt-1 text-xs uppercase tracking-widest">{t('elder_interface_tagline')}</p>
+          <p className="text-muted-foreground font-medium mt-0.5 text-[10px] uppercase tracking-widest">{"បច្ចេកវិទ្យាជំនួយការឌីជីថល សម្រាប់គ្រប់កម្មវិធី"}</p>
         </DrawerHeader>
 
         <div className="flex-1 overflow-y-auto px-6 -mx-1">
@@ -193,64 +186,64 @@ export function AddGuestDialog({ event, guestToEdit, onClose, trigger, onSuccess
             <div className="space-y-8">
               
               {/* 1. Name Input */}
-              <div className="space-y-4">
-                <Label className="text-sm font-black uppercase tracking-widest opacity-40 ml-2">{t('guest_name')}</Label>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground ml-1">{"ឈ្មោះភ្ញៀវ"}</Label>
                 <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/40 group-focus-within:text-primary" />
-                   <Input 
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
+                   <Input
                     ref={nameInputRef}
-                    placeholder={t('enter_name_placeholder')} 
+                    placeholder={"ឧ. ឯកឧត្តម, លោកជំទាវ, លោក, អ្នកនាង..."}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="h-14 text-base sm:text-lg font-bold rounded-xl border-slate-200 bg-white pl-12 focus:border-primary shadow-sm"
+                    className="h-12 text-base font-bold rounded-md border-border bg-muted/30 text-foreground pl-10 placeholder:text-muted-foreground/30 focus:border-primary/40 focus:ring-primary/10"
                     autoComplete="off"
                   />
                 </div>
               </div>
 
               {/* 2. Location Input */}
-              <div className="space-y-4">
-                <Label className="text-sm font-black uppercase tracking-widest opacity-40 ml-2">
-                  {t('location')} <span className="text-gray-300">{t('optional_tag')}</span>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground ml-1">
+                  {"មកពីទីតាំង"} <span className="text-muted-foreground/30">{"(មិនមានក៏បាន)"}</span>
                 </Label>
-                <Input 
-                  placeholder={t('enter_location')} 
+                <Input
+                  placeholder={"ឧ. ភ្នំពេញ, បាត់ដំបង..."}
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  className="h-14 text-base font-bold rounded-xl border-slate-200 bg-white focus:border-primary shadow-sm"
+                  className="h-12 text-base font-bold rounded-md border-border bg-muted/30 text-foreground placeholder:text-muted-foreground/30 focus:border-primary/40 focus:ring-primary/10"
                   autoComplete="off"
                 />
               </div>
 
               {/* 3. Amounts */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-4">
-                     <Label className="text-sm font-black uppercase tracking-widest ml-2 text-slate-400">{t('amount_usd_label')}</Label>
+              <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                     <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground ml-1">{"ទឹកប្រាក់ (ដុល្លារ)"}</Label>
                      <div className="relative">
-                        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-300">$</div>
-                         <Input 
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-muted-foreground/30">$</div>
+                         <Input
                            type="text"
                            inputMode="decimal"
                            placeholder="0"
                            value={displayUsd}
                            onChange={(e) => handleUsdChange(e.target.value)}
-                           className="h-16 text-xl sm:text-2xl font-bold rounded-xl border-slate-200 bg-white text-slate-900 focus:border-primary transition-colors pl-14"
+                           className="h-14 text-xl font-bold rounded-md border-border bg-muted/30 text-foreground placeholder:text-muted-foreground/30 focus:border-primary/40 focus:ring-primary/10 pl-10"
                            onFocus={(e) => e.target.select()}
                          />
                       </div>
                    </div>
- 
-                   <div className="space-y-4">
-                      <Label className="text-sm font-black uppercase tracking-widest ml-2 text-slate-400">{t('amount_khr_label')}</Label>
+  
+                   <div className="space-y-2">
+                      <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground ml-1">{"ទឹកប្រាក់ (រៀល)"}</Label>
                       <div className="relative">
-                         <div className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl font-black text-slate-300">៛</div>
-                         <Input 
+                         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-muted-foreground/30">៛</div>
+                         <Input
                            type="text"
                            inputMode="numeric"
                            placeholder="0"
                            value={displayKhr}
                            onChange={(e) => handleKhrChange(e.target.value)}
-                           className="h-16 text-xl sm:text-2xl font-bold rounded-xl border-slate-200 bg-white text-slate-900 focus:border-primary transition-colors pl-14"
+                           className="h-14 text-xl font-bold rounded-md border-border bg-muted/30 text-foreground placeholder:text-muted-foreground/30 focus:border-primary/40 focus:ring-primary/10 pl-10"
                            onFocus={(e) => e.target.select()}
                          />
                       </div>
@@ -258,23 +251,23 @@ export function AddGuestDialog({ event, guestToEdit, onClose, trigger, onSuccess
               </div>
 
               {/* 4. Payment Method Dropdown */}
-              <div className="space-y-4">
-                <Label className="text-sm font-black uppercase tracking-widest opacity-40 ml-2">{t('payment_method')}</Label>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground ml-1">{"វិធីបង់ប្រាក់"}</Label>
                 <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                  <SelectTrigger className="h-14 rounded-xl border-slate-200 bg-white font-bold text-base">
-                    <SelectValue placeholder={t('select_payment_method')} />
+                  <SelectTrigger className="h-12 rounded-md border-border bg-muted/30 text-foreground font-semibold text-sm">
+                    <SelectValue placeholder={"ជ្រើសរើសវិធីបង់ប្រាក់"} />
                   </SelectTrigger>
-                  <SelectContent className="rounded-2xl border-slate-200">
+                  <SelectContent className="rounded-md bg-card border-border text-foreground">
                     {paymentOptions.map((option) => {
                       const Icon = option.icon;
                       return (
-                        <SelectItem 
-                          key={option.value} 
+                        <SelectItem
+                          key={option.value}
                           value={option.value}
-                          className="h-12 cursor-pointer rounded-xl font-bold"
+                          className="h-11 cursor-pointer rounded-md font-semibold text-sm hover:bg-accent focus:bg-accent focus:text-accent-foreground"
                         >
                           <div className="flex items-center gap-3">
-                            <Icon className="h-4 w-4 text-muted-foreground" />
+                            <Icon className="h-4 w-4 text-muted-foreground/50" />
                             <span>{option.label}</span>
                           </div>
                         </SelectItem>
@@ -285,45 +278,43 @@ export function AddGuestDialog({ event, guestToEdit, onClose, trigger, onSuccess
               </div>
 
               {/* 5. Note */}
-              <div className="space-y-4">
-                 <Label className="text-sm font-black uppercase tracking-widest opacity-40 ml-2">{t('note')}</Label>
-                 <Textarea 
+              <div className="space-y-2">
+                 <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground ml-1">{"សម្គាល់"}</Label>
+                 <Textarea
                    placeholder="..."
                    value={note}
                    onChange={(e) => setNote(e.target.value)}
-                   className="min-h-24 rounded-xl text-base font-bold border-slate-200 bg-white focus:border-primary resize-none shadow-sm"
+                   className="min-h-20 rounded-md text-sm font-medium border-border bg-muted/30 text-foreground placeholder:text-muted-foreground/30 focus:border-primary/40 focus:ring-primary/10 resize-none px-4 py-3"
                  />
               </div>
             </div>
           </form>
         </div>
 
-        <DrawerFooter className="mt-4 pb-12 sm:pb-8 border-t pt-4">
-          <div className="flex gap-4">
+        <DrawerFooter className="mt-2 pb-10 sm:pb-6 border-t border-border pt-4">
+          <div className="flex gap-3">
             <DrawerClose asChild>
-              <Button 
+              <Button
                 type="button"
-                variant="outline"
-                size="lg"
-                className="flex-1 h-12 rounded-xl font-bold border-slate-200"
+                variant="ghost"
+                className="flex-1 h-11 rounded-md font-semibold text-muted-foreground hover:text-foreground hover:bg-accent"
               >
-                {t('cancel')}
+                {"បោះបង់"}
               </Button>
             </DrawerClose>
-            <Button 
-              type="submit" 
-              size="lg" 
+            <Button
+              type="submit"
               disabled={loading}
               onClick={handleManualSave}
-              className="flex-1 h-12 rounded-xl font-black text-base shadow-md hover:shadow-lg transition-all bg-primary hover:bg-primary/90"
+              className="flex-1 h-11 rounded-md font-bold text-sm shadow-md transition-all bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  {t('saving')}
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {"កំពុងរក្សាទុក..."}
                 </>
               ) : (
-                guestToEdit ? t('update') : t('add_guest')
+                guestToEdit ? "កែប្រែ" : "បញ្ចូលភ្ញៀវ"
               )}
             </Button>
           </div>

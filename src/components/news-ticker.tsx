@@ -1,7 +1,6 @@
 "use client";
 
-import { useLanguage } from "@/providers/language-provider";
-import { cn, formatDate } from "@/lib/utils";
+import { cn, formatDateTime } from "@/lib/utils";
 import { Event } from "@/types";
 import { Content } from "@/services/content.service";
 import { Megaphone, Calendar, ArrowRight } from "lucide-react";
@@ -16,7 +15,6 @@ function isEvent(item: Event | Content): item is Event {
 }
 
 export function NewsTicker({ items }: NewsTickerProps) {
-  const { t, language } = useLanguage();
 
   if (!items || items.length === 0) return null;
 
@@ -33,9 +31,9 @@ export function NewsTicker({ items }: NewsTickerProps) {
         </div>
         <span className={cn(
           "text-[10px] font-black uppercase tracking-[0.2em] text-white whitespace-nowrap",
-          language === 'kh' ? 'font-moul text-[8px]' : ''
+          'font-moul text-[8px]'
         )}>
-          {t('announcement') || "Updates"}
+          {"សេចក្តីជូនដំណឹង"}
         </span>
       </div>
 
@@ -46,19 +44,37 @@ export function NewsTicker({ items }: NewsTickerProps) {
             const isEvt = isEvent(item);
             const date = isEvt ? item.eventDate : item.createdAt;
             
+            const getPublicUrl = (item: Event | Content): string => {
+              const isEvt = isEvent(item);
+              const id = item.id;
+              if (isEvt) {
+                switch (item.category) {
+                  case 'wedding':      return `/wedding/${id}`;
+                  case 'buddhist':     return `/merit-making/${id}`;
+                  default:             return `/event/${id}`;
+                }
+              }
+              switch (item.type) {
+                case 'wedding':      return `/wedding/${id}`;
+                case 'funeral':      return `/funeral/${id}`;
+                case 'article':      return `/article/${id}`;
+                default:             return `/event/${id}`;
+              }
+            };
+            
             return (
               <Link 
                 key={`${item.id}-${idx}`}
-                href={`/event/${item.id}`}
+                href={getPublicUrl(item)}
                 className="inline-flex items-center gap-4 px-10 group border-r border-white/5 hover:bg-white/5 transition-colors py-3"
               >
                 <span className="text-[11px] text-white/50 uppercase font-black tracking-widest leading-none">
-                  {formatDate(date, language)}
+                  {formatDateTime(date)}
                 </span>
                 
                 <span className={cn(
                   "text-xs font-bold tracking-tight text-white transition-all group-hover:scale-[1.02] whitespace-nowrap",
-                  language === 'kh' ? 'text-xs leading-normal' : ''
+                  'text-xs leading-normal'
                 )}>
                   {item.title}
                 </span>

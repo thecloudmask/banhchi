@@ -1,452 +1,597 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Event } from "@/types";
-import { updateEvent } from "@/services/event.service";
-import { useLanguage } from "@/providers/language-provider";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { useState, useRef, useEffect } from "react";
+import { 
+  Drawer, 
+  DrawerContent, 
+  DrawerHeader, 
+  DrawerTitle, 
+  DrawerDescription, 
+  DrawerTrigger, 
+  DrawerFooter,
+  DrawerClose
+} from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2, Pencil, CalendarIcon, Upload, MapPin, Clock, Navigation, Plus, X } from "lucide-react";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { 
+  CalendarIcon, 
+  Clock, 
+  MapPin, 
+  Navigation, 
+  Pencil, 
+  Plus, 
+  Upload, 
+  X, 
+  Loader2,
+  Heart,
+  Sparkles,
+  Palette,
+  Image as ImageIcon,
+  CheckCircle2,
+  Trash2,
+  LayoutGrid,
+  Map as MapIcon,
+  MessageSquare,
+  Users
+} from "lucide-react";
+import { Event } from "@/types";
 import { EVENT_TEMPLATES } from "@/lib/constants";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerTrigger, DrawerFooter, DrawerClose } from "@/components/ui/drawer";
+import { toast } from "sonner";
+import { updateEvent } from "@/services/event.service";
 import RichTextEditor from "./rich-text-editor";
+import { cn, formatDateTime } from "@/lib/utils";
+import { format } from "date-fns";
+import { Timestamp } from "firebase/firestore";
+
+const toDate = (ts: any): Date => {
+  if (ts instanceof Date) return ts;
+  if (ts?.toDate) return ts.toDate();
+  if (ts && typeof ts === 'object' && 'seconds' in ts) return new Timestamp(ts.seconds, ts.nanoseconds).toDate();
+  return new Date(ts);
+};
 
 interface EditEventDialogProps {
   event: Event;
-  onSuccess?: () => void;
   trigger?: React.ReactNode;
+  onSuccess?: () => void;
 }
 
-export function EditEventDialog({ event, onSuccess, trigger }: EditEventDialogProps) {
+export function EditEventDialog({ event, trigger, onSuccess }: EditEventDialogProps) {
+  // No internationalization needed
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { t } = useLanguage();
-
+  
+  // Basic State
   const [title, setTitle] = useState(event.title);
-  const [date, setDate] = useState("");
+  const [category, setCategory] = useState(event.category || "wedding");
+  const [customCategory, setCustomCategory] = useState(event.category === "custom" ? (event.category || "") : "");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(event.eventDate ? toDate(event.eventDate) : undefined);
   const [time, setTime] = useState(event.eventTime || "");
   const [location, setLocation] = useState(event.location || "");
   const [mapUrl, setMapUrl] = useState(event.mapUrl || "");
-  const [banner, setBanner] = useState<File | null>(null);
-  const [status, setStatus] = useState(event.status);
-  const [category, setCategory] = useState("merit_making");
-  const [customCategory, setCustomCategory] = useState("");
-  const [currentBannerUrl, setCurrentBannerUrl] = useState(event.bannerUrl || "");
   const [description, setDescription] = useState(event.description || "");
-  const [extraData, setExtraData] = useState<Record<string, any>>(event.extraData || {});
-
-  // Gallery Management
-  const [currentGalleryUrls, setCurrentGalleryUrls] = useState<string[]>(event.galleryUrls || []);
-  const [newGalleryFiles, setNewGalleryFiles] = useState<File[]>([]);
-  const [newGalleryPreviews, setNewGalleryPreviews] = useState<string[]>([]);
   
+  // Wedding/Ceremony Specific State
+  const [activeTab, setActiveTab] = useState("general");
+  const [groomName, setGroomName] = useState(event.extraData?.groomName || "");
+  const [brideName, setBrideName] = useState(event.extraData?.brideName || "");
+  const [donorName, setDonorName] = useState(event.extraData?.donorName || "");
+  const [preventDuplicateGuests, setPreventDuplicateGuests] = useState(event.extraData?.preventDuplicateGuests || false);
+  const [footerContent, setFooterContent] = useState(event.extraData?.footerContent || "");
+  const [weddingSchedule, setWeddingSchedule] = useState<any[]>(event.extraData?.schedule || [{
+      id: "day_1",
+      dayLabel: "",
+      groups: [{ id: "group_1", groupTitle: "", activities: [{ time: "", title: "", description: "" }] }]
+  }]);
+  
+  // Refined Location State
+  const [locObj, setLocObj] = useState({
+     name: event.extraData?.location?.name || event.location || "",
+     address: event.extraData?.location?.address || "",
+     mapUrl: event.extraData?.location?.mapUrl || event.mapUrl || ""
+  });
+  
+  // Assets State
+  const [banner, setBanner] = useState<File | null>(null);
+  const [currentBannerUrl, setCurrentBannerUrl] = useState(event.bannerUrl || "");
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  const [currentGalleryUrls, setCurrentGalleryUrls] = useState<string[]>(event.galleryUrls || []);
+  const [newGalleryPreviews, setNewGalleryPreviews] = useState<string[]>([]);
+  const [khqrUSD, setKhqrUSD] = useState<File | null>(null);
+  const [khqrKHR, setKhqrKHR] = useState<File | null>(null);
+  const [currentKhqrUSDUrl, setCurrentKhqrUSDUrl] = useState(event.extraData?.khqrUSDUrl || "");
+  const [currentKhqrKHRUrl, setCurrentKhqrKHRUrl] = useState(event.extraData?.khqrKHRUrl || "");
+
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open) {
       setTitle(event.title);
+      setCategory(event.category || "wedding");
+      setCustomCategory(event.category === "custom" ? (event.category || "") : "");
+      setSelectedDate(event.eventDate ? toDate(event.eventDate) : undefined);
       setTime(event.eventTime || "");
       setLocation(event.location || "");
       setMapUrl(event.mapUrl || "");
-      setStatus(event.status);
-      
-      const isTemplate = EVENT_TEMPLATES.some(t => t.id === event.category);
-      if (isTemplate) {
-        setCategory(event.category || "merit_making");
-        setCustomCategory("");
-      } else if (event.category) {
-        setCategory("custom");
-        setCustomCategory(event.category);
-      } else {
-        setCategory("merit_making");
-        setCustomCategory("");
-      }
-
-      setCurrentBannerUrl(event.bannerUrl || "");
-      setBanner(null);
       setDescription(event.description || "");
-      setExtraData(event.extraData || {});
-
+      
+      setGroomName(event.extraData?.groomName || "");
+      setBrideName(event.extraData?.brideName || "");
+      setDonorName(event.extraData?.donorName || "");
+      setPreventDuplicateGuests(event.extraData?.preventDuplicateGuests || false);
+      setFooterContent(event.extraData?.footerContent || "");
+      setWeddingSchedule(event.extraData?.schedule || [{
+          id: "day_1",
+          dayLabel: "",
+          groups: [{ id: "group_1", groupTitle: "", activities: [{ time: "", title: "", description: "" }] }]
+      }]);
+      setLocObj({
+         name: event.extraData?.location?.name || event.location || "",
+         address: event.extraData?.location?.address || "",
+         mapUrl: event.extraData?.location?.mapUrl || event.mapUrl || ""
+      });
+      setCurrentKhqrUSDUrl(event.extraData?.khqrUSDUrl || "");
+      setCurrentKhqrKHRUrl(event.extraData?.khqrKHRUrl || "");
+      
+      setCurrentBannerUrl(event.bannerUrl || "");
       setCurrentGalleryUrls(event.galleryUrls || []);
-      setNewGalleryFiles([]);
       setNewGalleryPreviews([]);
-
-      if (event.eventDate) {
-        let eventDate: Date;
-        if (event.eventDate instanceof Date) {
-          eventDate = event.eventDate;
-        } else if (typeof event.eventDate === 'object' && 'seconds' in event.eventDate) {
-          eventDate = new Date((event.eventDate as any).seconds * 1000);
-        } else {
-          eventDate = new Date(event.eventDate as string);
-        }
-        
-        if (!isNaN(eventDate.getTime())) {
-          setDate(eventDate.toISOString().split('T')[0]);
-        }
-      }
+      setGalleryFiles([]);
     }
   }, [open, event]);
 
   const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
-      setNewGalleryFiles(prev => [...prev, ...files]);
-      setNewGalleryPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
+      setGalleryFiles([...galleryFiles, ...files]);
+      const previews = files.map(file => URL.createObjectURL(file));
+      setNewGalleryPreviews([...newGalleryPreviews, ...previews]);
     }
   };
 
   const removeCurrentGallery = (index: number) => {
-    setCurrentGalleryUrls(prev => prev.filter((_, i) => i !== index));
+    setCurrentGalleryUrls(currentGalleryUrls.filter((_, i) => i !== index));
   };
 
   const removeNewGallery = (index: number) => {
-    setNewGalleryFiles(prev => prev.filter((_, i) => i !== index));
-    setNewGalleryPreviews(prev => {
-        URL.revokeObjectURL(prev[index]);
-        return prev.filter((_, i) => i !== index);
-    });
+    setGalleryFiles(galleryFiles.filter((_, i) => i !== index));
+    setNewGalleryPreviews(newGalleryPreviews.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !date) {
-      toast.error(t('fill_all_fields'));
-      return;
-    }
-
+    setLoading(true);
     try {
-      setLoading(true);
-      await updateEvent(
-        event.id,
-        {
-          title: title.trim(),
-          eventDate: new Date(date),
-          eventTime: time || undefined,
-          location: location || undefined,
-          mapUrl: mapUrl || undefined,
-          status,
-          category: category === 'custom' ? customCategory : category,
-          galleryUrls: currentGalleryUrls,
-          description: description || undefined,
-          extraData: Object.keys(extraData).length > 0 ? extraData : undefined,
+      const extraData = event.extraData || {};
+      await updateEvent(event.id, {
+        title: category === 'wedding' ? `${groomName} & ${brideName}` : 
+               (category === 'buddhist' && donorName ? `បុណ្យកុសលរបស់ ${donorName}` : title.trim()),
+        category: category === 'custom' ? customCategory : category,
+        eventDate: selectedDate,
+        eventTime: time || undefined,
+        location: locObj.name || undefined,
+        mapUrl: locObj.mapUrl || undefined,
+        description: description || undefined,
+        extraData: {
+          ...extraData,
+          groomName: category === 'wedding' ? (groomName || null) : null,
+          brideName: category === 'wedding' ? (brideName || null) : null,
+          donorName: category === 'buddhist' ? (donorName || null) : null,
+          preventDuplicateGuests,
+          footerContent: category === 'wedding' ? (footerContent || null) : null,
+          location: category === 'wedding' ? locObj : null,
+          schedule: category === 'wedding' ? weddingSchedule.map(day => ({
+              ...day,
+              groups: day.groups.map((g: any) => ({
+                  ...g,
+                  activities: g.activities.filter((a: any) => a.time.trim() || a.title.trim() || a.description.trim())
+              })).filter((g: any) => g.activities.length > 0 || (g.groupTitle && g.groupTitle.trim()))
+          })).filter(day => (day.dayLabel && day.dayLabel.trim()) || day.groups.length > 0) : null,
+          khqrUSDUrl: currentKhqrUSDUrl || null,
+          khqrKHRUrl: currentKhqrKHRUrl || null,
         },
-        banner || undefined,
-        undefined,
-        newGalleryFiles
-      );
-      toast.success(t('toast_updated'));
+        galleryUrls: currentGalleryUrls,
+      }, banner || undefined, undefined, galleryFiles, khqrUSD || undefined, khqrKHR || undefined);
+      
+      toast.success("បានកែប្រែដោយជោគជ័យ");
       if (onSuccess) onSuccess();
       setOpen(false);
     } catch (error) {
       console.error(error);
-      toast.error(t('toast_failed_save'));
+      toast.error("បរាជ័យក្នុងការរក្សាទុក");
     } finally {
       setLoading(false);
     }
   };
 
   const renderFormContent = () => (
-    <form onSubmit={handleSubmit} className="flex flex-col h-full bg-slate-50/50">
-      {/* Premium Header */}
-      <div className="bg-white px-8 pt-10 pb-6 border-b border-slate-100 flex items-center justify-between shrink-0">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-2xl bg-amber-500/10 flex items-center justify-center">
-              <CalendarIcon className="h-5 w-5 text-amber-600" />
-            </div>
-            <DrawerTitle className="text-2xl font-black text-slate-900 tracking-tight">{t('edit_event')}</DrawerTitle>
-          </div>
-          <DrawerDescription className="text-slate-400 font-medium text-xs uppercase tracking-widest pl-1">{t('update_event_info')}</DrawerDescription>
-        </div>
+    <div className="flex flex-col h-full w-full bg-background text-foreground font-kantumruy">
+      {/* HEADER */}
+      <div className="h-16 bg-card border-b border-border flex items-center px-4 relative shrink-0">
         <DrawerClose asChild>
-          <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100 h-10 w-10">
-            <X className="h-5 w-5 text-slate-400" />
-          </Button>
+          <button className="h-8 cursor-pointer w-8 flex items-center justify-center hover:bg-accent rounded-md transition-colors order-first">
+            <X className="h-4 w-4 " />
+          </button>
         </DrawerClose>
+        <div className="absolute left-1/2 -translate-x-1/2 text-center">
+           <DrawerTitle className="text-sm sm:text-lg text-foreground font-bold">{"កែប្រែព័ត៌មានកម្មវិធី"}</DrawerTitle>
+           <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black truncate max-w-xs">{title}</p>
+        </div>
       </div>
 
-      {/* Scrollable Body with Grouped Sections */}
-      <div className="flex-1 overflow-y-auto p-6 sm:p-10 space-y-10 custom-scrollbar">
-        
-        {/* SECTION 1: VISUALS */}
-        <div className="space-y-6">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="h-1 w-8 bg-amber-500 rounded-full" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{t('event_visuals') || "Event Visuals"}</span>
-          </div>
+      {/* TABS SELECTOR */}
+      <div className="px-4 shrink-0 flex gap-2 border-b border-border overflow-x-auto no-scrollbar bg-card/30">
+         <button onClick={() => setActiveTab("general")} className={cn("px-4 py-3 text-[10px] font-black uppercase tracking-widest border-b-2 transition-all whitespace-nowrap flex items-center gap-2", activeTab === "general" ? "border-[#f41f4d] text-[#f41f4d]" : "border-transparent text-muted-foreground hover:text-foreground")}>
+           <LayoutGrid className="h-3 w-3" /> {"ទូទៅ"}
+         </button>
+         {category === 'wedding' && (
+           <>
+             <button onClick={() => setActiveTab("couple")} className={cn("px-4 py-3 text-[10px] font-black uppercase tracking-widest border-b-2 transition-all whitespace-nowrap flex items-center gap-2", activeTab === "couple" ? "border-[#f41f4d] text-[#f41f4d]" : "border-transparent text-muted-foreground hover:text-foreground")}>
+               <Users className="h-3 w-3" /> {"គូស្រករ"}
+             </button>
+             <button onClick={() => setActiveTab("schedule")} className={cn("px-4 py-3 text-[10px] font-black uppercase tracking-widest border-b-2 transition-all whitespace-nowrap flex items-center gap-2", activeTab === "schedule" ? "border-[#f41f4d] text-[#f41f4d]" : "border-transparent text-muted-foreground hover:text-foreground")}>
+               <Clock className="h-3 w-3" /> {"កម្មវិធីសិរីមង្គល"}
+             </button>
+             <button onClick={() => setActiveTab("location")} className={cn("px-4 py-3 text-[10px] font-black uppercase tracking-widest border-b-2 transition-all whitespace-nowrap flex items-center gap-2", activeTab === "location" ? "border-[#f41f4d] text-[#f41f4d]" : "border-transparent text-muted-foreground hover:text-foreground")}>
+               <MapIcon className="h-3 w-3" /> {"ទីតាំង & Footer"}
+             </button>
+           </>
+         )}
+         <button onClick={() => setActiveTab("assets")} className={cn("px-4 py-3 text-[10px] font-black uppercase tracking-widest border-b-2 transition-all whitespace-nowrap flex items-center gap-2", activeTab === "assets" ? "border-[#f41f4d] text-[#f41f4d]" : "border-transparent text-muted-foreground hover:text-foreground")}>
+           <ImageIcon className="h-3 w-3" /> {"រូបភាព"}
+         </button>
+      </div>
+
+      {/* BODY - Scrollable area */}
+      <div className="flex-1 overflow-y-auto pb-32">
+        <div className="max-w-4xl mx-auto space-y-6 pt-6 px-4">
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Banner Section */}
-            <div className="group space-y-3">
-              <Label className="text-xs font-bold text-slate-600 block pl-1">{t('banner_image')}</Label>
-              <div className="relative rounded-3xl overflow-hidden border-2 border-dashed border-slate-200 h-52 group-hover:border-amber-500/40 transition-all duration-500 bg-white shadow-sm ring-4 ring-transparent group-hover:ring-amber-500/5">
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  onChange={(e) => setBanner(e.target.files?.[0] || null)} 
-                  className="absolute inset-0 w-full h-full opacity-0 z-20 cursor-pointer" 
-                />
-                {(banner || currentBannerUrl) ? (
-                  <div className="absolute inset-0 w-full h-full">
-                    <img 
-                      src={banner ? URL.createObjectURL(banner) : currentBannerUrl} 
-                      alt="Banner" 
-                      className={cn("w-full h-full object-cover transition-transform duration-700 group-hover:scale-105", loading && "opacity-50 blur-sm")} 
-                    />
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 backdrop-blur-sm">
-                      <div className="flex flex-col items-center gap-2 text-white">
-                        <Upload className="h-8 w-8" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">{t('change_banner')}</span>
+          {activeTab === "general" && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="bg-card/40 border border-border rounded-md p-5 space-y-5 shadow-sm">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                       <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground pl-1">{"ប្រភេទកម្មវិធី"}</Label>
+                       <Select value={category} onValueChange={setCategory}>
+                         <SelectTrigger className="h-12 cursor-pointer bg-muted/20 border-border rounded-md font-bold">
+                           <SelectValue />
+                         </SelectTrigger>
+                         <SelectContent className="font-kantumruy">
+                           <SelectItem value="wedding">{"អាពាហ៍ពិពាហ៍"}</SelectItem>
+                           <SelectItem value="buddhist">{"កម្មវិធីបុណ្យ"}</SelectItem>
+                           <SelectItem value="custom">{"ផ្សេងៗ"}</SelectItem>
+                         </SelectContent>
+                       </Select>
+                    </div>
+
+                    {category !== 'wedding' && (
+                      <div className="space-y-2">
+                         <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground pl-1">{"ឈ្មោះកម្មវិធី"}</Label>
+                         <Input value={title} onChange={e => setTitle(e.target.value)} className="h-12 bg-muted/20 font-bold" />
                       </div>
+                    )}
+                 </div>
+                 
+                 {category === 'custom' && (
+                   <div className="space-y-2 animate-in slide-in-from-top-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground pl-1">{"បញ្ចូលប្រភេទខ្លួនឯង"}</Label>
+                      <Input value={customCategory} onChange={e => setCustomCategory(e.target.value)} className="h-12 bg-muted/20" />
+                   </div>
+                 )}
+
+                 {category === 'buddhist' && (
+                   <div className="space-y-2 animate-in slide-in-from-top-2">
+                      <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground pl-1">{"ឈ្មោះម្ចាស់បុណ្យ"}</Label>
+                      <Input placeholder={"ឧ. ឧបាសក ឡុង ប៊ុនធឿន"} value={donorName} onChange={e => setDonorName(e.target.value)} className="h-12 bg-muted/20" />
+                   </div>
+                 )}
+
+                 <div className="h-px bg-border/50 my-2" />
+
+                 <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground pl-1 flex items-center gap-2">
+                      <CalendarIcon className="h-3 w-3" /> {"កាលបរិច្ឆេទ & ពេលវេលា"}
+                    </Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full justify-start h-12 bg-muted/20 border-border font-bold">
+                          {selectedDate ? formatDateTime(selectedDate) : "ជ្រើសរើសថ្ងៃ"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                         <Calendar mode="single" selected={selectedDate} onSelect={d => {
+                           if (!d) return;
+                           const n = new Date(d);
+                           if (selectedDate) { n.setHours(selectedDate.getHours()); n.setMinutes(selectedDate.getMinutes()); }
+                           setSelectedDate(n);
+                         }} className="font-kantumruy" />
+                         <div className="p-4 border-t border-border flex items-center justify-between gap-4 bg-card">
+                            <span className="text-xs font-bold uppercase">កំណត់ម៉ោង</span>
+                            <input type="time" className="bg-muted/30 border border-border rounded-md px-3 py-2 text-sm font-bold outline-none focus:ring-2 focus:ring-rose-500/20" value={selectedDate ? `${String(selectedDate.getHours()).padStart(2, '0')}:${String(selectedDate.getMinutes()).padStart(2, '0')}` : "00:00"} onChange={e => {
+                              const [h, m] = e.target.value.split(':');
+                              const n = new Date(selectedDate || new Date());
+                              n.setHours(parseInt(h)); n.setMinutes(parseInt(m));
+                              setSelectedDate(n);
+                            }} />
+                         </div>
+                      </PopoverContent>
+                    </Popover>
+                 </div>
+
+                 <div className="space-y-3">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground pl-1">{"ព័ត៌មានបន្ថែម (Rich Text)"}</Label>
+                    <div className="rounded-md border border-border bg-muted/5 p-1">
+                       <RichTextEditor value={description} onChange={setDescription} className="min-h-48" />
                     </div>
-                  </div>
-                ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-slate-400">
-                    <div className="h-14 w-14 rounded-full bg-slate-50 flex items-center justify-center shadow-inner border border-slate-100 group-hover:bg-white transition-colors">
-                      <Upload className="h-6 w-6 text-amber-500" />
-                    </div>
-                    <div className="text-center">
-                      <span className="block text-xs font-black uppercase tracking-widest text-slate-600">{t('upload_banner')}</span>
-                    </div>
-                  </div>
-                )}
+                 </div>
               </div>
-            </div>
-
-            {/* Gallery Section */}
-            <div className="space-y-3">
-              <Label className="text-xs font-bold text-slate-600 block pl-1">{t('gallery_images')}</Label>
-              <div className="h-52 rounded-3xl bg-white border border-slate-200 p-4 shadow-sm overflow-hidden flex flex-col">
-                <div className="grid grid-cols-3 gap-3 overflow-y-auto pr-2 custom-scrollbar">
-                  {/* Existing Images */}
-                  {currentGalleryUrls.map((url, idx) => (
-                    <div key={`existing-${idx}`} className="relative aspect-square rounded-2xl overflow-hidden border border-slate-100 group shadow-sm bg-slate-50">
-                      <img src={url} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                      <button 
-                        type="button"
-                        onClick={() => removeCurrentGallery(idx)} 
-                        className="absolute top-1.5 right-1.5 bg-black/60 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all backdrop-blur-md shadow-lg"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  ))}
-                  {/* New Image Previews */}
-                  {newGalleryPreviews.map((pre, idx) => (
-                    <div key={`new-${idx}`} className="relative aspect-square rounded-2xl overflow-hidden border border-amber-200 group shadow-sm bg-amber-50/30">
-                      <img src={pre} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                      <div className="absolute top-1 left-1 bg-amber-500 text-[8px] font-black text-white px-1.5 py-0.5 rounded-full uppercase tracking-tighter">New</div>
-                      <button 
-                        type="button"
-                        onClick={() => removeNewGallery(idx)} 
-                        className="absolute top-1.5 right-1.5 bg-black/60 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 hover:bg-red-500 transition-all backdrop-blur-md"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  ))}
-                  <button 
-                    type="button"
-                    onClick={() => galleryInputRef.current?.click()}
-                    className="aspect-square rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-amber-500/40 transition-all group shadow-inner"
-                  >
-                    <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-amber-500/10 transition-colors">
-                      <Plus className="h-4 w-4 text-slate-400 group-hover:text-amber-500 transition-colors" />
-                    </div>
-                    <input type="file" multiple ref={galleryInputRef} accept="image/*" onChange={handleGalleryChange} className="hidden" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* SECTION 2: INFORMATION */}
-        <div className="bg-white rounded-[2.5rem] border border-slate-200/60 p-8 sm:p-10 shadow-sm space-y-8">
-          <div className="flex items-center gap-2">
-            <div className="h-6 w-1 bg-amber-400 rounded-full" />
-            <h3 className="text-lg font-black text-slate-900 tracking-tight">{t('general_info')}</h3>
-          </div>
-
-          <div className="grid grid-cols-1 gap-8">
-            <div className="space-y-3">
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">{t('event_title')}</Label>
-              <Input
-                placeholder={t('event_title_placeholder')}
-                className="h-14 bg-slate-50/50 border-slate-100 rounded-2xl font-bold px-6 focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/5 transition-all text-base sm:text-lg shadow-inner"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {/* Date Selection */}
-              <div className="space-y-4">
-                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">{t('event_date') || "Event Date"}</Label>
-                <div className="relative">
-                  <CalendarIcon className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-amber-500/40 pointer-events-none" />
-                  <Input
-                    type="date"
-                    className="h-14 bg-slate-50 border-slate-100 rounded-2xl font-bold pl-14 focus:border-amber-500 transition-all shadow-inner w-full text-base sm:text-sm cursor-pointer"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* Time Selection */}
-              <div className="space-y-4">
-                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">{t('event_time')}</Label>
-                <div className="relative">
-                  <Clock className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-indigo-500/40 pointer-events-none" />
-                  <Input
-                    type="time"
-                    className="h-14 bg-slate-50 border-slate-100 rounded-2xl font-bold pl-14 focus:border-indigo-500 transition-all shadow-inner w-full text-base sm:text-sm cursor-pointer"
-                    value={time}
-                    onChange={(e) => setTime(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* Category Selection */}
-              <div className="space-y-4">
-                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">{t('event_category')}</Label>
-                <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger className="h-14 bg-slate-50 border-slate-100 rounded-2xl font-bold px-6 focus:border-amber-500 transition-all shadow-inner">
-                    <SelectValue placeholder={t('select_best_fit')} />
-                  </SelectTrigger>
-                  <SelectContent 
-                    className="rounded-2xl border-slate-100 shadow-2xl p-2 z-50"
-                  >
-                    {EVENT_TEMPLATES.map(temp => (
-                      <SelectItem key={temp.id} value={temp.id} className="font-bold py-3 rounded-xl focus:bg-amber-50 focus:text-amber-600 transition-colors">
-                        {t(temp.id) || temp.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {category === 'custom' && (
-                  <Input
-                    placeholder={t('enter_custom_category')}
-                    className="h-12 bg-white border-amber-500/20 border-2 rounded-xl font-bold px-4 focus:border-amber-500 transition-all animate-in slide-in-from-top-2"
-                    value={customCategory}
-                    onChange={(e) => setCustomCategory(e.target.value)}
-                  />
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* SECTION 3: LOCATION & VENUE */}
-        <div className="bg-white rounded-[2.5rem] border border-slate-200/60 p-8 sm:p-10 shadow-sm space-y-8">
-          <div className="flex items-center gap-2">
-            <div className="h-6 w-1 bg-indigo-400 rounded-full" />
-            <h3 className="text-lg font-black text-slate-900 tracking-tight">{t('location_map')}</h3>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-            <div className="space-y-3">
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">{t('location')}</Label>
-              <div className="relative">
-                <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-red-500/40 pointer-events-none" />
-                <Input
-                  placeholder={t('venue_name_placeholder')}
-                  className="h-14 bg-slate-50 border-slate-100 rounded-2xl font-bold pl-14 focus:border-red-500 transition-all shadow-inner"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="space-y-3">
-              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">{t('map_pin_url')}</Label>
-              <div className="relative">
-                <Navigation className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500/40 pointer-events-none" />
-                <Input
-                  placeholder={t('google_maps_link_placeholder')}
-                  className="h-14 bg-slate-50 border-slate-100 rounded-2xl font-bold pl-14 focus:border-green-500 transition-all shadow-inner"
-                  value={mapUrl}
-                  onChange={(e) => setMapUrl(e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-
-
-
-          {/* Description Section */}
-          <div className="space-y-4 pt-4">
-            <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 ml-1">{t('event_description')}</Label>
-            <div className="rounded-[2.5rem] border border-slate-100 bg-slate-50/30 overflow-hidden shadow-inner focus-within:ring-4 focus-within:ring-amber-500/5 transition-all">
-              <RichTextEditor 
-                value={description} 
-                onChange={setDescription} 
-                className="min-h-48"
-                placeholder={t('event_description_placeholder')}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="h-10" />
-      </div>
-
-      {/* Floating Action Footer */}
-      <div className="p-6 sm:p-10 bg-white border-t border-slate-100 flex flex-row gap-4 shrink-0 shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.05)]">
-        <DrawerClose asChild>
-          <Button type="button" variant="ghost" className="h-14 rounded-2xl font-bold flex-1 text-slate-500 hover:bg-slate-100">
-            {t('cancel')}
-          </Button>
-        </DrawerClose>
-        <Button 
-          type="submit" 
-          disabled={loading} 
-          className="h-14 rounded-2xl font-black text-base flex-2 shadow-2xl shadow-amber-500/20 bg-amber-500 hover:bg-amber-600 text-white transition-all transform active:scale-95"
-        >
-          {loading ? (
-            <div className="flex items-center gap-3">
-              <Loader2 className="h-5 w-5 animate-spin" />
-              <span>{t('saving') || 'Saving...'}</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <Pencil className="h-5 w-5" />
-              <span>{t('save_changes')}</span>
             </div>
           )}
-        </Button>
+
+          {activeTab === "couple" && category === "wedding" && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="bg-card/40 border border-border rounded-md p-6 space-y-6 shadow-sm">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-3">
+                       <Label className="text-[10px] font-black uppercase flex items-center gap-2 tracking-[0.2em] text-[#f41f4d]">
+                         <Heart className="h-4 w-4 fill-[#f41f4d]/20" /> {"ឈ្មោះកូនកំលោះ"}
+                       </Label>
+                       <Input value={groomName} onChange={e => setGroomName(e.target.value)} className="h-14 text-xl font-black bg-muted/10 border-border focus:border-[#f41f4d]/50 transition-all shadow-inner" placeholder="ឈ្មោះកូនកំលោះ" />
+                    </div>
+                    <div className="space-y-3">
+                       <Label className="text-[10px] font-black uppercase flex items-center gap-2 tracking-[0.2em] text-[#f41f4d]">
+                         <Heart className="h-4 w-4 fill-[#f41f4d]/20" /> {"ឈ្មោះកូនក្រមុំ"}
+                       </Label>
+                       <Input value={brideName} onChange={e => setBrideName(e.target.value)} className="h-14 text-xl font-black bg-muted/10 border-border focus:border-[#f41f4d]/50 transition-all shadow-inner" placeholder="ឈ្មោះកូនក្រមុំ" />
+                    </div>
+                 </div>
+
+                 <div className="h-px bg-border/50" />
+
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-3">
+                       <Label className="text-[10px] font-black flex items-center gap-2 uppercase tracking-widest text-muted-foreground">
+                          <ImageIcon className="h-3 w-3" /> KHQR USD (សម្រាប់ទទួលចំណងដៃ)
+                       </Label>
+                       <div className="aspect-video rounded-xl border-2 border-dashed border-border bg-muted/5 relative overflow-hidden group hover:border-[#f41f4d]/30 transition-all flex flex-col items-center justify-center p-4">
+                          <input type="file" accept="image/*" className="absolute inset-0 opacity-0 z-10 cursor-pointer" onChange={e => setKhqrUSD(e.target.files?.[0] || null)} />
+                          {(khqrUSD || currentKhqrUSDUrl) ? (
+                            <img src={khqrUSD ? URL.createObjectURL(khqrUSD) : currentKhqrUSDUrl} className="w-full h-full object-contain" />
+                          ) : (
+                            <div className="flex flex-col items-center gap-2 text-muted-foreground/30">
+                               <Upload className="h-8 w-8" />
+                               <span className="text-[10px] font-bold uppercase tracking-widest">បញ្ចូលរូបភាព QR</span>
+                            </div>
+                          )}
+                          {(khqrUSD || currentKhqrUSDUrl) && (
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                               <Upload className="h-6 w-6 text-white" />
+                            </div>
+                          )}
+                       </div>
+                    </div>
+                    <div className="space-y-3">
+                       <Label className="text-[10px] font-black flex items-center gap-2 uppercase tracking-widest text-muted-foreground">
+                          <ImageIcon className="h-3 w-3" /> KHQR KHR (សម្រាប់ទទួលចំណងដៃ)
+                       </Label>
+                       <div className="aspect-video rounded-xl border-2 border-dashed border-border bg-muted/5 relative overflow-hidden group hover:border-[#f41f4d]/30 transition-all flex flex-col items-center justify-center p-4">
+                          <input type="file" accept="image/*" className="absolute inset-0 opacity-0 z-10 cursor-pointer" onChange={e => setKhqrKHR(e.target.files?.[0] || null)} />
+                          {(khqrKHR || currentKhqrKHRUrl) ? (
+                            <img src={khqrKHR ? URL.createObjectURL(khqrKHR) : currentKhqrKHRUrl} className="w-full h-full object-contain" />
+                          ) : (
+                            <div className="flex flex-col items-center gap-2 text-muted-foreground/30">
+                               <Upload className="h-8 w-8" />
+                               <span className="text-[10px] font-bold uppercase tracking-widest">បញ្ចូលរូបភាព QR</span>
+                            </div>
+                          )}
+                          {(khqrKHR || currentKhqrKHRUrl) && (
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                               <Upload className="h-6 w-6 text-white" />
+                            </div>
+                          )}
+                       </div>
+                    </div>
+                 </div>
+
+                 <div className="bg-rose-500/5 p-4 rounded-xl border border-rose-500/10 flex items-center gap-4 group cursor-pointer" onClick={() => setPreventDuplicateGuests(!preventDuplicateGuests)}>
+                    <div className={cn("w-10 h-6 rounded-full relative transition-all duration-300", preventDuplicateGuests ? "bg-[#f41f4d]" : "bg-muted")}>
+                       <div className={cn("absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm", preventDuplicateGuests ? "left-5" : "left-1")} />
+                    </div>
+                    <div className="flex-1">
+                       <Label className="text-xs font-black text-rose-500 uppercase tracking-widest cursor-pointer">{"មិនអនុញ្ញាតឱ្យមានភ្ញៀវឈ្មោះដូចគ្នា"}</Label>
+                       <p className="text-[10px] text-muted-foreground mt-0.5">{"ប្រព័ន្ធនឹងត្រួតពិនិត្យជៀសវាងការចុះឈ្មោះស្ទួន"}</p>
+                    </div>
+                 </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "schedule" && category === "wedding" && (
+            <div className="space-y-1 animate-in fade-in slide-in-from-bottom-2 duration-300 pb-20">
+              <div className="flex items-center justify-between mb-4 bg-muted/20 p-2 rounded-md">
+                 <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">{"គ្រប់គ្រងកាលវិភាគអាពាហ៍ពិពាហ៍"}</Label>
+                 <Button variant="outline" size="sm" onClick={() => setWeddingSchedule([...weddingSchedule, { id: `day_${Date.now()}`, dayLabel: "", groups: [{ id: `group_${Date.now()}`, groupTitle: "", activities: [] }] }])} className="h-9 px-4 text-[10px] font-black uppercase tracking-widest border-[#f41f4d]/20 text-[#f41f4d] hover:bg-[#f41f4d]/5">
+                    <Plus className="h-3.5 w-3.5 mr-2" /> {"បន្ថែមថ្ងៃថ្មី"}
+                 </Button>
+              </div>
+              
+              {weddingSchedule.map((day, dIdx) => (
+                <div key={day.id} className="bg-card/40 border border-border rounded-xl p-8 relative group mb-8 shadow-sm hover:border-[#f41f4d]/10 transition-all">
+                   <button onClick={() => setWeddingSchedule(weddingSchedule.filter((_, i) => i !== dIdx))} className="absolute top-6 right-6 text-muted-foreground/20 hover:text-rose-500 transition-colors p-2 hover:bg-rose-500/5 rounded-md"><Trash2 className="h-5 w-5" /></button>
+                   
+                   <div className="space-y-8">
+                      <div className="max-w-md space-y-3">
+                         <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground pl-1">{"កាលបរិច្ឆេទ (ឧ. ថ្ងៃទី១ - ពេលព្រឹក)"}</Label>
+                         <Input placeholder="ឧ. ថ្ងៃសៅរ៍ ទី២១ ខែមីនា" value={day.dayLabel} onChange={e => {
+                           const n = [...weddingSchedule]; n[dIdx].dayLabel = e.target.value; setWeddingSchedule(n);
+                         }} className="h-12 font-bold bg-muted/20 border-border rounded-md px-4 focus:ring-rose-500/20" />
+                      </div>
+                      
+                      <div className="space-y-5 pt-4">
+                         {(day.groups[0]?.activities || []).map((act: any, aIdx: number) => (
+                           <div key={aIdx} className="flex gap-6 p-6 bg-muted/10 rounded-2xl group/act border border-border/50 hover:bg-muted/15 transition-all relative">
+                              <div className="shrink-0 flex flex-col gap-2">
+                                 <Label className="text-[8px] font-black text-muted-foreground uppercase tracking-widest ml-1 text-center">ម៉ោង</Label>
+                                 <Input placeholder="៧:៣០" value={act.time} onChange={e => {
+                                   const n = [...weddingSchedule]; n[dIdx].groups[0].activities[aIdx].time = e.target.value; setWeddingSchedule(n);
+                                 }} className="w-24 h-11 font-black text-center bg-background border-border text-[#f41f4d] rounded-md text-lg shadow-inner" />
+                              </div>
+                              <div className="flex-1 space-y-4">
+                                 <div className="space-y-1.5 flex-1">
+                                    <Label className="text-[8px] font-black text-muted-foreground uppercase tracking-widest ml-1">ឈ្មោះកម្មវិធី</Label>
+                                    <Input placeholder="ឧ. ពិធីដង្ហែជំនូន" value={act.title} onChange={e => {
+                                      const n = [...weddingSchedule]; n[dIdx].groups[0].activities[aIdx].title = e.target.value; setWeddingSchedule(n);
+                                    }} className="h-11 font-bold bg-background border-border rounded-md px-4" />
+                                 </div>
+                              </div>
+                              <button onClick={() => {
+                                const n = [...weddingSchedule]; n[dIdx].groups[0].activities = n[dIdx].groups[0].activities.filter((_: any, i: number) => i !== aIdx); setWeddingSchedule(n);
+                              }} className="absolute top-4 right-4 text-muted-foreground/10 hover:text-rose-500 opacity-0 group-hover/act:opacity-100 transition-all"><X className="h-4 w-4" /></button>
+                           </div>
+                         ))}
+                         
+                         <Button variant="ghost" size="sm" onClick={() => {
+                           const n = [...weddingSchedule];
+                           if(!n[dIdx].groups[0]) n[dIdx].groups[0] = { id: `g_${Date.now()}`, activities: [] };
+                           n[dIdx].groups[0].activities.push({ time: "", title: "", description: "" });
+                           setWeddingSchedule(n);
+                         }} className="w-full h-14 border-2 border-dashed border-border rounded-md hover:bg-muted/30 text-[10px] uppercase font-black tracking-[0.2em] text-muted-foreground transition-all flex items-center justify-center gap-3">
+                            <Plus className="h-4 w-4" /> {"បន្ថែមសកម្មភាពកម្មវិធី"}
+                         </Button>
+                      </div>
+                   </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {activeTab === "location" && category === "wedding" && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="bg-card/40 border border-border rounded-md p-8 space-y-8 shadow-sm">
+                 <div className="space-y-5">
+                    <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-2">
+                       <MapIcon className="h-3.5 w-3.5" /> {"ព័ត៌មានទីតាំងកម្មវិធី"}
+                    </Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       <div className="space-y-2.5">
+                          <Label className="text-[10px] font-bold text-muted-foreground">{"ឈ្មោះទីតាំង"}</Label>
+                          <Input value={locObj.name} onChange={e => setLocObj({...locObj, name: e.target.value})} className="h-12 bg-muted/10 font-bold" placeholder="ឧ. សណ្ឋាគារ ហៃយ៉ាត់ រីជិនស៊ី ភ្នំពេញ" />
+                       </div>
+                       <div className="space-y-2.5">
+                          <Label className="text-[10px] font-bold text-muted-foreground">{"Google Map URL"}</Label>
+                          <Input value={locObj.mapUrl} onChange={e => setLocObj({...locObj, mapUrl: e.target.value})} className="h-12 bg-muted/10" placeholder="https://maps.google.com/..." />
+                       </div>
+                    </div>
+                    <div className="space-y-2.5">
+                       <Label className="text-[10px] font-bold text-muted-foreground">{"អាសយដ្ឋានលម្អិត"}</Label>
+                       <Input value={locObj.address} onChange={e => setLocObj({...locObj, address: e.target.value})} className="h-12 bg-muted/10" placeholder="បញ្ចូលអាសយដ្ឋានសម្រាប់បង្ហាញលើធៀប" />
+                    </div>
+                 </div>
+
+                 <div className="h-px bg-border/50" />
+
+                 <div className="space-y-3">
+                    <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center gap-2">
+                       <MessageSquare className="h-3.5 w-3.5" /> {"ពាក្យអរគុណ (Footer Content)"}
+                    </Label>
+                    <Textarea value={footerContent} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFooterContent(e.target.value)} placeholder="ឧ. វត្តមានដ៏ខ្ពង់ខ្ពស់របស់អស់លោក លោកស្រី អ្នកនាងកញ្ញា ជាកិត្តិយសដ៏ធំធេងសម្រាប់គ្រួសាររបស់យើងក្នុងឱកាសនេះ..." className="min-h-40 text-sm leading-relaxed p-6 bg-muted/5 rounded-2xl" />
+                 </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "assets" && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="bg-card/40 border border-border rounded-md p-8 space-y-10 shadow-sm">
+                 <div className="space-y-4">
+                    <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center justify-between pl-1">
+                       {"រូបភាពបដា (Cover Image)"}
+                       <span className="text-[8px] opacity-30">DIMENSION 21:9 RECOMMENDED</span>
+                    </Label>
+                    <div className="aspect-21/9 rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center relative overflow-hidden group hover:border-[#f41f4d]/30 transition-all bg-muted/10 shadow-inner">
+                       <input type="file" className="absolute inset-0 opacity-0 z-10 cursor-pointer" onChange={e => setBanner(e.target.files?.[0] || null)} />
+                       {(banner || currentBannerUrl) ? (
+                         <img src={banner ? URL.createObjectURL(banner) : currentBannerUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                       ) : (
+                         <div className="flex flex-col items-center gap-3 text-muted-foreground/30">
+                           <Upload className="h-10 w-10" />
+                           <span className="text-[10px] font-black uppercase tracking-widest">UPLOAD COVER PHOTO</span>
+                         </div>
+                       )}
+                       {(banner || currentBannerUrl) && (
+                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                            <Button variant="outline" className="h-10 rounded-full border-white/50 bg-white/10 text-white backdrop-blur-md font-black text-[10px] uppercase tracking-widest">
+                               CHANGE PHOTO
+                            </Button>
+                         </div>
+                       )}
+                    </div>
+                 </div>
+
+                 <div className="space-y-5 pt-4">
+                    <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground flex items-center justify-between pl-1">
+                       {"វិចិត្រសាលរូបភាព (Gallery)"}
+                       <span className="text-[8px] opacity-30">{currentGalleryUrls.length + galleryFiles.length} PHOTOS</span>
+                    </Label>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
+                       {currentGalleryUrls.map((url, i) => (
+                         <div key={i} className="aspect-square rounded-xl border border-border relative group overflow-hidden shadow-sm">
+                            <img src={url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all backdrop-blur-[1px] flex items-center justify-center">
+                               <button onClick={() => removeCurrentGallery(i)} className="bg-rose-500 text-white p-2 rounded-lg transform scale-90 group-hover:scale-100 transition-transform"><Trash2 className="h-4 w-4" /></button>
+                            </div>
+                         </div>
+                       ))}
+                       {newGalleryPreviews.map((p, i) => (
+                         <div key={i} className="aspect-square rounded-xl border-2 border-[#f41f4d]/20 relative group overflow-hidden shadow-sm">
+                            <img src={p} className="w-full h-full object-cover animate-pulse-subtle" />
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all backdrop-blur-[1px] flex items-center justify-center">
+                               <button onClick={() => removeNewGallery(i)} className="bg-rose-500 text-white p-2 rounded-lg transform scale-90 group-hover:scale-100 transition-transform"><X className="h-4 w-4" /></button>
+                            </div>
+                             <div className="absolute top-1 left-1 bg-[#f41f4d] text-[6px] text-white px-1 py-0.5 rounded uppercase font-black">NEW</div>
+                         </div>
+                       ))}
+                       <button onClick={() => galleryInputRef.current?.click()} className="aspect-square rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center hover:bg-[#f41f4d]/5 hover:border-[#f41f4d]/20 transition-all text-muted-foreground/30 group active:scale-95">
+                          <Plus className="h-8 w-8 group-hover:scale-110 transition-transform" />
+                          <input type="file" multiple ref={galleryInputRef} className="hidden" onChange={handleGalleryChange} />
+                       </button>
+                    </div>
+                 </div>
+              </div>
+            </div>
+          )}
+
+        </div>
       </div>
-    </form>
+
+       {/* FOOTER - CTA */}
+       <div className="h-24 bg-card border-t border-border flex items-center justify-center px-4 z-50 shrink-0">
+        <form onSubmit={handleSubmit} className="w-full max-w-4xl">
+           <Button type="submit" disabled={loading} className="cursor-pointer w-full h-14 rounded-xl font-black bg-[#f41f4d] text-white hover:bg-[#d91a45] transition-all flex items-center justify-center gap-3 text-sm shadow-xl shadow-[#f41f4d]/20 active:scale-[0.98]">
+             {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <CheckCircle2 className="h-5 w-5" />}
+             <span className="uppercase tracking-[0.2em]">{loading ? "កំពុងរក្សាទុក..." : "រក្សាទុកការផ្លាស់ប្តូរ"}</span>
+           </Button>
+        </form>
+      </div>
+    </div>
   );
 
   const triggerElement = trigger || (
-    <Button variant="outline" size="sm" className="h-8 rounded-lg gap-2 text-xs font-bold border-zinc-200">
-      <Pencil className="h-3 w-3" />
-      {t('edit')}
+    <Button variant="outline" size="sm" className="h-9 px-4 rounded-lg bg-card border-border hover:bg-muted font-bold flex items-center gap-2 transition-all">
+      <Pencil className="w-3.5 h-3.5 text-rose-500" />
+      កែប្រែ
     </Button>
   );
 
   return (
     <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerTrigger asChild>
-        {triggerElement}
-      </DrawerTrigger>
-      <DrawerContent className="rounded-t-[2.5rem] h-[96vh] sm:h-[94vh] max-w-4xl mx-auto border-none shadow-2xl overflow-hidden bg-white">
+      <DrawerTrigger asChild>{triggerElement}</DrawerTrigger>
+      <DrawerContent className="fixed inset-0! top-0! bottom-0! left-0! right-0! mt-0! max-h-screen! h-screen! w-screen max-w-none rounded-none! border-none p-0 bg-background overflow-hidden [&>div:first-child]:hidden">
         {renderFormContent()}
       </DrawerContent>
     </Drawer>

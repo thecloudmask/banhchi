@@ -3,7 +3,6 @@
 import { useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Wallet, Building2, TrendingUp, PieChart as PieChartIcon } from "lucide-react";
-import { useLanguage } from "@/providers/language-provider";
 import { Guest } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -12,7 +11,7 @@ interface AdminEventStatsProps {
 }
 
 export function AdminEventStats({ guests }: AdminEventStatsProps) {
-  const { t } = useLanguage();
+  // No internationalization needed
 
   const stats = useMemo(() => {
     const res = {
@@ -58,7 +57,7 @@ export function AdminEventStats({ guests }: AdminEventStatsProps) {
              <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center">
                 <PieChartIcon className="h-5 w-5 text-primary" />
              </div>
-             <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50">{t('total_contributions')}</span>
+             <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50">{"ចំណូលសរុប"}</span>
           </div>
           
           <div className="space-y-1">
@@ -68,7 +67,7 @@ export function AdminEventStats({ guests }: AdminEventStatsProps) {
 
           <div className="pt-4 border-t border-white/10 flex items-center justify-between">
             <div className="text-[10px] font-black uppercase tracking-widest opacity-40">
-              {stats.counts.total} {t('guests')}
+              {stats.counts.total} {"នាក់"}
             </div>
             <div className="flex -space-x-2">
                {[1,2,3].map(i => (
@@ -91,8 +90,8 @@ export function AdminEventStats({ guests }: AdminEventStatsProps) {
                   <Wallet className="h-5 w-5 text-orange-500" />
                 </div>
                 <div>
-                   <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{t('cash_in_hand')}</span>
-                   <h4 className="text-lg font-black text-gray-900">{stats.counts.cash} {t('guests')}</h4>
+                   <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{"សាច់ប្រាក់សុទ្ធ"}</span>
+                   <h4 className="text-lg font-black text-gray-900">{stats.counts.cash} {"នាក់"}</h4>
                 </div>
               </div>
               <div className="space-y-1 pl-13">
@@ -108,8 +107,8 @@ export function AdminEventStats({ guests }: AdminEventStatsProps) {
                   <Building2 className="h-5 w-5 text-blue-500" />
                 </div>
                 <div>
-                   <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{t('digital_transfers')}</span>
-                   <h4 className="text-lg font-black text-gray-900">{stats.counts.bank} {t('guests')}</h4>
+                   <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{"តាមធនាគារ"}</span>
+                   <h4 className="text-lg font-black text-gray-900">{stats.counts.bank} {"នាក់"}</h4>
                 </div>
               </div>
               <div className="space-y-1 pl-13">
@@ -122,8 +121,8 @@ export function AdminEventStats({ guests }: AdminEventStatsProps) {
         {/* Visual Ratio Bar */}
         <div className="mt-8 space-y-3">
            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
-              <span className="text-orange-500">{t('cash')} {Math.round(100 - bankPercentage)}%</span>
-              <span className="text-blue-500">{t('bank')} {Math.round(bankPercentage)}%</span>
+              <span className="text-orange-500">{"សាច់ប្រាក់"} {Math.round(100 - bankPercentage)}%</span>
+              <span className="text-blue-500">{"ធនាគារ"} {Math.round(bankPercentage)}%</span>
            </div>
            <div className="h-3 w-full bg-gray-50 rounded-full overflow-hidden flex">
               <div 

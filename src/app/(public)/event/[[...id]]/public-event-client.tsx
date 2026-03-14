@@ -7,15 +7,15 @@ import { getContentsByEventId, getContentById, Content } from "@/services/conten
 import { Event } from "@/types";
 import { useLanguage } from "@/providers/language-provider";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Loader2, Calendar, MapPin, ArrowLeft, Clock, Share2, Navigation, Lock, ArrowRight, Heart } from "lucide-react";
-import { formatDate, cn } from "@/lib/utils";
+import { formatDateTime, cn } from "@/lib/utils";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
-import { Toaster } from "@/components/ui/sonner";
 import { AgendaRenderer } from "../components/rendering/agenda-renderer";
 import { ArticleRenderer } from "../components/rendering/article-renderer";
 
@@ -30,72 +30,45 @@ const getCategoryTheme = (category?: string) => {
     button: string,
   }> = {
     wedding: {
-      primary: "text-rose-600",
-      accent: "bg-rose-50",
-      bg: "bg-rose-50/20",
-      card: "bg-white border-rose-100 hover:border-rose-200 shadow-sm hover:shadow-md",
-      badge: "bg-rose-500 text-white",
-      icon: "text-rose-400 group-hover:text-rose-600",
-      button: "bg-rose-600 hover:bg-rose-700 shadow-rose-200",
+      primary: "text-[#f41f4d]",
+      accent: "bg-[#f41f4d]/10",
+      bg: "bg-background",
+      card: "bg-card border-border shadow-2xl",
+      badge: "bg-[#f41f4d] text-white shadow-rose-500/20",
+      icon: "text-[#f41f4d]",
+      button: "bg-[#f41f4d] hover:bg-[#f41f4d]/90 shadow-rose-500/20",
     },
-    funeral: {
-      primary: "text-zinc-900",
-      accent: "bg-zinc-100",
-      bg: "bg-zinc-50",
-      card: "bg-white border-zinc-200 hover:border-zinc-300 shadow-sm hover:shadow-md",
-      badge: "bg-zinc-800 text-white",
-      icon: "text-zinc-500 group-hover:text-zinc-900",
-      button: "bg-zinc-900 hover:bg-zinc-800 shadow-zinc-200",
-    },
-    merit_making: {
-      primary: "text-orange-600",
-      accent: "bg-orange-50",
-      bg: "bg-orange-50/20",
-      card: "bg-white border-orange-100 hover:border-orange-200 shadow-sm hover:shadow-md",
-      badge: "bg-orange-500 text-white",
-      icon: "text-orange-400 group-hover:text-orange-600",
-      button: "bg-orange-600 hover:bg-orange-700 shadow-orange-200",
-    },
-    inauguration: {
-      primary: "text-indigo-600",
-      accent: "bg-indigo-50",
-      bg: "bg-indigo-50/20",
-      card: "bg-white border-indigo-100 hover:border-indigo-200 shadow-sm hover:shadow-md",
-      badge: "bg-indigo-600 text-white",
-      icon: "text-indigo-400 group-hover:text-indigo-600",
-      button: "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200",
-    },
-    memorial: {
-      primary: "text-slate-600",
-      accent: "bg-slate-50",
-      bg: "bg-slate-50/20",
-      card: "bg-white border-slate-100 hover:border-slate-200 shadow-sm hover:shadow-md",
-      badge: "bg-slate-500 text-white",
-      icon: "text-slate-400 group-hover:text-slate-600",
-      button: "bg-slate-600 hover:bg-slate-700 shadow-slate-200",
+    buddhist: {
+      primary: "text-orange-500",
+      accent: "bg-orange-500/10",
+      bg: "bg-background",
+      card: "bg-card border-border shadow-2xl",
+      badge: "bg-orange-500 text-white shadow-orange-500/20",
+      icon: "text-orange-500",
+      button: "bg-orange-500 hover:bg-orange-600 shadow-orange-500/20",
     },
   };
 
   return themes[category || "default"] || {
-    primary: "text-blue-600",
-    accent: "bg-blue-50",
-    bg: "bg-zinc-50/50",
-    card: "bg-white border-zinc-100 hover:border-zinc-200 shadow-sm hover:shadow-md",
-    badge: "bg-zinc-900 text-white",
-    icon: "text-zinc-300 group-hover:text-primary",
-    button: "bg-zinc-900 hover:bg-zinc-800 shadow-zinc-200",
+    primary: "text-blue-500",
+    accent: "bg-blue-500/10",
+    bg: "bg-background",
+    card: "bg-card border-border shadow-2xl",
+    badge: "bg-slate-700 text-white shadow-slate-500/10",
+    icon: "text-blue-500",
+    button: "bg-blue-500 hover:bg-blue-600 shadow-blue-500/20",
   };
 };
 
 export default function PublicEventClient() {
   const params = useParams();
-  // Handles both /event/[[...id]] (array) and /wedding/[id] etc (string)
   const rawId = params.id;
   const eventId = Array.isArray(rawId) ? rawId[0] : (rawId as string | undefined);
   const { t, language } = useLanguage();
   
   const [event, setEvent] = useState<Event | null>(null);
   const [content, setContent] = useState<Content | null>(null);
+  const [relatedContents, setRelatedContents] = useState<Content[]>([]);
   const [loading, setLoading] = useState(true);
   const [pin, setPin] = useState("");
   const [unlocking, setUnlocking] = useState(false);
@@ -107,27 +80,33 @@ export default function PublicEventClient() {
       
       try {
         setLoading(true);
-        // 1. Try to find an Event with this ID
+        // Try fetching as event first
         const eventData = await getEventById(eventId);
         
         if (eventData) {
-            // Find content reference for this event
             const contentsData = await getContentsByEventId(eventId);
             setEvent(eventData);
+            setRelatedContents(contentsData || []);
+            
             if (contentsData && contentsData.length > 0) {
+              // If we are at the event root, show the first content (usually the agenda/main story)
               setContent(contentsData[0]);
-              setIsLocked(contentsData[0].status === 'draft'); // draft = locked in some sense, or use explicit pin logic if needed
+              setIsLocked(contentsData[0].status === 'draft');
             }
         } else {
-            // 2. Fallback: maybe the ID is actually a Content ID
+            // If not event, try fetching as content
             const contentData = await getContentById(eventId);
             if (contentData) {
               setContent(contentData);
               setIsLocked(contentData.status === 'draft');
-              // If content has an eventId, fetch event details for context
+              
               if (contentData.eventId) {
-                const eData = await getEventById(contentData.eventId);
+                const [eData, cData] = await Promise.all([
+                  getEventById(contentData.eventId),
+                  getContentsByEventId(contentData.eventId)
+                ]);
                 setEvent(eData);
+                setRelatedContents(cData || []);
               }
             }
         }
@@ -143,12 +122,31 @@ export default function PublicEventClient() {
 
   const theme = useMemo(() => getCategoryTheme(event?.category), [event?.category]);
 
+  // Create a virtual content object if it's a ceremony event but no explicit content post exists
+  // This allows the premium wedding/agenda layouts to show even if only the event details are filled
+  const effectiveContent = useMemo(() => {
+    if (content) return content;
+    if (event && ['wedding', 'buddhist', 'funeral', 'memorial', 'inauguration', 'custom'].includes(event.category || "")) {
+      return {
+        id: `v-${event.id}`,
+        title: event.title,
+        type: event.category === 'buddhist' ? 'agenda' : (event.category === 'custom' ? 'article' : event.category),
+        contentData: event.extraData || {},
+        status: 'published',
+        createdAt: event.createdAt,
+        updatedAt: event.createdAt,
+        eventId: event.id,
+        body: event.description || "",
+      } as unknown as Content;
+    }
+    return null;
+  }, [content, event]);
+
   const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
     setUnlocking(true);
-    // Simulate/Implement actual PIN check if needed
     setTimeout(() => {
-      if (pin === "1234") { // Temporary mock PIN
+      if (pin === "1234") {
         setIsLocked(false);
       } else {
         toast.error(t('invalid_pin'));
@@ -177,71 +175,85 @@ export default function PublicEventClient() {
 
   if (loading) return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-      <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
-      <span className="text-muted-foreground font-medium">{t('loading')}</span>
+      <Loader2 className="h-12 w-12 animate-spin text-[#f41f4d] mb-6 opacity-60" />
+      <span className="text-muted-foreground font-black uppercase tracking-[0.2em] text-xs">{t('loading')}</span>
     </div>
   );
 
   if (!eventId || (!event && !content)) return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-      <h2 className="text-xl font-black mb-4 uppercase tracking-widest">{t('not_found')}</h2>
-      <Link href="/"><Button variant="outline" className="rounded-xl">{t('back_to_home')}</Button></Link>
+      <div className="text-center space-y-8 animate-in fade-in zoom-in duration-700">
+        <div className="h-24 w-24 bg-card border border-border rounded-3xl flex items-center justify-center mx-auto mb-6 text-muted-foreground">
+          <Calendar className="h-10 w-10" />
+        </div>
+        <h2 className="text-2xl font-black text-foreground uppercase tracking-tight">{t('not_found')}</h2>
+        <Link href="/">
+          <Button variant="outline" className="h-14 px-8 rounded-2xl border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground uppercase font-black text-xs tracking-widest shadow-xl">
+            {t('back_to_home')}
+          </Button>
+        </Link>
+      </div>
     </div>
   );
 
   if (isLocked) {
     return (
-      <div className="min-h-screen bg-secondary/20 flex flex-col items-center justify-center p-6 sm:p-12">
-        <Card className="w-full max-w-lg rounded-3xl border-none shadow-xl overflow-hidden">
-          <CardContent className="p-10 sm:p-16">
-             <div className="text-center mb-8">
-                <Lock className="h-12 w-12 text-primary mx-auto mb-4" />
-                <h1 className="text-2xl font-black">{t('content_protected')}</h1>
-             </div>
-             <form onSubmit={handleUnlock} className="space-y-6">
-                <Input 
-                  type="password"
-                  placeholder="PIN"
-                  value={pin}
-                  onChange={(e) => setPin(e.target.value)}
-                  className="h-14 text-center text-2xl font-black rounded-2xl"
-                />
-                <Button className="w-full h-14 rounded-2xl font-black" disabled={unlocking}>
-                   {unlocking ? <Loader2 className="h-4 w-4 animate-spin" /> : t('enter')}
-                </Button>
-             </form>
-          </CardContent>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 sm:p-12 font-kantumruy">
+        <Card className="w-full max-w-lg rounded-[2.5rem] bg-card border border-border shadow-2xl p-10 sm:p-16 text-center animate-in fade-in slide-in-from-bottom-8 duration-700">
+          <div className="mb-10">
+            <div className="h-20 w-20 bg-muted/50 border border-[#f41f4d]/20 rounded-[1.5rem] flex items-center justify-center mx-auto mb-6 text-[#f41f4d] shadow-xl shadow-rose-500/10">
+              <Lock className="h-10 w-10" />
+            </div>
+            <h1 className="text-2xl font-black text-foreground uppercase tracking-tight mb-2">{t('content_protected')}</h1>
+            <p className="text-muted-foreground text-xs uppercase tracking-widest font-bold">Encrypted Data Access Required</p>
+          </div>
+          <form onSubmit={handleUnlock} className="space-y-6">
+            <div className="space-y-2 text-left">
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Access PIN</label>
+              <Input 
+                type="password"
+                placeholder="••••"
+                value={pin}
+                onChange={(e) => setPin(e.target.value)}
+                className="h-16 text-center text-3xl font-black rounded-2xl bg-muted/50 border-border text-foreground placeholder:text-muted-foreground/30 focus:border-[#f41f4d] focus:ring-[#f41f4d]/20"
+                maxLength={4}
+              />
+            </div>
+            <Button className="w-full h-16 rounded-2xl font-black bg-[#f41f4d] hover:bg-[#f41f4d]/90 shadow-xl shadow-rose-500/20 text-white uppercase tracking-widest text-xs" disabled={unlocking}>
+              {unlocking ? <Loader2 className="h-4 w-4 animate-spin" /> : t('enter')}
+            </Button>
+          </form>
         </Card>
       </div>
     );
   }
 
-  const isAgenda = content?.type === 'agenda' || content?.type === 'wedding' || content?.type === 'funeral';
+  const isAgenda = effectiveContent?.type === 'agenda' || effectiveContent?.type === 'wedding' || effectiveContent?.type === 'funeral';
 
-  // --- RENDER LOGIC ---
-  if (content) {
+  if (effectiveContent) {
     return (
-      <div className="min-h-screen bg-slate-50/30 text-zinc-900 selection:bg-primary/10 overflow-x-hidden transform-gpu">
-        <header className="sticky top-0 z-50 glass border-b border-white/40">
-          <div className="container h-16 sm:h-20 flex items-center justify-between">
+      <div className="min-h-screen bg-background text-foreground selection:bg-[#f41f4d]/20 overflow-x-hidden transform-gpu font-kantumruy">
+        <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border h-16 sm:h-20">
+          <div className="container mx-auto px-6 sm:px-12 h-full flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2 group">
-              <div className="h-10 w-48 sm:h-12 sm:w-64 relative items-center justify-center overflow-hidden transition-ultra group-hover:scale-[1.02]">
+              <div className="h-12 w-48 sm:h-14 sm:w-64 relative items-center justify-center overflow-hidden transition-all group-hover:scale-105">
                 <Image 
                   src="/SIDETH-THEAPKA.png" 
                   alt="Logo" 
                   fill
-                  className="object-contain object-left" 
+                  className="object-contain object-left dark:brightness-200" 
                   priority
                 />
               </div>
             </Link>
             <div className="flex items-center gap-3 sm:gap-4">
+              <ThemeToggle />
               <LanguageSwitcher />
               <Button 
                 variant="ghost" 
                 size="icon" 
                 onClick={handleShare} 
-                className="rounded-2xl h-10 w-10 sm:h-12 sm:w-12 bg-white/50 border border-white/60 hover:bg-white hover:shadow-xl transition-ultra"
+                className="rounded-xl h-10 w-10 sm:h-12 sm:w-12 bg-muted/50 border border-border hover:bg-muted text-foreground transition-all hover:scale-105"
               >
                 <Share2 className="h-5 w-5" />
               </Button>
@@ -249,89 +261,152 @@ export default function PublicEventClient() {
           </div>
         </header>
 
-        <main className="container py-8 sm:py-20 animate-in fade-in slide-in-from-bottom-5 duration-1000">
-          {isAgenda ? (
-            <AgendaRenderer content={content} event={event!} theme={theme} />
-          ) : (
-            <ArticleRenderer content={content} event={event!} theme={theme} />
-          )}
+        <main className="container mx-auto px-6 sm:px-12 py-24 sm:py-32 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+          <div className="max-w-4xl mx-auto space-y-24 sm:space-y-32">
+            {isAgenda ? (
+              <AgendaRenderer content={effectiveContent} event={event!} theme={theme} />
+            ) : (
+              <ArticleRenderer content={effectiveContent} event={event!} theme={theme} />
+            )}
+
+            {/* Related Contents Section */}
+            {relatedContents.filter(c => c.id !== content?.id).length > 0 && (
+              <div className="space-y-12 sm:space-y-20 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-300">
+                 <div className="flex flex-col items-center gap-6 text-center">
+                    <div className="h-1.5 w-16 bg-primary rounded-full" />
+                    <div className="space-y-2">
+                       <h3 className="text-xl sm:text-3xl font-black text-foreground uppercase tracking-widest leading-none">
+                          {language === 'kh' ? 'អត្ថបទ និងរឿងរ៉ាវពាក់ព័ន្ធ' : 'Related Stories'}
+                       </h3>
+                       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em]">
+                          {language === 'kh' ? 'ស្វែងយល់បន្ថែមអំពីកម្មវិធីនេះ' : 'Discover more about this event'}
+                       </p>
+                    </div>
+                 </div>
+
+                 <div className="grid gap-10 sm:grid-cols-2">
+                    {relatedContents.filter(c => c.id !== content?.id).map((item) => (
+                      <Link key={item.id} href={`/event/${item.id}`} className="group">
+                        <Card className="h-full overflow-hidden border-border bg-card/40 backdrop-blur-xl hover:bg-card hover:border-primary/20 transition-all duration-700 hover:shadow-[0_20px_50px_rgba(244,31,77,0.1)] hover:-translate-y-2 rounded-[2.5rem]">
+                           <CardContent className="p-0 flex flex-col h-full">
+                             <div className="aspect-4/3 relative overflow-hidden bg-muted/20">
+                               {item.thumbnail ? (
+                                 <Image src={item.thumbnail} alt={item.title} fill className="object-cover transition-transform duration-1000 group-hover:scale-105" />
+                               ) : (
+                                 <div className="absolute inset-0 bg-muted/50 flex items-center justify-center">
+                                    <Heart className="h-12 w-12 text-primary/5" />
+                                 </div>
+                               )}
+                               <div className="absolute inset-0 bg-linear-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-700" />
+                               <div className="absolute top-4 right-4">
+                                  <div className="bg-primary/90 backdrop-blur-md text-white text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-lg">
+                                     {item.type}
+                                  </div>
+                               </div>
+                             </div>
+                             <div className="p-10 space-y-5 flex-1 flex flex-col">
+                                <div className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em]">
+                                   <Calendar className="h-3.5 w-3.5 text-primary" />
+                                   <span>{formatDateTime(item.createdAt)}</span>
+                                </div>
+                                <h4 className="text-xl sm:text-2xl font-black text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-2">
+                                   {item.title}
+                                </h4>
+                                <p className="text-sm text-muted-foreground font-medium line-clamp-3 leading-relaxed opacity-60 flex-1">
+                                   {item.description}
+                                </p>
+                                <div className="pt-4 flex items-center gap-2 text-primary font-black text-[10px] uppercase tracking-widest group-hover:gap-4 transition-all">
+                                   <span>{language === 'kh' ? 'អានបន្ថែម' : 'Read Full Story'}</span>
+                                   <ArrowRight className="h-3.5 w-3.5" />
+                                </div>
+                             </div>
+                           </CardContent>
+                         </Card>
+                      </Link>
+                    ))}
+                 </div>
+              </div>
+            )}
+          </div>
         </main>
 
-        <footer className="border-t border-zinc-100 bg-zinc-50/50 py-12 sm:py-20 text-center">
-          <p className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-300">
-            © {new Date().getFullYear()} Banhchi Digital Event Companion
-          </p>
+         <footer className="border-t border-border bg-card py-16 text-center relative overflow-hidden">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-[#f41f4d]/5 blur-[100px] pointer-events-none" />
+          <div className="container relative z-10">
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground mb-2">
+              © {new Date().getFullYear()} SIDETH THEAPKA
+            </p>
+            <p className="text-[8px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
+              Digital Event Solutions Powered by Banhchi
+            </p>
+          </div>
         </footer>
-        
-        <Toaster position="bottom-center" />
       </div>
     );
   }
 
-  // Fallback: If it's an Event without linked Content (Private/Internal Management Mode)
+  // Fallback: If it's an Event without linked Content
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 sm:p-12 selection:bg-primary/10 transition-ultra transform-gpu">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 sm:p-12 selection:bg-[#f41f4d]/20 transition-all font-kantumruy">
       <div className="w-full max-w-xl text-center space-y-12 animate-in fade-in zoom-in slide-in-from-bottom-10 duration-1000">
-        <div className="h-32 w-32 bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200 flex items-center justify-center mx-auto mb-10 relative group border border-slate-100/50 transition-ultra hover:rotate-[-5deg] hover:scale-110">
-          <div className="absolute inset-x-2 inset-y-2 bg-primary/5 rounded-[2.2rem]" />
-          <Calendar className="h-14 w-14 text-primary relative z-10" />
+        <div className="h-32 w-32 bg-card rounded-[2.5rem] shadow-2xl border border-border flex items-center justify-center mx-auto mb-10 relative group transition-all hover:rotate-[-5deg] hover:scale-110 isolate">
+          <div className="absolute inset-x-2 inset-y-2 bg-[#f41f4d]/5 rounded-[2.2rem] -z-1" />
+          <Calendar className="h-14 w-14 text-[#f41f4d] relative z-10" />
         </div>
         
         <div className="space-y-6">
           <h1 className={cn(
-            "text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight px-4",
+            "text-3xl sm:text-5xl font-black text-foreground tracking-tight leading-tight px-4",
             language === 'kh' ? 'font-kantumruy leading-[1.6]' : ''
           )}>
             {event?.title}
           </h1>
-          <div className="h-2 w-16 bg-primary/20 mx-auto rounded-full" />
-          <p className="text-slate-400 font-bold text-[11px] sm:text-sm uppercase tracking-[0.4em] leading-relaxed px-8">
+          <div className="h-1.5 w-16 bg-[#f41f4d] mx-auto rounded-full" />
+          <p className="text-muted-foreground font-bold text-[11px] sm:text-sm uppercase tracking-[0.25em] leading-relaxed px-8">
             {language === 'kh' ? 'កាលវិភាគ និងព័ត៌មានលម្អិតសាធារណៈជន មិនទាន់ត្រូវបានផ្សព្វផ្សាយនៅឡើយទេ' : 'The public schedule and event details have not been published yet.'}
           </p>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-3xl p-10 sm:p-14 rounded-[3rem] shadow-xl border border-white flex flex-col items-stretch gap-10 w-full relative group transition-ultra hover:shadow-2xl hover:-translate-y-1">
-          <div className="absolute inset-0 bg-linear-to-br from-primary/5 to-transparent rounded-[3rem] opacity-0 group-hover:opacity-100 transition-ultra" />
+        <div className="bg-card p-10 sm:p-14 rounded-[3rem] shadow-2xl border border-border flex flex-col items-stretch gap-10 w-full relative group transition-all hover:shadow-rose-500/5 hover:-translate-y-1 overflow-hidden">
+          <div className="absolute inset-0 bg-linear-to-br from-[#f41f4d]/5 to-transparent rounded-[3rem] opacity-0 group-hover:opacity-100 transition-all" />
           
           <div className="flex items-center gap-6 justify-center relative z-10">
-            <div className="h-14 w-14 rounded-2xl bg-slate-50 flex items-center justify-center text-primary shadow-inner border border-slate-100 transition-ultra group-hover:bg-white">
+            <div className="h-14 w-14 rounded-2xl bg-muted/50 flex items-center justify-center text-[#f41f4d] border border-border transition-all group-hover:bg-muted">
               <Clock className="h-7 w-7" />
             </div>
             <div className="text-left">
-              <p className="text-[10px] font-black text-slate-400/60 uppercase tracking-widest leading-none mb-2">{t('event_date')}</p>
-              <p className="text-xl font-black text-slate-800 tracking-tight">{formatDate(event!.eventDate, language)}</p>
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-2">{t('event_date')}</p>
+              <p className="text-xl font-black text-foreground tracking-tight">{event && formatDateTime(event.eventDate)}</p>
             </div>
           </div>
 
           {event?.location && (
-            <div className="pt-10 border-t border-slate-100/60 flex items-center gap-6 justify-center relative z-10">
-              <div className="h-14 w-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 shadow-inner border border-slate-100 transition-ultra group-hover:bg-white group-hover:text-red-500">
+            <div className="pt-10 border-t border-border flex items-center gap-6 justify-center relative z-10">
+              <div className="h-14 w-14 rounded-2xl bg-muted/50 flex items-center justify-center text-muted-foreground border border-border transition-all group-hover:bg-muted group-hover:text-[#f41f4d]">
                 <MapPin className="h-7 w-7" />
               </div>
               <div className="text-left">
-                <p className="text-[10px] font-black text-slate-400/60 uppercase tracking-widest leading-none mb-2">{t('location')}</p>
-                <p className="text-base font-bold text-slate-600 line-clamp-1 group-hover:text-slate-900 transition-colors">{event.location}</p>
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-2">{t('location')}</p>
+                <p className="text-base font-bold text-muted-foreground/80 line-clamp-1 group-hover:text-foreground transition-colors">{event.location}</p>
               </div>
             </div>
           )}
         </div>
 
-        <div className="pt-12 flex flex-col items-center gap-8">
+        <div className="pt-12 flex flex-col items-center gap-10">
           <Link href="/">
-            <Button variant="outline" className="rounded-[1.5rem] h-16 px-10 border-slate-200 bg-white font-black text-slate-500 hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-ultra shadow-sm hover:shadow-xl hover:-translate-y-0.5 uppercase text-xs tracking-widest">
+            <Button variant="outline" className="h-16 px-12 rounded-2xl border-border bg-card font-black text-muted-foreground hover:text-foreground hover:border-[#f41f4d]/50 hover:bg-[#f41f4d]/10 transition-all shadow-xl uppercase text-xs tracking-widest">
               <ArrowLeft className="mr-4 h-4 w-4" />
               {t('back_to_home')}
             </Button>
           </Link>
-          <div className="flex flex-col items-center gap-2 opacity-20">
-            <p className="text-[10px] font-black uppercase tracking-[0.6em]">
-              Banhchi
-            </p>
-            <p className="text-[8px] font-bold uppercase tracking-[0.3em]">Digital Event Companion</p>
+          <div className="flex flex-col items-center gap-3 opacity-20 group">
+            <div className="flex h-10 w-40 items-center justify-center overflow-hidden dark:brightness-200">
+               <img src="/SIDETH-THEAPKA.png" alt="Logo" className="w-full h-full object-contain" />
+            </div>
           </div>
         </div>
       </div>
-      <Toaster position="bottom-center" />
     </div>
   );
 }

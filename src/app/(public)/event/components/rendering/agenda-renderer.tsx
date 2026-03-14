@@ -12,16 +12,17 @@ interface Props {
 
 export const AgendaRenderer = ({ content, event, theme }: Props) => {
   // Use content type if it's a specific ceremony style, otherwise fallback to event category
-  const category = (content.type === 'wedding' || content.type === 'funeral') 
+  const category = (content.type === 'wedding' || content.type === 'buddhist') 
     ? content.type 
     : (event.category || 'default');
 
   switch (category) {
     case 'wedding':
       return <WeddingAgenda content={content} event={event} theme={theme} />;
-    case 'funeral':
-      return <FuneralAgenda content={content} event={event} theme={theme} />;
+    case 'buddhist':
     case 'merit_making':
+    case 'funeral':
+    case 'memorial':
     case 'inauguration':
       return <TraditionalAgenda content={content} event={event} theme={theme} />;
     default:

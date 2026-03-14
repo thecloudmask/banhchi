@@ -79,20 +79,32 @@ export default function RichTextEditor({ value, onChange, placeholder, className
           font-size: 1rem;
           border-bottom-left-radius: 0.75rem;
           border-bottom-right-radius: 0.75rem;
-          border-color: #e4e4e7 !important;
+          border-color: var(--border) !important;
+          background-color: transparent;
+          color: var(--foreground);
         }
         .ql-toolbar {
           border-top-left-radius: 0.75rem;
           border-top-right-radius: 0.75rem;
-          background-color: #fafafa;
-          border-color: #e4e4e7 !important;
+          background-color: var(--muted);
+          border-color: var(--border) !important;
         }
         .ql-editor {
           min-height: 300px;
         }
         .ql-editor.ql-blank::before {
-          color: #a1a1aa;
+          color: var(--muted-foreground);
           font-style: normal;
+          opacity: 0.5;
+        }
+        .ql-snow .ql-stroke {
+          stroke: var(--foreground);
+        }
+        .ql-snow .ql-fill {
+          fill: var(--foreground);
+        }
+        .ql-snow .ql-picker {
+          color: var(--foreground);
         }
       `}</style>
       <ReactQuill 

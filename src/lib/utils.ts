@@ -5,65 +5,54 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Manual Khmer translation helper for browsers with limited Intl support
 const khmerDays = ['អាទិត្យ', 'ច័ន្ទ', 'អង្គារ', 'ពុធ', 'ព្រហស្បតិ៍', 'សុក្រ', 'សៅរ៍'];
 const khmerMonths = ['មករា', 'កុម្ភៈ', 'មីនា', 'មេសា', 'ឧសភា', 'មិថុនា', 'កក្កដា', 'សីហា', 'កញ្ញា', 'តុលា', 'វិច្ឆិកា', 'ធ្នូ'];
-const toKhmerDigits = (num: number | string) => String(num).replace(/\d/g, d => '០១២៣៤៥៦៧៨៩'[parseInt(d)]);
+export const toKhmerDigits = (num: number | string) => String(num).replace(/\d/g, d => '០១២៣៤៥៦៧៨៩'[parseInt(d)]);
 
-export function formatDate(date: { seconds?: number } | Date | number | string, locale = 'en-US', includeTime = false): string {
+/**
+ * បង្ហាញថ្ងៃខែ និងម៉ោងជាភាសាខ្មែរចេញពី Date Object តែមួយ
+ * សមស្របសម្រាប់ប្រើជាមួយ DateTime Picker
+ */
+export function formatDateTime(date: any, includeTime = true): string {
   if (!date) return "";
-  let d: Date;
   
-  if (typeof date === 'object' && date !== null && 'seconds' in date && typeof (date as { seconds: unknown }).seconds === 'number') {
-    d = new Date((date as { seconds: number }).seconds * 1000);
-  } else {
-    d = new Date(date as string | number | Date);
-  }
-
+  const d = new Date(date?.seconds ? date.seconds * 1000 : date);
   if (isNaN(d.getTime())) return "";
 
-  if (locale === 'kh') {
-    const day = khmerDays[d.getDay()];
-    const dateNum = toKhmerDigits(d.getDate());
-    const month = khmerMonths[d.getMonth()];
-    const year = toKhmerDigits(d.getFullYear());
+  const day = khmerDays[d.getDay()];
+  const dateNum = toKhmerDigits(d.getDate());
+  const month = khmerMonths[d.getMonth()];
+  const year = toKhmerDigits(d.getFullYear());
+  
+  let result = `ថ្ងៃ${day} ទី${dateNum} ខែ${month} ឆ្នាំ${year}`;
+  
+  if (includeTime) {
+    const hours = d.getHours();
+    const minutes = d.getMinutes();
+    const ampm = hours >= 12 ? 'ល្ងាច' : 'ព្រឹក';
     
-    let result = `ថ្ងៃ${day} ទី${dateNum} ខែ${month} ឆ្នាំ${year}`;
+    // ប្តូរម៉ោង ២៤ មកម៉ោង ១២ បែបខ្មែរ
+    const displayHours = hours % 12 || 12; 
+    const khHours = toKhmerDigits(displayHours);
+    const khMinutes = toKhmerDigits(minutes < 10 ? `0${minutes}` : minutes);
     
-    if (includeTime) {
-      const hours = d.getHours();
-      const minutes = d.getMinutes();
-      const ampm = hours >= 12 ? 'ល្ងាច' : 'ព្រឹក';
-      const khHours = toKhmerDigits(hours % 12 || 12);
-      const khMinutes = toKhmerDigits(minutes < 10 ? `0${minutes}` : minutes);
-      result += ` ម៉ោង ${khHours}:${khMinutes} ${ampm}`;
-    }
-    
-    return result;
+    result += ` ម៉ោង ${khHours}:${khMinutes} ${ampm}`;
   }
-
-  return d.toLocaleDateString('en-US', {
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric'
-  });
+  
+  return result;
 }
 
-export function formatDateRange(startDate: any, endDate: any, locale = 'en-US'): string {
-  if (!startDate) return "";
-  const startStr = formatDate(startDate, locale);
-  if (!endDate) return startStr;
-  
-  // Simplified same-day check
-  const startD = new Date(startDate.seconds ? startDate.seconds * 1000 : startDate);
-  const endD = new Date(endDate.seconds ? endDate.seconds * 1000 : endDate);
-  
-  if (startD.toDateString() === endD.toDateString()) return startStr;
+// បងនៅតែអាចប្រើ Function នេះសម្រាប់បង្ហាញតែម៉ោងសុទ្ធបាន
+export function formatTimeOnly(date: any): string {
+  if (!date) return "";
+  const d = new Date(date?.seconds ? date.seconds * 1000 : date);
+  if (isNaN(d.getTime())) return "";
 
-  if (locale === 'kh') {
-    return `${startStr} ដល់ ${formatDate(endDate, locale)}`;
-  }
-
-  return `${startStr} - ${formatDate(endDate, locale)}`;
+  const hours = d.getHours();
+  const minutes = d.getMinutes();
+  const ampm = hours >= 12 ? 'ល្ងាច' : 'ព្រឹក';
+  const khHours = toKhmerDigits(hours % 12 || 12);
+  const khMinutes = toKhmerDigits(minutes < 10 ? `0${minutes}` : minutes);
+  
+  return `ម៉ោង ${khHours}:${khMinutes} ${ampm}`;
 }

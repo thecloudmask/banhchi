@@ -16,6 +16,7 @@ export const translations: Record<string, Record<Language, string>> = {
   "app_name": { en: "Banhchi", kh: "បញ្ជី" },
   // Wedding & Event specific
   "wedding_groom_info": { en: "Groom Info", kh: "ព័ត៌មានកូនប្រុស" },
+  "groom_info": { en: "Groom Info", kh: "ព័ត៌មានកូនប្រុស" },
   "groom_name": { en: "Groom Name", kh: "ឈ្មោះកូនប្រុស" },
   "groom_name_placeholder": { en: "e.g. John Doe", kh: "ឧ. សុខ" },
   "father": { en: "Father", kh: "លោកឪពុក" },
@@ -23,8 +24,10 @@ export const translations: Record<string, Record<Language, string>> = {
   "mother": { en: "Mother", kh: "អ្នកម្តាយ" },
   "mother_placeholder": { en: "e.g. Mrs. Mother", kh: "ឧ. អ្នកម្តាយ" },
   "wedding_bride_info": { en: "Bride Info", kh: "ព័ត៌មានកូនស្រី" },
+  "bride_info": { en: "Bride Info", kh: "ព័ត៌មានកូនស្រី" },
   "bride_name": { en: "Bride Name", kh: "ឈ្មោះកូនស្រី" },
   "bride_name_placeholder": { en: "e.g. Jane Doe", kh: "ឧ. សៅ" },
+  "prevent_duplicate_guests": { en: "Prevent duplicate guest names", kh: "ការពារកុំឱ្យមានឈ្មោះភ្ញៀវស្ទួនគ្នា" },
   "location_name": { en: "Venue Name", kh: "ឈ្មោះទីតាំង" },
   "venue_name_placeholder": { en: "e.g. Hyatt Regency...", kh: "ឧ. សណ្ឋាគារ ហៃយ៉ាត់..." },
   "map_url": { en: "Map Link (Google Maps)", kh: "តំណភ្ជាប់ផែនទី (Google Maps)" },
@@ -55,8 +58,17 @@ export const translations: Record<string, Record<Language, string>> = {
   "success": { en: "Success", kh: "ជោគជ័យ" },
   "error": { en: "Error", kh: "កំហុស" },
   "event": { en: "Event", kh: "កម្មវិធី" },
-  "article": { en: "Article", kh: "អត្ថបទ" },
-  "agenda": { en: "Agenda", kh: "កម្មវិធីបុណ្យ" },
+  "article": { en: "Article", kh: "អត្ថបទ និងរឿងរ៉ាវ" },
+  "agenda": { en: "Buddhist Ceremony", kh: "កម្មវិធីបុណ្យ" },
+  
+  // Login
+  "admin_access": { en: "Admin Access", kh: "ការចូលប្រើប្រាស់អ្នកគ្រប់គ្រង" },
+  "email": { en: "Email", kh: "អ៊ីមែល" },
+  "password": { en: "Password", kh: "លេខសម្ងាត់" },
+  "authorize_access": { en: "Authorize Access", kh: "ចូលប្រើប្រាស់" },
+  "sign_in_email": { en: "Sign in with Email", kh: "ចូលប្រើជាមួយអ៊ីមែល" },
+  "invalid_credentials": { en: "Invalid credentials", kh: "អ៊ីមែល ឬលេខសម្ងាត់មិនត្រឹមត្រូវ" },
+  "back_to_registry": { en: "Back to Registry", kh: "ត្រឡប់ទៅទំព័រដើម" },
   
   // Status Labels
   "active": { en: "Upcoming", kh: "ជិតមកដល់" },
@@ -324,13 +336,10 @@ export const translations: Record<string, Record<Language, string>> = {
 
   
   // Template & Dynamic Fields
-  "wedding": { en: "Wedding", kh: "អាពាហ៍ពិពាហ៍" },
-  "merit_making": { en: "Merit-making / Flower Ceremony", kh: "បុណ្យផ្កាប្រាក់សាមគ្គី" },
-  "memorial": { en: "Memorial Service", kh: "បុណ្យទក្ខិណានុប្បទាន" },
-  "inauguration": { en: "Temple Inauguration", kh: "បុណ្យឆ្លងប្រាង្គ/ឆ្លងកុដិ" },
-  "funeral": { en: "Funeral", kh: "បុណ្យសព" },
+  "wedding": { en: "Wedding Ceremony", kh: "អាពាហ៍ពិពាហ៍" },
+  "buddhist": { en: "Buddhist Ceremony", kh: "កម្មវិធីបុណ្យ" },
   "custom": { en: "Other / Custom", kh: "កម្មវិធីផ្សេងៗ" },
-  "enter_custom_category": { en: "Enter ceremony type", kh: "បញ្ចូលប្រភេទកម្មវិធីបុណ្យ" },
+  "enter_custom_category": { en: "Enter ceremony type", kh: "បញ្ចូលប្រភេទកម្មវិធីជាក់លាក់ (ឧ. បុណ្យឡើងផ្ទះ)" },
   "template": { en: "Template", kh: "គំរូកម្មវិធី" },
   "contribution_fields": { en: "Contribution Fields", kh: "ប្រភេទចំណងដៃ" },
   "field_label": { en: "Field Label", kh: "ឈ្មោះប្រភេទ" },
@@ -380,14 +389,16 @@ export const translations: Record<string, Record<Language, string>> = {
   "content_title": { en: "Title", kh: "ចំណងជើង" },
   "content_type": { en: "Content Type", kh: "ប្រភេទមាតិកា" },
   "select_best_fit": { en: "Select best fit", kh: "ជ្រើសរើសប្រភេទដែលសមស្រប" },
-  "article_blog": { en: "Ceremony Background", kh: "ប្រវត្តិកម្មវិធី / រឿងរ៉ាវ" },
-  "article_blog_desc": { en: "History, significance, or background stories with images.", kh: "ព័ត៌មានពីប្រវត្តិបុណ្យ ឬអត្ថបទរឿងរ៉ាវផ្សេងៗ" },
-  "agenda_poster": { en: "Detailed Program", kh: "កាលវិភាគ / កម្មវិធីបុណ្យ" },
-  "agenda_poster_desc": { en: "Formal schedule and agenda of ceremonial activities.", kh: "បង្ហាញពីកាលវិភាគ និងកម្មវិធីបុណ្យលម្អិត" },
-  "wedding_style": { en: "Wedding Style", kh: "ស្ទីលកម្មវិធីមង្គលការ" },
-  "wedding_style_desc": { en: "Elegant floral theme for weddings", kh: "ស្ទីលផ្កាស្រស់ស្អាតសម្រាប់កម្មវិធីមង្គលការ" },
-  "funeral_style": { en: "Funeral Style", kh: "ស្ទីលកម្មវិធីបុណ្យសព" },
-  "funeral_style_desc": { en: "Solemn minimalist theme for funerals", kh: "ស្ទីលសាមញ្ញស្ងប់ស្ងាត់សម្រាប់កម្មវិធីបុណ្យសព" },
+  "article_blog": { en: "Stories / Articles", kh: "អត្ថបទ និងរឿងរ៉ាវ" },
+  "article_blog_desc": { en: "History, significance, or general background stories.", kh: "ព័ត៌មានពីប្រវត្តិបុណ្យ ឬអត្ថបទរឿងរ៉ាវប្លែកៗ" },
+  "news_announcement": { en: "News & Announcements", kh: "ព័ត៌មាន និងសេចក្តីជូនដំណឹង" },
+  "news_announcement_desc": { en: "Official news or important notices.", kh: "ចុះផ្សាយព័ត៌មានផ្លូវការ ឬសេចក្តីជូនដំណឹង" },
+  "event_update": { en: "Event Updates", kh: "បច្ចុប្បន្នភាពកម្មវិធី" },
+  "event_update_desc": { en: "Updates about a specific ceremony event.", kh: "ការធ្វើបច្ចុប្បន្នភាពផ្សេងៗទាក់ទងនឹងកម្មវិធី" },
+  "wedding_style": { en: "Wedding Style", kh: "រចនាបថមង្គលការ" },
+  "wedding_style_desc": { en: "Public page with wedding floral aesthetic", kh: "បង្ហាញទំព័រមង្គលការដែលស្អាត និងមានភាពទាក់ទាញ" },
+  "buddhist_style": { en: "Buddhist Style", kh: "រចនាបថកម្មវិធីបុណ្យ" },
+  "buddhist_style_desc": { en: "Public page with traditional Buddhist aesthetic", kh: "បង្ហាញទំព័រកម្មវិធីបុណ្យតាមបែបប្រពៃណីខ្មែរ" },
   "announcement": { en: "Notice / Update", kh: "សេចក្តីជូនដំណឹង" },
   "announcement_desc": { en: "Brief notices or important updates for guests.", kh: "សេចក្តីជូនដំណឹងខ្លីៗ ឬព័ត៌មានបន្ថែមសម្រាប់ភ្ញៀវ" },
   "poster": { en: "Invitation / Poster", kh: "លិខិតអញ្ជើញ / រូបភាពប័ណ្ណ" },
@@ -528,24 +539,22 @@ export const translations: Record<string, Record<Language, string>> = {
 };
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>("en");
+  const [language, setLanguageState] = useState<Language>("kh");
 
   useEffect(() => {
-    const saved = localStorage.getItem("language") as Language;
-    if (saved) {
-      setLanguage(saved);
-    }
+    // Always Khmer
+    document.documentElement.lang = "kh";
   }, []);
 
-  const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
-    localStorage.setItem("language", lang);
-    // Update HTML lang attribute for font switching logic in globals.css
-    document.documentElement.lang = lang;
+  const setLanguage = (_lang: Language) => {
+    // Always stay in Khmer
+    setLanguageState("kh");
+    localStorage.setItem("language", "kh");
+    document.documentElement.lang = "kh";
   };
 
   const t = (key: string): string => {
-    return translations[key]?.[language] || key;
+    return translations[key]?.["kh"] || key;
   };
 
   return (

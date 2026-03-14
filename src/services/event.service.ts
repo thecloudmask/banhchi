@@ -50,7 +50,9 @@ export const getEventById = async (id: string): Promise<Event | null> => {
 export const createEvent = async (
   data: Omit<Event, "id" | "createdAt" | "status" | "bannerUrl" | "galleryUrls">, 
   bannerFile?: File,
-  galleryFiles?: File[]
+  galleryFiles?: File[],
+  khqrUSDFile?: File,
+  khqrKHRFile?: File
 ): Promise<string> => {
   if (!db) throw new Error("Firebase services not initialized");
   
@@ -65,11 +67,22 @@ export const createEvent = async (
     galleryUrls = await uploadMultipleToCloudinary(galleryFiles, "galleries");
   }
 
+  const finalExtraData = { ...(data.extraData || {}) };
+  
+  if (khqrUSDFile) {
+    finalExtraData.khqrUSDUrl = await uploadToCloudinary(khqrUSDFile, "wedding_qrs", 'thumbnail');
+  }
+
+  if (khqrKHRFile) {
+    finalExtraData.khqrKHRUrl = await uploadToCloudinary(khqrKHRFile, "wedding_qrs", 'thumbnail');
+  }
+
   const docRef = await addDoc(collection(db, EVENTS_COLLECTION), {
     ...data,
     bannerUrl,
     galleryUrls,
     status: 'active',
+    extraData: Object.keys(finalExtraData).length > 0 ? finalExtraData : undefined,
     eventDate: Timestamp.fromDate(data.eventDate as Date),
     endDate: data.endDate ? Timestamp.fromDate(data.endDate as Date) : undefined,
     createdAt: serverTimestamp(),
@@ -82,7 +95,9 @@ export const updateEvent = async (
   data: Partial<Omit<Event, "id" | "createdAt">>, 
   bannerFile?: File, 
   bankQrFile?: File,
-  galleryFiles?: File[]
+  galleryFiles?: File[],
+  khqrUSDFile?: File,
+  khqrKHRFile?: File
 ): Promise<void> => {
   if (!db) throw new Error("Database not initialized");
   
@@ -94,6 +109,16 @@ export const updateEvent = async (
 
   if (bankQrFile) {
     updateData.bankQrUrl = await uploadToCloudinary(bankQrFile, "bank_qrs", 'thumbnail');
+  }
+
+  if (khqrUSDFile) {
+    const url = await uploadToCloudinary(khqrUSDFile, "wedding_qrs", 'thumbnail');
+    updateData.extraData = { ...updateData.extraData, khqrUSDUrl: url };
+  }
+
+  if (khqrKHRFile) {
+    const url = await uploadToCloudinary(khqrKHRFile, "wedding_qrs", 'thumbnail');
+    updateData.extraData = { ...updateData.extraData, khqrKHRUrl: url };
   }
 
   if (galleryFiles && galleryFiles.length > 0) {

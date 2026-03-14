@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -52,25 +53,25 @@
 }
 
 :root {
-  --radius: 1.25rem; /* Larger, more modern radius */
-  --background: oklch(1 0 0); /* Pure White */
-  --foreground: oklch(0.12 0.03 290); /* Deep Amethyst Black */
+  --radius: 1rem; 
+  --background: oklch(0.99 0 0); /* Near White */
+  --foreground: oklch(0.15 0.02 260); /* Deep Slate Black */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.12 0.03 290);
+  --card-foreground: oklch(0.15 0.02 260);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.12 0.03 290);
-  --primary: oklch(0.42 0.18 290); /* Royal Amethyst - Vibrant & Festive */
+  --popover-foreground: oklch(0.15 0.02 260);
+  --primary: oklch(0.6 0.25 20); /* Custom Rose Brand */
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.98 0.01 290); /* Very Light Lavender tint */
-  --secondary-foreground: oklch(0.35 0.1 290);
-  --muted: oklch(0.97 0.01 290);
-  --muted-foreground: oklch(0.45 0.05 290);
-  --accent: oklch(0.96 0.03 30); /* Rose Gold tint */
-  --accent-foreground: oklch(0.42 0.18 290);
+  --secondary: oklch(0.96 0.01 260);
+  --secondary-foreground: oklch(0.3 0.05 260);
+  --muted: oklch(0.96 0.01 260);
+  --muted-foreground: oklch(0.5 0.03 260);
+  --accent: oklch(0.92 0.04 285 / 10%); /* Subtle Amethyst tint */
+  --accent-foreground: var(--primary);
   --destructive: oklch(0.55 0.22 25);
-  --border: oklch(0.92 0.02 290);
-  --input: oklch(0.92 0.02 290);
-  --ring: oklch(0.42 0.18 290 / 15%);
+  --border: oklch(0.92 0.01 260);
+  --input: oklch(0.92 0.01 260);
+  --ring: oklch(0.6 0.25 20 / 20%);
 }
 
 .dark {
@@ -80,7 +81,7 @@
   --card-foreground: oklch(0.98 0.01 290);
   --popover: oklch(0.12 0.03 290);
   --popover-foreground: oklch(0.98 0.01 290);
-  --primary: oklch(0.7 0.15 290);
+  --primary: oklch(0.7 0.2 20);
   --primary-foreground: oklch(0.1 0.02 290);
   --secondary: oklch(0.15 0.05 290);
   --secondary-foreground: oklch(0.85 0.1 290);
@@ -91,7 +92,7 @@
   --destructive: oklch(0.6 0.18 25);
   --border: oklch(1 0 0 / 8%);
   --input: oklch(1 0 0 / 8%);
-  --ring: oklch(0.7 0.15 290 / 20%);
+  --ring: oklch(0.7 0.2 20 / 20%);
 }
 
 @layer base {
@@ -146,27 +147,32 @@ html[lang="kh"] body {
 
 /* Premium Card Effects */
 .premium-card {
-  @apply bg-white border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-1 rounded-[2rem] overflow-hidden;
-  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  @apply bg-white border border-zinc-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 rounded-2xl overflow-hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
+.premium-input {
+  @apply h-12 bg-zinc-50 border-zinc-200/80 rounded-xl font-medium px-4 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all outline-none;
 }
 
-::-webkit-scrollbar-track {
-  @apply bg-transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  @apply bg-muted-foreground/10 rounded-full hover:bg-muted-foreground/20 transition-colors;
+.glass-header {
+  @apply sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-100;
 }
 
 /* News Ticker Optimization */
 @keyframes ticker {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(10px, -20px) rotate(5deg); }
+  66% { transform: translate(-10px, -40px) rotate(-5deg); }
+}
+
+.animate-float-slow {
+  animation: float-slow 8s ease-in-out infinite;
 }
 
 .animate-ticker {

@@ -6,10 +6,8 @@ import { Button } from "@/components/ui/button";
 import { History, Clock, User, ArrowRight, Loader2, Info } from "lucide-react";
 import { getEventLogs } from "@/services/event.service";
 import { AuditLog } from "@/types";
-import { formatDate } from "@/lib/utils";
-import { useLanguage } from "@/providers/language-provider";
+import { formatDateTime, cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
 
 interface LogViewerSheetProps {
   eventId: string;
@@ -18,7 +16,6 @@ interface LogViewerSheetProps {
 export function LogViewerSheet({ eventId }: LogViewerSheetProps) {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(false);
-  const { language } = useLanguage();
 
   const fetchLogs = async () => {
     try {
@@ -39,20 +36,20 @@ export function LogViewerSheet({ eventId }: LogViewerSheetProps) {
           variant="outline" 
           size="icon" 
           className="h-12 w-12 rounded-xl border-border hover:bg-secondary bg-background transition-all"
-          title="Event History"
+          title="កំណត់ត្រាសកម្មភាព"
         >
           <History className="h-5 w-5" />
         </Button>
       </SheetTrigger>
       <SheetContent className="sm:max-w-md w-full p-0 border-l border-border bg-background shadow-lg">
         <SheetHeader className="p-8 pb-4">
-          <SheetTitle className="text-2xl font-black flex items-center gap-3">
-             <div className="h-10 w-10 bg-secondary rounded-xl flex items-center justify-center">
-                <History className="h-5 w-5 opacity-40" />
+          <SheetTitle className="text-2xl font-black flex items-center gap-3 italic">
+             <div className="h-10 w-10 bg-accent rounded-xl flex items-center justify-center">
+                <History className="h-5 w-5 text-muted-foreground/60" />
              </div>
-             Recent Activity
+             កំណត់ត្រាសកម្មភាពថ្មីៗ
           </SheetTitle>
-          <p className="text-xs font-medium text-muted-foreground">Audit logs for this event</p>
+          <p className="text-xs font-medium text-muted-foreground">កំណត់ត្រាសកម្មភាពនៅក្នុងកម្មវិធី</p>
         </SheetHeader>
 
         <ScrollArea className="h-[calc(100vh-120px)] p-8 pt-0">
@@ -62,7 +59,7 @@ export function LogViewerSheet({ eventId }: LogViewerSheetProps) {
             </div>
           ) : logs.length === 0 ? (
             <div className="text-center py-20 text-muted-foreground font-medium opacity-40">
-               No activity logs found.
+               មិនទាន់មានសកម្មភាពទេ
             </div>
           ) : (
             <div className="space-y-8 py-4">
@@ -77,18 +74,18 @@ export function LogViewerSheet({ eventId }: LogViewerSheetProps) {
                   <div className="flex items-center justify-between gap-4 mb-2">
                     <span className={cn(
                       "text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded",
-                      log.action === 'CREATE' ? "bg-green-50 text-green-700" : 
-                      log.action === 'UPDATE' ? "bg-blue-50 text-blue-700" : "bg-destructive/10 text-destructive"
+                       log.action === 'CREATE' ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : 
+                       log.action === 'UPDATE' ? "bg-blue-500/10 text-blue-500 border border-blue-500/20" : "bg-rose-500/10 text-rose-500 border border-rose-500/20"
                     )}>
                       {log.action}
                     </span>
                     <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-bold">
                       <Clock className="h-3 w-3" />
-                      {formatDate(log.timestamp)}
+                      {formatDateTime(log.timestamp, false)}
                     </div>
                   </div>
 
-                  <div className="bg-secondary/30 rounded-xl p-4 border border-border/50 group-hover:bg-secondary/50 transition-colors">
+                  <div className="bg-muted/30 rounded-xl p-4 border border-border group-hover:bg-muted/50 transition-colors">
                     <p className="text-sm font-bold text-foreground leading-relaxed whitespace-pre-wrap">
                       {log.details}
                     </p>
@@ -97,7 +94,7 @@ export function LogViewerSheet({ eventId }: LogViewerSheetProps) {
                        <div className="mt-3 pt-3 border-t border-border/50 flex flex-col gap-2">
                           <div className="flex items-center gap-2 opacity-40">
                              <Info className="h-3 w-3" />
-                             <span className="text-[10px] font-black uppercase tracking-widest">Field Mapping</span>
+                             <span className="text-[10px] font-black uppercase tracking-widest">ព័ត៌មានប្រតិបត្តិការ</span>
                           </div>
                        </div>
                     )}
