@@ -477,7 +477,7 @@ export default function Home() {
           <div className="flex items-center gap-3">
             {user ? (
               <Link href="/admin/">
-              <Button className="h-11 px-6 rounded-md bg-primary hover:bg-primary/90 text-white font-black text-[10px] uppercase shadow-xl shadow-primary/20 group">
+                <Button className="h-11 px-6 rounded-md bg-primary hover:bg-primary/90 text-white font-black text-[10px] uppercase shadow-xl shadow-primary/20 group">
                   <LayoutDashboard className="h-4 w-4 mr-2.5 group-hover:rotate-12 transition-transform" />
                   <span>ផ្ទាំងគ្រប់គ្រង</span>
                 </Button>
@@ -510,6 +510,9 @@ export default function Home() {
                 </div>
 
                 <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-foreground leading-[1.4] uppercase font-kantumruy animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+                  <span className="text-4xl md:text-6xl lg:text-7xl font-black text-primary leading-[1.4] uppercase font-kantumruy animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
+                    មត៌ត ធៀបការ
+                  </span>
                   ដៃគូឌីជីថលសម្រាប់គ្រប់កម្មវិធីមង្គលរបស់អ្នក
                 </h1>
 
