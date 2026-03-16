@@ -1,10 +1,10 @@
 "use client";
 
+import React, { useState, useEffect, ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
-import { ReactNode, useState } from "react";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +29,11 @@ export function PublicHeader({
   transparent = false,
 }: PublicHeaderProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <header
@@ -119,7 +124,7 @@ export function PublicHeader({
                   </div>
                   <div className="mt-10 pt-10 border-t border-border/10 flex flex-col items-center gap-2">
                     <p className="text-[10px] font-black uppercase text-muted-foreground/30">
-                      © {new Date().getFullYear()} មត៍ក (MORDOK)
+                      © {mounted ? new Date().getFullYear() : ""} មត៌ត ធៀបការ (Motorola Theapka)
                     </p>
                     <p className="text-[9px] font-bold uppercase text-primary/40">
                       Digital Event Companion

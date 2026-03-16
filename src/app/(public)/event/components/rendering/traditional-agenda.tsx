@@ -236,7 +236,7 @@ export const TraditionalAgenda = ({ content, event, theme }: Props) => {
                 ))}
               </div>
               <p className="text-muted-foreground/30 text-[9px] sm:text-xs font-black uppercase">
-                Premium Memorial • MORDOK
+                Premium Memorial • Motorola Theapka
               </p>
             </div>
           </div>

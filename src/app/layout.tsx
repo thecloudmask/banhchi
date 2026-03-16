@@ -22,9 +22,9 @@ const kantumruy = Kantumruy_Pro({
 });
 
 export const metadata: Metadata = {
-  title: "មត៍ក (MORDOK) - Digital Event Companion",
+  title: "មត៌ត ធៀបការ (Motorola Theapka) - Digital Event Companion",
   description:
-    "Modern event contribution tracking for Khmer weddings and ceremonies by MORDOK.",
+    "Modern event contribution tracking for Khmer weddings and ceremonies by Motorola Theapka.",
   manifest: "/manifest.json",
 };
 
@@ -44,6 +44,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
+        suppressHydrationWarning
         className={`${outfit.variable} ${kantumruy.variable} antialiased font-sans bg-background text-foreground`}
       >
         <ThemeProvider

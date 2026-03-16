@@ -256,7 +256,7 @@ export const updateGuest = async (eventId: string, guestId: string, data: Partia
   await updateDoc(docRef, cleanData(data));
 
   // Generate detailed change log
-  let changes = [];
+  const changes = [];
   if (data.name && data.name !== oldValue?.name) changes.push(`name: ${oldValue?.name} -> ${data.name}`);
   if (data.amountUsd !== undefined && data.amountUsd !== oldValue?.amountUsd) changes.push(`usd: ${oldValue?.amountUsd} -> ${data.amountUsd}`);
   if (data.amountKhr !== undefined && data.amountKhr !== oldValue?.amountKhr) changes.push(`khr: ${oldValue?.amountKhr} -> ${data.amountKhr}`);

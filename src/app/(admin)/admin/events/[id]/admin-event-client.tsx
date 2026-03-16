@@ -338,7 +338,7 @@ export default function AdminEventClient() {
   const handleThankYou = (guest: Guest) => {
     if (!event) return;
 
-    let parts = [];
+    const parts = [];
     if (guest.amountUsd > 0) parts.push(`$${guest.amountUsd}`);
     if (guest.amountKhr > 0)
       parts.push(`${guest.amountKhr.toLocaleString()} ៛`);
@@ -989,7 +989,7 @@ export default function AdminEventClient() {
             </table>
 
             <div className="mt-12 text-center text-[10px] font-bold text-gray-400 uppercase">
-              រៀបរៀងដោយ មត៍ក (MORDOK) Digital Event Companion •{" "}
+              រៀបរៀងដោយ មត៌ត ធៀបការ (Motorola Theapka) Digital Event Companion •{" "}
               {new Date().toLocaleDateString()}
             </div>
           </div>
@@ -1222,6 +1222,14 @@ export default function AdminEventClient() {
                     ...event.extraData,
                     groomName: formData.get("groomName") as string,
                     brideName: formData.get("brideName") as string,
+                    groomFatherTitle: formData.get("groomFatherTitle") as string,
+                    groomFatherName: formData.get("groomFatherName") as string,
+                    groomMotherTitle: formData.get("groomMotherTitle") as string,
+                    groomMotherName: formData.get("groomMotherName") as string,
+                    brideFatherTitle: formData.get("brideFatherTitle") as string,
+                    brideFatherName: formData.get("brideFatherName") as string,
+                    brideMotherTitle: formData.get("brideMotherTitle") as string,
+                    brideMotherName: formData.get("brideMotherName") as string,
                   },
                 };
                 try {
@@ -1296,6 +1304,53 @@ export default function AdminEventClient() {
                   className="h-10 rounded-md border-border bg-accent/50 text-foreground font-medium placeholder:text-muted-foreground/30"
                 />
               </div>
+
+              {/* Parents Section - Groom */}
+              <div className="space-y-4 col-span-1 md:col-span-2 p-4 border rounded-md bg-muted/20">
+                <h4 className="text-sm font-bold text-[#C5A866]">ព័ត៌មានមាតាបិតាកូនប្រុស</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-semibold uppercase text-muted-foreground">ងារឪពុក</label>
+                    <Input name="groomFatherTitle" defaultValue={event.extraData?.groomFatherTitle} placeholder="ឧ. លោក / ឯកឧត្តម" className="h-10 text-foreground text-sm" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-semibold uppercase text-muted-foreground">ឈ្មោះឪពុក</label>
+                    <Input name="groomFatherName" defaultValue={event.extraData?.groomFatherName} placeholder="ឧ. ឈន ស៊ីដេត" className="h-10 text-foreground text-sm" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-semibold uppercase text-muted-foreground">ងារម្ដាយ</label>
+                    <Input name="groomMotherTitle" defaultValue={event.extraData?.groomMotherTitle} placeholder="ឧ. លោកស្រី / លោកជំទាវ" className="h-10 text-foreground text-sm" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-semibold uppercase text-muted-foreground">ឈ្មោះម្ដាយ</label>
+                    <Input name="groomMotherName" defaultValue={event.extraData?.groomMotherName} placeholder="ឧ. ម៉ម សុផាត" className="h-10 text-foreground text-sm" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Parents Section - Bride */}
+              <div className="space-y-4 col-span-1 md:col-span-2 p-4 border rounded-md bg-muted/20">
+                <h4 className="text-sm font-bold text-[#C5A866]">ព័ត៌មានមាតាបិតាកូនស្រី</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-semibold uppercase text-muted-foreground">ងារឪពុក</label>
+                    <Input name="brideFatherTitle" defaultValue={event.extraData?.brideFatherTitle} placeholder="ឧ. លោក / ឯកឧត្តម" className="h-10 text-foreground text-sm" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-semibold uppercase text-muted-foreground">ឈ្មោះឪពុក</label>
+                    <Input name="brideFatherName" defaultValue={event.extraData?.brideFatherName} placeholder="ឧ. ស៊ីម ច័ន្ទសុធានេត្រ" className="h-10 text-foreground text-sm" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-semibold uppercase text-muted-foreground">ងារម្ដាយ</label>
+                    <Input name="brideMotherTitle" defaultValue={event.extraData?.brideMotherTitle} placeholder="ឧ. លោកស្រី / លោកជំទាវ" className="h-10 text-foreground text-sm" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-semibold uppercase text-muted-foreground">ឈ្មោះម្ដាយ</label>
+                    <Input name="brideMotherName" defaultValue={event.extraData?.brideMotherName} placeholder="ឧ. អ៊ុក សោភា" className="h-10 text-foreground text-sm" />
+                  </div>
+                </div>
+              </div>
+
               <div className="md:col-span-2 pt-4">
                 <Button
                   type="submit"

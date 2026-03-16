@@ -98,7 +98,17 @@ export function EditEventDialog({
   // Wedding/Ceremony Specific State
   const [activeTab, setActiveTab] = useState("general");
   const [groomName, setGroomName] = useState(event.extraData?.groomName || "");
+  const [groomFatherTitle, setGroomFatherTitle] = useState(event.extraData?.groomFatherTitle || "");
+  const [groomFatherName, setGroomFatherName] = useState(event.extraData?.groomFatherName || "");
+  const [groomMotherTitle, setGroomMotherTitle] = useState(event.extraData?.groomMotherTitle || "");
+  const [groomMotherName, setGroomMotherName] = useState(event.extraData?.groomMotherName || "");
+
   const [brideName, setBrideName] = useState(event.extraData?.brideName || "");
+  const [brideFatherTitle, setBrideFatherTitle] = useState(event.extraData?.brideFatherTitle || "");
+  const [brideFatherName, setBrideFatherName] = useState(event.extraData?.brideFatherName || "");
+  const [brideMotherTitle, setBrideMotherTitle] = useState(event.extraData?.brideMotherTitle || "");
+  const [brideMotherName, setBrideMotherName] = useState(event.extraData?.brideMotherName || "");
+
   const [donorName, setDonorName] = useState(event.extraData?.donorName || "");
   const [preventDuplicateGuests, setPreventDuplicateGuests] = useState(
     event.extraData?.preventDuplicateGuests || false,
@@ -164,7 +174,17 @@ export function EditEventDialog({
       setDescription(event.description || "");
 
       setGroomName(event.extraData?.groomName || "");
+      setGroomFatherTitle(event.extraData?.groomFatherTitle || "");
+      setGroomFatherName(event.extraData?.groomFatherName || "");
+      setGroomMotherTitle(event.extraData?.groomMotherTitle || "");
+      setGroomMotherName(event.extraData?.groomMotherName || "");
+
       setBrideName(event.extraData?.brideName || "");
+      setBrideFatherTitle(event.extraData?.brideFatherTitle || "");
+      setBrideFatherName(event.extraData?.brideFatherName || "");
+      setBrideMotherTitle(event.extraData?.brideMotherTitle || "");
+      setBrideMotherName(event.extraData?.brideMotherName || "");
+
       setDonorName(event.extraData?.donorName || "");
       setPreventDuplicateGuests(
         event.extraData?.preventDuplicateGuests || false,
@@ -241,7 +261,15 @@ export function EditEventDialog({
           extraData: {
             ...extraData,
             groomName: category === "wedding" ? groomName || null : null,
+            groomFatherTitle: category === "wedding" ? groomFatherTitle || null : null,
+            groomFatherName: category === "wedding" ? groomFatherName || null : null,
+            groomMotherTitle: category === "wedding" ? groomMotherTitle || null : null,
+            groomMotherName: category === "wedding" ? groomMotherName || null : null,
             brideName: category === "wedding" ? brideName || null : null,
+            brideFatherTitle: category === "wedding" ? brideFatherTitle || null : null,
+            brideFatherName: category === "wedding" ? brideFatherName || null : null,
+            brideMotherTitle: category === "wedding" ? brideMotherTitle || null : null,
+            brideMotherName: category === "wedding" ? brideMotherName || null : null,
             donorName: category === "buddhist" ? donorName || null : null,
             preventDuplicateGuests,
             footerContent:
@@ -534,30 +562,77 @@ export function EditEventDialog({
           {activeTab === "couple" && category === "wedding" && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="bg-card/40 border border-border rounded-md p-6 space-y-6 shadow-sm">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase flex items-center gap-2 text-[#f41f4d]">
-                      <Heart className="h-4 w-4 fill-[#f41f4d]/20" />{" "}
-                      {"ឈ្មោះកូនកំលោះ"}
-                    </Label>
-                    <Input
-                      value={groomName}
-                      onChange={(e) => setGroomName(e.target.value)}
-                      className="h-14 text-xl font-black bg-muted/10 border-border focus:border-[#f41f4d]/50 transition-all shadow-inner"
-                      placeholder="ឈ្មោះកូនកំលោះ"
-                    />
+                <div className="grid grid-cols-1 gap-6">
+                  {/* GROOM */}
+                  <div className="space-y-4 p-4 rounded-xl border border-border bg-muted/5">
+                    <h3 className="text-xs font-black uppercase text-[#C5A866] flex items-center gap-2">
+                       <Heart className="h-4 w-4 fill-[#C5A866]/20" /> ព័ត៌មានកូនកំលោះ និង មាតាបិតា
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-3 col-span-1 md:col-span-2">
+                        <Label className="text-[10px] font-black uppercase flex items-center gap-2 text-[#f41f4d]">
+                          ឈ្មោះកូនកំលោះ
+                        </Label>
+                        <Input
+                          value={groomName}
+                          onChange={(e) => setGroomName(e.target.value)}
+                          className="h-12 text-sm font-black bg-background border-border focus:border-[#f41f4d]/50 transition-all shadow-inner"
+                          placeholder="ឈ្មោះកូនកំលោះ"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground mr-1">ងារឪពុក</Label>
+                        <Input className="h-10 text-sm font-semibold border-border bg-background shadow-inner" placeholder="ឧ. លោក / ឯកឧត្តម" value={groomFatherTitle} onChange={(e) => setGroomFatherTitle(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground mr-1">ឈ្មោះឪពុក</Label>
+                        <Input className="h-10 text-sm font-semibold border-border bg-background shadow-inner" placeholder="ឧ. ឈន ស៊ីដេត" value={groomFatherName} onChange={(e) => setGroomFatherName(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground mr-1">ងារម្ដាយ</Label>
+                        <Input className="h-10 text-sm font-semibold border-border bg-background shadow-inner" placeholder="ឧ. លោកស្រី / លោកជំទាវ" value={groomMotherTitle} onChange={(e) => setGroomMotherTitle(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground mr-1">ឈ្មោះម្ដាយ</Label>
+                        <Input className="h-10 text-sm font-semibold border-border bg-background shadow-inner" placeholder="ឧ. ម៉ម សុផាត" value={groomMotherName} onChange={(e) => setGroomMotherName(e.target.value)} />
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase flex items-center gap-2 text-[#f41f4d]">
-                      <Heart className="h-4 w-4 fill-[#f41f4d]/20" />{" "}
-                      {"ឈ្មោះកូនក្រមុំ"}
-                    </Label>
-                    <Input
-                      value={brideName}
-                      onChange={(e) => setBrideName(e.target.value)}
-                      className="h-14 text-xl font-black bg-muted/10 border-border focus:border-[#f41f4d]/50 transition-all shadow-inner"
-                      placeholder="ឈ្មោះកូនក្រមុំ"
-                    />
+
+                  {/* BRIDE */}
+                  <div className="space-y-4 p-4 rounded-xl border border-border bg-muted/5">
+                    <h3 className="text-xs font-black uppercase text-[#C5A866] flex items-center gap-2">
+                       <Heart className="h-4 w-4 fill-[#C5A866]/20" /> ព័ត៌មានកូនក្រមុំ និង មាតាបិតា
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-3 col-span-1 md:col-span-2">
+                        <Label className="text-[10px] font-black uppercase flex items-center gap-2 text-[#f41f4d]">
+                          ឈ្មោះកូនក្រមុំ
+                        </Label>
+                        <Input
+                          value={brideName}
+                          onChange={(e) => setBrideName(e.target.value)}
+                          className="h-12 text-sm font-black bg-background border-border focus:border-[#f41f4d]/50 transition-all shadow-inner"
+                          placeholder="ឈ្មោះកូនក្រមុំ"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground mr-1">ងារឪពុក</Label>
+                        <Input className="h-10 text-sm font-semibold border-border bg-background shadow-inner" placeholder="ឧ. លោក / ឯកឧត្តម" value={brideFatherTitle} onChange={(e) => setBrideFatherTitle(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground mr-1">ឈ្មោះឪពុក</Label>
+                        <Input className="h-10 text-sm font-semibold border-border bg-background shadow-inner" placeholder="ឧ. ស៊ីម ច័ន្ទសុធានេត្រ" value={brideFatherName} onChange={(e) => setBrideFatherName(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground mr-1">ងារម្ដាយ</Label>
+                        <Input className="h-10 text-sm font-semibold border-border bg-background shadow-inner" placeholder="ឧ. លោកស្រី / លោកជំទាវ" value={brideMotherTitle} onChange={(e) => setBrideMotherTitle(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground mr-1">ឈ្មោះម្ដាយ</Label>
+                        <Input className="h-10 text-sm font-semibold border-border bg-background shadow-inner" placeholder="ឧ. អ៊ុក សោភា" value={brideMotherName} onChange={(e) => setBrideMotherName(e.target.value)} />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -569,7 +644,7 @@ export function EditEventDialog({
                       <ImageIcon className="h-3 w-3" /> KHQR USD
                       (សម្រាប់ទទួលចំណងដៃ)
                     </Label>
-                    <div className="aspect-video rounded-xl border-2 border-dashed border-border bg-muted/5 relative overflow-hidden group hover:border-[#f41f4d]/30 transition-all flex flex-col items-center justify-center p-4">
+                    <div className="h-75 w-full rounded-xl border-2 border-dashed border-border bg-muted/5 relative overflow-hidden group hover:border-[#f41f4d]/30 transition-all flex flex-col items-center justify-center p-2">
                       <input
                         type="file"
                         accept="image/*"
@@ -596,8 +671,22 @@ export function EditEventDialog({
                         </div>
                       )}
                       {(khqrUSD || currentKhqrUSDUrl) && (
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <Upload className="h-6 w-6 text-white" />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="h-9 w-9 p-0 rounded-full border-white/50 bg-white/10 text-white backdrop-blur-md hover:bg-white/20"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setKhqrUSD(null);
+                              setCurrentKhqrUSDUrl("");
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                          <div className="bg-white/10 backdrop-blur-md p-2 rounded-full border border-white/50">
+                            <Upload className="h-4 w-4 text-white" />
+                          </div>
                         </div>
                       )}
                     </div>
@@ -607,7 +696,7 @@ export function EditEventDialog({
                       <ImageIcon className="h-3 w-3" /> KHQR KHR
                       (សម្រាប់ទទួលចំណងដៃ)
                     </Label>
-                    <div className="aspect-video rounded-xl border-2 border-dashed border-border bg-muted/5 relative overflow-hidden group hover:border-[#f41f4d]/30 transition-all flex flex-col items-center justify-center p-4">
+                    <div className="h-75 w-full rounded-xl border-2 border-dashed border-border bg-muted/5 relative overflow-hidden group hover:border-[#f41f4d]/30 transition-all flex flex-col items-center justify-center p-2">
                       <input
                         type="file"
                         accept="image/*"
@@ -634,8 +723,22 @@ export function EditEventDialog({
                         </div>
                       )}
                       {(khqrKHR || currentKhqrKHRUrl) && (
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <Upload className="h-6 w-6 text-white" />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="h-9 w-9 p-0 rounded-full border-white/50 bg-white/10 text-white backdrop-blur-md hover:bg-white/20"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setKhqrKHR(null);
+                              setCurrentKhqrKHRUrl("");
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                          <div className="bg-white/10 backdrop-blur-md p-2 rounded-full border border-white/50">
+                            <Upload className="h-4 w-4 text-white" />
+                          </div>
                         </div>
                       )}
                     </div>
@@ -930,12 +1033,25 @@ export function EditEventDialog({
                       </div>
                     )}
                     {(banner || currentBannerUrl) && (
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4 backdrop-blur-[2px]">
                         <Button
+                          type="button"
                           variant="outline"
-                          className="h-10 rounded-full border-white/50 bg-white/10 text-white backdrop-blur-md font-black text-[10px] uppercase"
+                          className="h-10 px-6 rounded-full border-white/50 bg-white/10 text-white backdrop-blur-md font-black text-[10px] uppercase hover:bg-white/20"
                         >
                           CHANGE PHOTO
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setBanner(null);
+                            setCurrentBannerUrl("");
+                          }}
+                          className="h-10 w-10 p-0 rounded-full shadow-xl"
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     )}

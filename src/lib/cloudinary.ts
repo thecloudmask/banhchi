@@ -6,7 +6,7 @@
 import imageCompression from 'browser-image-compression';
 
 const CLOUD_NAME = "dw1ancaye";
-const UPLOAD_PRESET = "theapka_uploads"; // You'll need to create this in Cloudinary dashboard
+const UPLOAD_PRESET = "banhchi_uploads"; // Updated as requested
 
 /**
  * Upload an image file to Cloudinary with aggressive compression

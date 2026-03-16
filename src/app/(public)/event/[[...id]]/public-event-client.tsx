@@ -95,8 +95,10 @@ export default function PublicEventClient() {
   const [unlocking, setUnlocking] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [hideLayout, setHideLayout] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     if (hideLayout) {
       document.body.style.overflow = "hidden";
     } else {
@@ -122,13 +124,13 @@ export default function PublicEventClient() {
 
           if (contentsData && contentsData.length > 0) {
             setContent(contentsData[0]);
-            setIsLocked(contentsData[0].status === "draft");
+            // Lock the page if the event has a passcode
+            setIsLocked(!!(eventData.passcode && eventData.passcode.trim() !== ""));
           }
         } else {
           const contentData = await getContentById(eventId);
           if (contentData) {
             setContent(contentData);
-            setIsLocked(contentData.status === "draft");
 
             if (contentData.eventId) {
               const [eData, cData] = await Promise.all([
@@ -137,6 +139,10 @@ export default function PublicEventClient() {
               ]);
               setEvent(eData);
               setRelatedContents(cData || []);
+              // Lock based on passcode of the parent event
+              if (eData?.passcode && eData.passcode.trim() !== "") {
+                setIsLocked(true);
+              }
             }
           }
         }
@@ -192,14 +198,14 @@ export default function PublicEventClient() {
     e.preventDefault();
     setUnlocking(true);
     setTimeout(() => {
-      if (pin === "1234") {
+      if (event?.passcode && pin === event.passcode) {
         setIsLocked(false);
       } else {
         toast.error(t("invalid_pin"));
         setPin("");
       }
       setUnlocking(false);
-    }, 1000);
+    }, 800);
   };
 
   const handleShare = async () => {
@@ -219,7 +225,7 @@ export default function PublicEventClient() {
     }
   };
 
-  if (loading)
+  if (loading || !mounted)
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
         <Loader2 className="h-12 w-12 animate-spin text-primary mb-6 opacity-60" />

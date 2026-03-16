@@ -1,4 +1,5 @@
 "use client";
+import React, { useState, useEffect } from "react";
 
 import Link from "next/link";
 import Image from "next/image";
@@ -14,7 +15,13 @@ export function PublicFooter({
   className,
   variant = "default",
 }: PublicFooterProps) {
-  const year = new Date().getFullYear();
+  const [mounted, setMounted] = useState(false);
+  
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const year = mounted ? new Date().getFullYear() : "";
 
   if (variant === "premium") {
     return (
@@ -69,12 +76,12 @@ export function PublicFooter({
             <div className="flex items-center justify-center gap-4">
               <div className="h-px w-12 bg-[#C5A866]/20" />
               <p className="text-[#C5A866] text-[11px] font-black uppercase">
-                © {year} មត៍ក (MORDOK)
+                © {year} មត៌ត ធៀបការ (Motorola Theapka)
               </p>
               <div className="h-px w-12 bg-[#C5A866]/20" />
             </div>
             <p className="text-[10px] font-bold uppercase text-[#C5A866]/40 leading-relaxed max-w-md mx-auto">
-              <span>សេវាគ្រប់គ្រងពិធីឌីជីថល ផ្តល់ជូនដោយ មត៍ក (MORDOK)</span>
+              <span>សេវាគ្រប់គ្រងពិធីឌីជីថល ផ្តល់ជូនដោយ មត៌ត ធៀបការ (Motorola Theapka)</span>
             </p>
           </div>
         </div>
@@ -230,7 +237,7 @@ export function PublicFooter({
         <div className="pt-10 border-t border-border/50 flex flex-col sm:flex-row justify-between items-center gap-8">
           <div className="flex flex-col items-center sm:items-start gap-1">
             <p className="text-[10px] font-black text-foreground uppercase">
-              © {year} មត៍ក (MORDOK)
+              © {year} មត៌ត ធៀបការ (Motorola Theapka)
             </p>
             <p className="text-[9px] font-bold text-muted-foreground/30 uppercase">
               Digital Solutions for Modern Events

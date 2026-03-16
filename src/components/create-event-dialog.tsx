@@ -70,7 +70,17 @@ export function CreateEventDialog() {
 
   // Wedding/Ceremony Specific State
   const [groomName, setGroomName] = useState("");
+  const [groomFatherTitle, setGroomFatherTitle] = useState("");
+  const [groomFatherName, setGroomFatherName] = useState("");
+  const [groomMotherTitle, setGroomMotherTitle] = useState("");
+  const [groomMotherName, setGroomMotherName] = useState("");
+  
   const [brideName, setBrideName] = useState("");
+  const [brideFatherTitle, setBrideFatherTitle] = useState("");
+  const [brideFatherName, setBrideFatherName] = useState("");
+  const [brideMotherTitle, setBrideMotherTitle] = useState("");
+  const [brideMotherName, setBrideMotherName] = useState("");
+  
   const [donorName, setDonorName] = useState("");
   const [preventDuplicateGuests, setPreventDuplicateGuests] = useState(false);
 
@@ -114,7 +124,15 @@ export function CreateEventDialog() {
     setCustomCategory("");
     setDescription("");
     setGroomName("");
+    setGroomFatherTitle("");
+    setGroomFatherName("");
+    setGroomMotherTitle("");
+    setGroomMotherName("");
     setBrideName("");
+    setBrideFatherTitle("");
+    setBrideFatherName("");
+    setBrideMotherTitle("");
+    setBrideMotherName("");
     setDonorName("");
     setKhqrUSD(null);
     setKhqrKHR(null);
@@ -150,7 +168,15 @@ export function CreateEventDialog() {
           description: description || undefined,
           extraData: {
             groomName: category === "wedding" ? groomName : undefined,
+            groomFatherTitle: category === "wedding" ? groomFatherTitle : undefined,
+            groomFatherName: category === "wedding" ? groomFatherName : undefined,
+            groomMotherTitle: category === "wedding" ? groomMotherTitle : undefined,
+            groomMotherName: category === "wedding" ? groomMotherName : undefined,
             brideName: category === "wedding" ? brideName : undefined,
+            brideFatherTitle: category === "wedding" ? brideFatherTitle : undefined,
+            brideFatherName: category === "wedding" ? brideFatherName : undefined,
+            brideMotherTitle: category === "wedding" ? brideMotherTitle : undefined,
+            brideMotherName: category === "wedding" ? brideMotherName : undefined,
             donorName: category === "buddhist" ? donorName : undefined,
             preventDuplicateGuests,
           },
@@ -245,29 +271,60 @@ export function CreateEventDialog() {
             {category === "wedding" ? (
               <div className="space-y-6 animate-in fade-in duration-300">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold flex items-center gap-2 uppercase">
-                      <Heart className="h-3 w-3 text-primary" />{" "}
-                      {"ឈ្មោះកូនកំលោះ"}
-                    </Label>
-                    <Input
-                      placeholder={"ឈ្មោះកូនកំលោះ"}
-                      className="h-10 bg-muted/30 border-border rounded-md text-foreground px-4 placeholder:/30 text-sm"
-                      value={groomName}
-                      onChange={(e) => setGroomName(e.target.value)}
-                    />
+                  <div className="space-y-4 col-span-1 md:col-span-2 p-4 border rounded-md bg-muted/20">
+                    <h4 className="text-sm font-bold text-[#C5A866] flex items-center gap-2">
+                       <Heart className="h-4 w-4 text-[#C5A866]" /> ព័ត៌មានកូនប្រុស និង មាតាបិតា
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2 col-span-1 md:col-span-2">
+                        <Label className="text-xs font-semibold uppercase">ឈ្មោះកូនកំលោះ</Label>
+                        <Input placeholder="ឈ្មោះកូនកំលោះ" className="h-10 text-sm" value={groomName} onChange={(e) => setGroomName(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground">ងារឪពុក</Label>
+                        <Input placeholder="ឧ. លោក / ឯកឧត្តម" className="h-10 text-sm" value={groomFatherTitle} onChange={(e) => setGroomFatherTitle(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground">ឈ្មោះឪពុក</Label>
+                        <Input placeholder="ឧ. ឈន ស៊ីដេត" className="h-10 text-sm" value={groomFatherName} onChange={(e) => setGroomFatherName(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground">ងារម្ដាយ</Label>
+                        <Input placeholder="ឧ. លោកស្រី / លោកជំទាវ" className="h-10 text-sm" value={groomMotherTitle} onChange={(e) => setGroomMotherTitle(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground">ឈ្មោះម្ដាយ</Label>
+                        <Input placeholder="ឧ. ម៉ម សុផាត" className="h-10 text-sm" value={groomMotherName} onChange={(e) => setGroomMotherName(e.target.value)} />
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold flex items-center gap-2 uppercase">
-                      <Heart className="h-3 w-3 text-primary" />{" "}
-                      {"ឈ្មោះកូនក្រមុំ"}
-                    </Label>
-                    <Input
-                      placeholder={"ឈ្មោះកូនក្រមុំ"}
-                      className="h-10 bg-muted/30 border-border rounded-md text-foreground px-4 placeholder:/30 text-sm"
-                      value={brideName}
-                      onChange={(e) => setBrideName(e.target.value)}
-                    />
+
+                  <div className="space-y-4 col-span-1 md:col-span-2 p-4 border rounded-md bg-muted/20">
+                    <h4 className="text-sm font-bold text-[#C5A866] flex items-center gap-2">
+                       <Heart className="h-4 w-4 text-[#C5A866]" /> ព័ត៌មានកូនស្រី និង មាតាបិតា
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2 col-span-1 md:col-span-2">
+                        <Label className="text-xs font-semibold uppercase">ឈ្មោះកូនក្រមុំ</Label>
+                        <Input placeholder="ឈ្មោះកូនក្រមុំ" className="h-10 text-sm" value={brideName} onChange={(e) => setBrideName(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground">ងារឪពុក</Label>
+                        <Input placeholder="ឧ. លោក / ឯកឧត្តម" className="h-10 text-sm" value={brideFatherTitle} onChange={(e) => setBrideFatherTitle(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground">ឈ្មោះឪពុក</Label>
+                        <Input placeholder="ឧ. ស៊ីម ច័ន្ទសុធានេត្រ" className="h-10 text-sm" value={brideFatherName} onChange={(e) => setBrideFatherName(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground">ងារម្ដាយ</Label>
+                        <Input placeholder="ឧ. លោកស្រី / លោកជំទាវ" className="h-10 text-sm" value={brideMotherTitle} onChange={(e) => setBrideMotherTitle(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground">ឈ្មោះម្ដាយ</Label>
+                        <Input placeholder="ឧ. អ៊ុក សោភា" className="h-10 text-sm" value={brideMotherName} onChange={(e) => setBrideMotherName(e.target.value)} />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

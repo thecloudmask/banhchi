@@ -57,9 +57,19 @@ export interface Content {
   contentData?: {
     groom?: {
       name: string;
+      fatherTitle?: string;
+      fatherName?: string;
+      motherTitle?: string;
+      motherName?: string;
     };
+    khqrUSDUrl?: string;
+    khqrKHRUrl?: string;
     bride?: {
       name: string;
+      fatherTitle?: string;
+      fatherName?: string;
+      motherTitle?: string;
+      motherName?: string;
     };
     location?: {
       name: string;
@@ -81,6 +91,7 @@ export interface Content {
     }[];
     donorName?: string;
     footerContent?: string;
+    bankQrUrl?: string;
   };
   createdAt: string;
   updatedAt: string;

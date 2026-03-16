@@ -183,7 +183,7 @@ export const FuneralAgenda = ({ content, event, theme }: Props) => {
                 ))}
               </div>
               <p className="text-slate-700 text-[9px] sm:text-xs font-black uppercase">
-                Premium Memorial • MORDOK
+                Premium Memorial • Motorola Theapka
               </p>
             </div>
           </div>
