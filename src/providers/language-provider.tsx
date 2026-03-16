@@ -13,7 +13,7 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const translations: Record<string, Record<Language, string>> = {
-  "app_name": { en: "Banhchi", kh: "បញ្ជី" },
+  "app_name": { en: "Sideth-Theapka", kh: "ស៊ីដេត-ធៀបកា" },
   // Wedding & Event specific
   "wedding_groom_info": { en: "Groom Info", kh: "ព័ត៌មានកូនប្រុស" },
   "groom_info": { en: "Groom Info", kh: "ព័ត៌មានកូនប្រុស" },
@@ -300,20 +300,34 @@ export const translations: Record<string, Record<Language, string>> = {
   "explore_complete_info": { en: "Explore complete event information and guest contributions", kh: "ស្វែងយល់ព័ត៌មានលម្អិតអំពីកម្មវិធី" },
 
   // About Section
-  "about_title": { en: "Banhchi - Modernizing the Khmer Jongdai Tradition", kh: "បញ្ជី (Banhchi) - ទំនើបកម្មនៃប្រពៃណីចងដៃខ្មែរ" },
+  "about_title": { en: "Sideth-Theapka - Modernizing the Khmer Jongdai Tradition", kh: "ស៊ីដេត-ធៀបកា (Sideth-Theapka) - ទំនើបកម្មនៃប្រពៃណីចងដៃខ្មែរ" },
   "about_slogan": { en: "Record with confidence, preserve tradition with technology.", kh: "កត់ត្រាដោយទំនុកចិត្ត រក្សាប្រពៃណីដោយបច្ចេកវិទ្យា" },
   
   "mission_title": { en: "Our Mission", kh: "បេសកកម្មរបស់យើង" },
-  "mission_desc": { en: "Banhchi was created with a single purpose: to transform the 'Jongdai Book' from paper into a smart, secure digital system. We understand that organizing each ceremony is very busy, so accurate and fast recording is essential.", kh: "\"បញ្ជី\" ត្រូវបានបង្កើតឡើងក្នុងគោលបំណងតែមួយគត់៖ ប្រែក្លាយ \"សៀវភៅកត់ចំណងដៃ\" ពីក្រដាស ឱ្យទៅជាប្រព័ន្ធឌីជីថលដ៏ឆ្លាតវៃ និងមានសុវត្ថិភាព។ យើងយល់ច្បាស់ថា ការរៀបចំកម្មវិធីបុណ្យនីមួយៗមានភាពមមាញឹកខ្លាំង ដូច្នេះការកត់ត្រាដែលត្រឹមត្រូវ និងរហ័ស គឺជាកត្តាចាំបាច់បំផុត។" },
+  "mission_desc": { en: "Sideth-Theapka was created with a single purpose: to transform the 'Jongdai Book' from paper into a smart, secure digital system. We understand that organizing each ceremony is very busy, so accurate and fast recording is essential.", kh: "\"ស៊ីដេត-ធៀបកា\" ត្រូវបានបង្កើតឡើងក្នុងគោលបំណងតែមួយគត់៖ ប្រែក្លាយ \"សៀវភៅកត់ចំណងដៃ\" ពីក្រដាស ឱ្យទៅជាប្រព័ន្ធឌីជីថលដ៏ឆ្លាតវៃ និងមានសុវត្ថិភាព។ យើងយល់ច្បាស់ថា ការរៀបចំកម្មវិធីបុណ្យនីមួយៗមានភាពមមាញឹកខ្លាំង ដូច្នេះការកត់ត្រាដែលត្រឹមត្រូវ និងរហ័ស គឺជាកត្តាចាំបាច់បំផុត។" },
   
-  "why_banhchi_title": { en: "Why Banhchi?", kh: "ហេតុអ្វីជ្រើសរើស \"បញ្ជី\"?" },
-  "why_banhchi_desc": { en: "Our system is not just a simple money table, but specially designed for the Cambodian context:", kh: "ប្រព័ន្ធរបស់យើងមិនមែនគ្រាន់តែជាតារាងកត់លុយធម្មតាទេ ប៉ុន្តែវាត្រូវបានរចនាឡើងយ៉ាងពិសេសសម្រាប់បរិបទស្រុកខ្មែរ៖" },
+  "why_theapka_title": { en: "Why Sideth-Theapka?", kh: "ហេតុអ្វីជ្រើសរើស \"ស៊ីដេត-ធៀបកា\"?" },
+  "why_theapka_desc": { en: "Our system is not just a simple money table, but specially designed for the Cambodian context:", kh: "ប្រព័ន្ធរបស់យើងមិនមែនគ្រាន់តែជាតារាងកត់លុយធម្មតាទេ ប៉ុន្តែវាត្រូវបានរចនាឡើងយ៉ាងពិសេសសម្រាប់បរិបទស្រុកខ្មែរ៖" },
+
+  "hero_title": { en: "Digital Companion for Every Special Moment", kh: "ដៃគូឌីជីថលសម្រាប់គ្រប់កម្មវិធីមង្គលរបស់អ្នក" },
+  "hero_subtitle": { en: "The modern way to organize weddings, anniversaries, and merit-making ceremonies in Cambodia.", kh: "ប្រែក្លាយការគ្រប់គ្រងកម្មវិធីបែបប្រពៃណី ឱ្យទៅជាសម័យកាលឌីជីថលដ៏ឆ្លាតវៃ និងសាមញ្ញ។" },
+  "features_title": { en: "The Most Powerful Event Solution", kh: "បច្ចេកវិទ្យាគ្រប់គ្រងកម្មវិធីឈានមុខគេ" },
+  "feature_tracking_title": { en: "Smart Money Tracking", kh: "កត់ត្រាចំណងដៃឆ្លាតវៃ" },
+  "feature_tracking_desc": { en: "Record contributions instantly with automatic currency conversion ($ & ៛).", kh: "កត់ត្រាចំណងដៃបានរហ័ស ត្រឹមត្រូវ និងបូកសរុបលុយរូបិយប័ណ្ណពីរភ្លាមៗ។" },
+  "feature_invitation_title": { en: "Elegant Digital Cards", kh: "ធៀបឌីជីថលដ៏ស្រស់ស្អាត" },
+  "feature_invitation_desc": { en: "Share beautiful, interactive invitations with live countdowns and Google Maps.", kh: "ចែករំលែកធៀបតាមរយៈ Social Media ជាមួយផែនទី និងការរាប់ថយក្រោយយ៉ាងទំនើប។" },
+  "feature_security_title": { en: "Private & Secure", kh: "សុវត្ថិភាព និងឯកជនភាព" },
+  "feature_security_desc": { en: "Your data is encrypted and only accessible by the event host.", kh: "ទិន្នន័យរបស់អ្នកត្រូវបានកូដនីយកម្ម និងមានតែម្ចាស់កម្មវិធីប៉ុណ្ណោះដែលអាចមើលឃើញ។" },
+  "ready_to_start": { en: "Want to use this system for your event?", kh: "ចង់ប្រើប្រាស់ប្រព័ន្ធនេះសម្រាប់កម្មវិធីរបស់អ្នកមែនទេ?" },
+  "create_event_cta": { en: "Contact Admin / Support", kh: "ទំនាក់ទំនងផ្នែកសេវាកម្ម" },
+  "login": { en: "Admin Login", kh: "ចូលគ្រប់គ្រង" },
+  "explore_feed": { en: "Explore Recent Events", kh: "ស្វែងរកកម្មវិធីថ្មីៗ" },
   
   "dual_currency_title": { en: "Dual Currency", kh: "ប្រព័ន្ធរូបិយប័ណ្ណពីរ" },
   "dual_currency_desc": { en: "We solve the headache of adding Dollars ($) and Riel (៛) together. The system will separate and total them for you instantly without errors.", kh: "យើងដោះស្រាយបញ្ហាឈឺក្បាលនៃការបូកលុយ ដុល្លារ ($) និង រៀល (៛) បញ្ចូលគ្នា។ ប្រព័ន្ធនឹងបំបែក និងបូកសរុបជូនលោកអ្នកភ្លាមៗដោយគ្មានកំហុស។" },
   
   "materials_supported_title": { en: "Materials Supported", kh: "មិនមែនទទួលតែលុយ" },
-  "materials_supported_desc": { en: "For ceremonies, we know that material contributions (like rice, water, beer) still exist. Banhchi allows you to define and record those items easily.", kh: "សម្រាប់កម្មវិធីបុណ្យទាន យើងដឹងថាការចូលបុណ្យជាសម្ភារៈ (ដូចជា អង្ករ, ទឹកសុទ្ធ, ស្រាបៀរ) នៅតែមាន។ \"បញ្ជី\" អនុញ្ញាតឱ្យលោកអ្នកកំណត់ និងកត់ត្រាវត្ថុទាំងនោះបានយ៉ាងងាយស្រួល។" },
+  "materials_supported_desc": { en: "For ceremonies, we know that material contributions (like rice, water, beer) still exist. Sideth-Theapka allows you to define and record those items easily.", kh: "សម្រាប់កម្មវិធីបុណ្យទាន យើងដឹងថាការចូលបុណ្យជាសម្ភារៈ (ដូចជា អង្ករ, ទឹកសុទ្ធ, ស្រាបៀរ) នៅតែមាន។ \"ស៊ីដេត-ធៀបកា\" អនុញ្ញាតឱ្យលោកអ្នកកំណត់ និងកត់ត្រាវត្ថុទាំងនោះបានយ៉ាងងាយស្រួល។" },
   
   "elder_friendly_title": { en: "Elder-Friendly", kh: "ងាយស្រួលសម្រាប់មនុស្សគ្រប់វ័យ" },
   "elder_friendly_desc": { en: "We design large buttons and simple functions that even elders or those less tech-savvy can use proficiently.", kh: "យើងរចនាប៊ូតុងធំៗ និងមុខងារសាមញ្ញ ដែលសូម្បីតែចាស់ទុំ ឬអ្នកមិនសូវចេះបច្ចេកវិទ្យា ក៏អាចប្រើប្រាស់បានយ៉ាងស្ទាត់ជំនាញ។" },
@@ -365,7 +379,7 @@ export const translations: Record<string, Record<Language, string>> = {
   "developed_by": { en: "Developed By", kh: "អភិវឌ្ឍដោយ" },
   "working_hours": { en: "Working Hours", kh: "ម៉ោងធ្វើការ" },
   "client_name_placeholder": { en: "Event Host / Company", kh: "ម្ចាស់កម្មវិធី" },
-  "dev_team_name": { en: "Banhchi Tech Team", kh: "ក្រុមការងារបច្ចេកទេសបញ្ជី" },
+  "dev_team_name": { en: "Sideth-Theapka Tech Team", kh: "ក្រុមការងារបច្ចេកទេស ស៊ីដេត-ធៀបកា" },
   "payment_method": { en: "Payment Method", kh: "វិធីបង់ប្រាក់" },
   "elder_interface_tagline": { en: "Simple and Easy to Use", kh: "សាមញ្ញ ងាយស្រួលប្រើប្រាស់" },
   "total_contributions": { en: "Total Contributions", kh: "ការចូលរួមសរុប" },
@@ -512,7 +526,7 @@ export const translations: Record<string, Record<Language, string>> = {
   "try_different_search": { en: "Try a different search term", kh: "សូមព្យាយាមស្វែងរកពាក្យផ្សេងទៀត" },
   "clear_all_filters": { en: "Clear all filters", kh: "សម្អាតការកំណត់ទាំងអស់" },
   "view_website": { en: "View Website", kh: "មើលគេហទំព័រ" },
-  "banhchi_system": { en: "Banhchi System", kh: "ប្រព័ន្ធបញ្ជី (Banhchi)" },
+  "theapka_system": { en: "Sideth-Theapka System", kh: "ប្រព័ន្ធស៊ីដេត-ធៀបកា (Sideth-Theapka)" },
   "discover_more": { en: "Discover More", kh: "ស្វែងរកបន្ថែម" },
   
   // Support Page

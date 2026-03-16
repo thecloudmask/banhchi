@@ -6,7 +6,7 @@
 import imageCompression from 'browser-image-compression';
 
 const CLOUD_NAME = "dw1ancaye";
-const UPLOAD_PRESET = "banhchi_uploads"; // You'll need to create this in Cloudinary dashboard
+const UPLOAD_PRESET = "theapka_uploads"; // You'll need to create this in Cloudinary dashboard
 
 /**
  * Upload an image file to Cloudinary with aggressive compression
@@ -17,7 +17,7 @@ const UPLOAD_PRESET = "banhchi_uploads"; // You'll need to create this in Cloudi
  */
 export const uploadToCloudinary = async (
   file: File,
-  folder: string = "banhchi",
+  folder: string = "theapka",
   type: 'banner' | 'thumbnail' | 'gallery' = 'gallery'
 ): Promise<string> => {
   try {
@@ -85,7 +85,7 @@ export const uploadToCloudinary = async (
  */
 export const uploadMultipleToCloudinary = async (
   files: File[],
-  folder: string = "banhchi"
+  folder: string = "theapka"
 ): Promise<string[]> => {
   const results: string[] = [];
   

@@ -56,3 +56,20 @@ export function formatTimeOnly(date: any): string {
   
   return `ម៉ោង ${khHours}:${khMinutes} ${ampm}`;
 }
+
+export function stripHtml(html: string | undefined | null) {
+  if (!html) return "";
+  // Step 1: Decode basic entities so tags are recognizable
+  let text = html
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, '&');
+  
+  // Step 2: Strip actual HTML tags
+  text = text.replace(/<[^>]*>?/gm, '');
+  
+  // Step 3: Clean up remaining common entities
+  return text.replace(/&nbsp;/g, ' ').trim();
+}

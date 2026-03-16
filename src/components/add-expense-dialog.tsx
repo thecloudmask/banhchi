@@ -1,5 +1,14 @@
 import { useState, useRef, useEffect } from "react";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerFooter, DrawerClose } from "@/components/ui/drawer";
+import { 
+  Drawer, 
+  DrawerContent, 
+  DrawerHeader, 
+  DrawerTitle, 
+  DrawerDescription,
+  DrawerTrigger,
+  DrawerFooter,
+  DrawerClose 
+} from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,7 +42,7 @@ export function AddExpenseDialog({ event, expenseToEdit, onClose, trigger, onSuc
 
   const [actualAmount, setActualAmount] = useState("");
   const [invoiceNumber, setInvoiceNumber] = useState("");
-  const [currency, setCurrency] = useState<'USD' | 'KHR'>("USD");
+  const [currency, setCurrency] = useState<'USD' | "KHR">("USD");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [note, setNote] = useState("");
   
@@ -69,7 +78,7 @@ export function AddExpenseDialog({ event, expenseToEdit, onClose, trigger, onSuc
   const formatWithCommas = (value: string): string => {
     const cleanValue = value.replace(/[^\d.]/g, "");
     const parts = cleanValue.split(".");
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ", ");
     return parts.join(".");
   };
 
@@ -190,6 +199,9 @@ export function AddExpenseDialog({ event, expenseToEdit, onClose, trigger, onSuc
           <DrawerTitle className="text-2xl font-black text-foreground">
             {expenseToEdit ? "កែប្រែការចំណាយ" : "បន្ថែមការចំណាយ"}
           </DrawerTitle>
+          <DrawerDescription className="text-muted-foreground font-medium mt-0.5 text-[10px] uppercase">
+            សូមបំពេញព័ត៌មានខាងក្រោមដើម្បីកត់ត្រាការចំណាយរបស់លោកអ្នក
+          </DrawerDescription>
         </DrawerHeader>
 
         <div className="flex-1 overflow-y-auto px-6 -mx-1 scrollbar-hide">
@@ -198,7 +210,7 @@ export function AddExpenseDialog({ event, expenseToEdit, onClose, trigger, onSuc
               
               {/* Item Name */}
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">
+                <Label className="text-[10px] font-black uppercase  text-muted-foreground ml-1">
                   {"ឈ្មោះចំណាយ"}
                 </Label>
                 <div className="relative group">
@@ -216,7 +228,7 @@ export function AddExpenseDialog({ event, expenseToEdit, onClose, trigger, onSuc
               
               {/* Invoice Number */}
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">
+                <Label className="text-[10px] font-black uppercase  text-muted-foreground ml-1">
                   {"លេខវិក្កយបត្រ"}
                 </Label>
                 <div className="relative group">
@@ -243,7 +255,7 @@ export function AddExpenseDialog({ event, expenseToEdit, onClose, trigger, onSuc
 
               {/* Currency Selection */}
                <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">
+                <Label className="text-[10px] font-black uppercase  text-muted-foreground ml-1">
                   {"រូបិយប័ណ្ណ"}
                 </Label>
                 <Select value={currency} onValueChange={(val: any) => setCurrency(val)}>
@@ -259,7 +271,7 @@ export function AddExpenseDialog({ event, expenseToEdit, onClose, trigger, onSuc
 
               {/* Payment Method Dropdown */}
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">
+                <Label className="text-[10px] font-black uppercase  text-muted-foreground ml-1">
                   {"វិធីបង់ប្រាក់"}
                 </Label>
                 <Select value={paymentMethod} onValueChange={(val: any) => setPaymentMethod(val)}>
@@ -289,7 +301,7 @@ export function AddExpenseDialog({ event, expenseToEdit, onClose, trigger, onSuc
               {/* Amounts Grid */}
                <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">
+                  <Label className="text-[10px] font-black uppercase  text-muted-foreground ml-1">
                     {"ទឹកប្រាក់ចំណាយ"}
                   </Label>
                   <div className="relative group">
@@ -309,7 +321,7 @@ export function AddExpenseDialog({ event, expenseToEdit, onClose, trigger, onSuc
 
               {/* Note */}
                <div className="space-y-2">
-                 <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">
+                 <Label className="text-[10px] font-black uppercase  text-muted-foreground ml-1">
                   {"សម្គាល់"}
                  </Label>
                  <Textarea 

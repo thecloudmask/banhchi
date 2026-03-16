@@ -16,6 +16,21 @@ import {
 import { db } from "@/lib/firebase";
 export { deleteField };
 
+const cleanData = (obj: any): any => {
+  if (obj === null || typeof obj !== "object") return obj;
+  if (obj instanceof Date || (obj.constructor && obj.constructor.name === 'Timestamp')) return obj;
+  if (Array.isArray(obj)) return obj.map(cleanData);
+
+  const cleaned: any = {};
+  Object.keys(obj).forEach((key) => {
+    const value = obj[key];
+    if (value !== undefined) {
+      cleaned[key] = cleanData(value);
+    }
+  });
+  return cleaned;
+};
+
 export interface Content {
   id: string;
   title: string;
@@ -64,6 +79,7 @@ export interface Content {
         }[];
       }[];
     }[];
+    donorName?: string;
     footerContent?: string;
   };
   createdAt: string;
@@ -75,11 +91,12 @@ const COLLECTION_NAME = "contents";
 export const addContent = async (data: Omit<Content, "id" | "createdAt" | "updatedAt">) => {
   if (!db) throw new Error("Firebase not initialized");
   try {
-    const docRef = await addDoc(collection(db, COLLECTION_NAME), {
+    const contentData = cleanData({
       ...data,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
+    const docRef = await addDoc(collection(db, COLLECTION_NAME), contentData);
     return docRef.id;
   } catch (error) {
     console.error("Error adding content: ", error);
@@ -91,10 +108,11 @@ export const updateContent = async (id: string, data: Partial<Content>) => {
   if (!db) throw new Error("Firebase not initialized");
   try {
     const docRef = doc(db, COLLECTION_NAME, id);
-    await updateDoc(docRef, {
+    const updateData = cleanData({
       ...data,
       updatedAt: new Date().toISOString(),
     });
+    await updateDoc(docRef, updateData);
     return true;
   } catch (error) {
     console.error("Error updating content: ", error);
@@ -131,9 +149,9 @@ export const getContentById = async (id: string): Promise<Content | null> => {
 export const getAllContents = async (): Promise<Content[]> => {
   if (!db) throw new Error("Firebase not initialized");
   try {
-    const q = query(collection(db, COLLECTION_NAME), orderBy("createdAt", "desc"), limit(50));
+    const q = query(collection(db, COLLECTION_NAME), orderBy("createdAt", "desc"), limit(100));
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Content));
+    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), _source: 'contents' } as any));
   } catch (error) {
     console.error("Error getting contents: ", error);
     throw error;

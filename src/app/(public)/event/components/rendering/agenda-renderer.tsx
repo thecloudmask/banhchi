@@ -8,9 +8,10 @@ interface Props {
   content: Content;
   event: Event;
   theme: any;
+  onCoverStateChange?: (shown: boolean) => void;
 }
 
-export const AgendaRenderer = ({ content, event, theme }: Props) => {
+export const AgendaRenderer = ({ content, event, theme, onCoverStateChange }: Props) => {
   // Use content type if it's a specific ceremony style, otherwise fallback to event category
   const category = (content.type === 'wedding' || content.type === 'buddhist') 
     ? content.type 
@@ -18,7 +19,7 @@ export const AgendaRenderer = ({ content, event, theme }: Props) => {
 
   switch (category) {
     case 'wedding':
-      return <WeddingAgenda content={content} event={event} theme={theme} />;
+      return <WeddingAgenda content={content} event={event} theme={theme} onCoverStateChange={onCoverStateChange} />;
     case 'buddhist':
     case 'merit_making':
     case 'funeral':

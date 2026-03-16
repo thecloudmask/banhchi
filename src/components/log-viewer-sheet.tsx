@@ -66,15 +66,13 @@ export function LogViewerSheet({ eventId }: LogViewerSheetProps) {
               {logs.map((log) => (
                 <div key={log.id} className="relative pl-8 border-l border-border group last:border-0 last:pb-0 pb-8">
                   <div className={cn(
-                    "absolute -left-1.25 top-0 h-2.5 w-2.5 rounded-full border-2 border-background ring-4 ring-background transition-all",
-                    log.action === 'CREATE' ? "bg-green-500" : 
+                    "absolute -left-1.25 top-0 h-2.5 w-2.5 rounded-full border-2 border-background ring-4 ring-background transition-all", log.action === 'CREATE' ? "bg-green-500" : 
                     log.action === 'UPDATE' ? "bg-blue-500" : "bg-destructive"
                   )} />
                   
                   <div className="flex items-center justify-between gap-4 mb-2">
                     <span className={cn(
-                      "text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded",
-                       log.action === 'CREATE' ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : 
+                      "text-[10px] font-black uppercase   px-2 py-0.5 rounded", log.action === 'CREATE' ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : 
                        log.action === 'UPDATE' ? "bg-blue-500/10 text-blue-500 border border-blue-500/20" : "bg-rose-500/10 text-rose-500 border border-rose-500/20"
                     )}>
                       {log.action}
@@ -94,14 +92,14 @@ export function LogViewerSheet({ eventId }: LogViewerSheetProps) {
                        <div className="mt-3 pt-3 border-t border-border/50 flex flex-col gap-2">
                           <div className="flex items-center gap-2 opacity-40">
                              <Info className="h-3 w-3" />
-                             <span className="text-[10px] font-black uppercase tracking-widest">ព័ត៌មានប្រតិបត្តិការ</span>
+                             <span className="text-[10px] font-black uppercase  ">ព័ត៌មានប្រតិបត្តិការ</span>
                           </div>
                        </div>
                     )}
                   </div>
                   
                   <div className="mt-3 flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">
+                    <div className="flex items-center gap-1.5 text-[9px] font-black uppercase   text-muted-foreground opacity-50">
                       <User className="h-2.5 w-2.5" />
                       {log.userId.substring(0, 8)}
                     </div>

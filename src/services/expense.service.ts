@@ -15,6 +15,21 @@ import {
 import { Expense } from "@/types";
 import { logActivity } from "./event.service";
 
+const cleanData = (obj: any): any => {
+  if (obj === null || typeof obj !== "object") return obj;
+  if (obj instanceof Date || (obj.constructor && obj.constructor.name === 'Timestamp')) return obj;
+  if (Array.isArray(obj)) return obj.map(cleanData);
+
+  const cleaned: any = {};
+  Object.keys(obj).forEach((key) => {
+    const value = obj[key];
+    if (value !== undefined) {
+      cleaned[key] = cleanData(value);
+    }
+  });
+  return cleaned;
+};
+
 const EVENTS_COLLECTION = "events";
 
 export const getExpenses = async (eventId: string): Promise<Expense[]> => {
@@ -52,10 +67,11 @@ export const subscribeToExpenses = (eventId: string, callback: (expenses: Expens
 export const addExpense = async (eventId: string, expense: Omit<Expense, "id" | "createdAt">): Promise<void> => {
   if (!db) return;
   try {
-    const docRef = await addDoc(collection(db, EVENTS_COLLECTION, eventId, "expenses"), {
+    const expenseData = cleanData({
       ...expense,
       createdAt: serverTimestamp()
     });
+    const docRef = await addDoc(collection(db, EVENTS_COLLECTION, eventId, "expenses"), expenseData);
 
     await logActivity(
       eventId,
@@ -78,10 +94,10 @@ export const updateExpense = async (eventId: string, expenseId: string, data: Pa
     const oldDoc = await getDoc(docRef);
     const oldValue = oldDoc.exists() ? oldDoc.data() : null;
 
-    await updateDoc(docRef, {
+    await updateDoc(docRef, cleanData({
       ...data,
       updatedAt: serverTimestamp()
-    });
+    }));
 
     await logActivity(
       eventId,

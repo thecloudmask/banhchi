@@ -10,7 +10,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Clock as ClockIcon, User as UserIcon, History as HistoryIcon, Loader2 } from "lucide-react";
+import {
+  Clock as ClockIcon,
+  User as UserIcon,
+  History as HistoryIcon,
+  Loader2,
+} from "lucide-react";
 import { getGuestLogs } from "@/services/event.service";
 import { AuditLog, Guest } from "@/types";
 import { formatDateTime } from "@/lib/utils";
@@ -22,7 +27,10 @@ interface GuestHistoryDialogProps {
   guest: Guest;
 }
 
-export function GuestHistoryDialog({ eventId, guest }: GuestHistoryDialogProps) {
+export function GuestHistoryDialog({
+  eventId,
+  guest,
+}: GuestHistoryDialogProps) {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(false);
   // No internationalization needed
@@ -42,9 +50,9 @@ export function GuestHistoryDialog({ eventId, guest }: GuestHistoryDialogProps) 
   return (
     <Dialog onOpenChange={(open) => open && fetchLogs()}>
       <DialogTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="icon" 
+        <Button
+          variant="ghost"
+          size="icon"
           className="h-10 w-10 text-muted-foreground hover:bg-secondary rounded-xl transition-all"
         >
           <HistoryIcon className="h-4 w-4" />
@@ -53,12 +61,14 @@ export function GuestHistoryDialog({ eventId, guest }: GuestHistoryDialogProps) 
       <DialogContent className="sm:max-w-xl rounded-2xl p-0 border border-border bg-background shadow-lg overflow-hidden">
         <DialogHeader className="p-8 pb-4">
           <DialogTitle className="text-2xl font-black flex items-center gap-3 italic">
-             <div className="h-10 w-10 bg-accent rounded-xl flex items-center justify-center">
-                <HistoryIcon className="h-5 w-5 text-muted-foreground/60" />
-             </div>
-             ប្រវត្តិសម្រាប់ {guest.name}
+            <div className="h-10 w-10 bg-accent rounded-xl flex items-center justify-center">
+              <HistoryIcon className="h-5 w-5 text-muted-foreground/60" />
+            </div>
+            ប្រវត្តិសម្រាប់ {guest.name}
           </DialogTitle>
-          <DialogDescription className="sr-only">ប្រវត្តិប្រតិបត្តិការ និងការផ្លាស់ប្តូរសម្រាប់ {guest.name}។</DialogDescription>
+          <DialogDescription className="sr-only">
+            ប្រវត្តិប្រតិបត្តិការ និងការផ្លាស់ប្តូរសម្រាប់ {guest.name}។
+          </DialogDescription>
         </DialogHeader>
 
         <ScrollArea className="h-100 p-8 pt-0">
@@ -68,25 +78,35 @@ export function GuestHistoryDialog({ eventId, guest }: GuestHistoryDialogProps) 
             </div>
           ) : logs.length === 0 ? (
             <div className="text-center py-20 text-muted-foreground font-medium opacity-40">
-               មិនទាន់មានប្រវត្តិនៅឡើយទេ។
+              មិនទាន់មានប្រវត្តិនៅឡើយទេ។
             </div>
           ) : (
             <div className="space-y-6">
               {logs.map((log) => (
-                <div key={log.id} className="relative pl-8 border-l-2 border-border pb-2 group last:border-0 last:pb-0">
-                   <div className={cn(
-                    "absolute -left-2.25 top-0 h-4 w-4 rounded-full bg-border border-4 border-background group-hover:bg-primary group-hover:border-primary/20 transition-all",
-                    log.action === 'CREATE' && "bg-green-500",
-                    log.action === 'UPDATE' && "bg-blue-500",
-                    log.action === 'DELETE' && "bg-destructive"
-                  )} />
-                  
+                <div
+                  key={log.id}
+                  className="relative pl-8 border-l-2 border-border pb-2 group last:border-0 last:pb-0"
+                >
+                  <div
+                    className={cn(
+                      "absolute -left-2.25 top-0 h-4 w-4 rounded-full bg-border border-4 border-background group-hover:bg-primary group-hover:border-primary/20 transition-all",
+                      log.action === "CREATE" && "bg-green-500",
+                      log.action === "UPDATE" && "bg-blue-500",
+                      log.action === "DELETE" && "bg-destructive",
+                    )}
+                  />
+
                   <div className="flex items-center gap-4 mb-2">
-                    <span className={cn(
-                       "text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded",
-                       log.action === 'CREATE' ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : 
-                       log.action === 'UPDATE' ? "bg-blue-500/10 text-blue-500 border border-blue-500/20" : "bg-rose-500/10 text-rose-500 border border-rose-500/20"
-                    )}>
+                    <span
+                      className={cn(
+                        "text-[10px] font-black uppercase px-2 py-0.5 rounded",
+                        log.action === "CREATE"
+                          ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                          : log.action === "UPDATE"
+                            ? "bg-blue-500/10 text-blue-500 border border-blue-500/20"
+                            : "bg-rose-500/10 text-rose-500 border border-rose-500/20",
+                      )}
+                    >
                       {log.action}
                     </span>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
@@ -100,8 +120,8 @@ export function GuestHistoryDialog({ eventId, guest }: GuestHistoryDialogProps) 
                       {log.details}
                     </p>
                   </div>
-                  
-                  <div className="mt-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground opacity-40">
+
+                  <div className="mt-3 flex items-center gap-2 text-[10px] font-black uppercase text-muted-foreground opacity-40">
                     <UserIcon className="h-3 w-3" />
                     ដោយ Admin: {log.userId.substring(0, 8)}...
                   </div>

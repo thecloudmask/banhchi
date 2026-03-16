@@ -1,12 +1,35 @@
 import { useState, useRef, useEffect } from "react";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerFooter, DrawerClose } from "@/components/ui/drawer";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerTrigger,
+  DrawerFooter,
+  DrawerClose,
+} from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { addGuest, updateGuest } from "@/services/event.service";
-import { Loader2, Plus, User, Wallet, CreditCard, Building2, Smartphone } from "lucide-react";
+import {
+  Loader2,
+  Plus,
+  User,
+  Wallet,
+  CreditCard,
+  Building2,
+  Smartphone,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Guest, PaymentMethod, Event } from "@/types";
 
@@ -18,11 +41,17 @@ interface AddGuestDialogProps {
   onSuccess?: () => void;
 }
 
-export function AddGuestDialog({ event, guestToEdit, onClose, trigger, onSuccess }: AddGuestDialogProps) {
+export function AddGuestDialog({
+  event,
+  guestToEdit,
+  onClose,
+  trigger,
+  onSuccess,
+}: AddGuestDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   // No internationalization needed
-  
+
   // Form State
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
@@ -30,7 +59,7 @@ export function AddGuestDialog({ event, guestToEdit, onClose, trigger, onSuccess
   const [amountKhr, setAmountKhr] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [note, setNote] = useState("");
-  
+
   // Display versions for Elders
   const [displayUsd, setDisplayUsd] = useState("");
   const [displayKhr, setDisplayKhr] = useState("");
@@ -53,10 +82,22 @@ export function AddGuestDialog({ event, guestToEdit, onClose, trigger, onSuccess
       setOpen(true);
       setName(guestToEdit.name);
       setLocation(guestToEdit.location || "");
-      setAmountUsd(guestToEdit.amountUsd > 0 ? guestToEdit.amountUsd.toString() : "");
-      setAmountKhr(guestToEdit.amountKhr > 0 ? guestToEdit.amountKhr.toString() : "");
-      setDisplayUsd(guestToEdit.amountUsd > 0 ? formatWithCommas(guestToEdit.amountUsd.toString()) : "");
-      setDisplayKhr(guestToEdit.amountKhr > 0 ? formatWithCommas(guestToEdit.amountKhr.toString()) : "");
+      setAmountUsd(
+        guestToEdit.amountUsd > 0 ? guestToEdit.amountUsd.toString() : "",
+      );
+      setAmountKhr(
+        guestToEdit.amountKhr > 0 ? guestToEdit.amountKhr.toString() : "",
+      );
+      setDisplayUsd(
+        guestToEdit.amountUsd > 0
+          ? formatWithCommas(guestToEdit.amountUsd.toString())
+          : "",
+      );
+      setDisplayKhr(
+        guestToEdit.amountKhr > 0
+          ? formatWithCommas(guestToEdit.amountKhr.toString())
+          : "",
+      );
       setPaymentMethod(guestToEdit.paymentMethod || "cash");
       setNote(guestToEdit.note || "");
     }
@@ -73,7 +114,7 @@ export function AddGuestDialog({ event, guestToEdit, onClose, trigger, onSuccess
   const formatWithCommas = (value: string): string => {
     const cleanValue = value.replace(/[^\d.]/g, "");
     const parts = cleanValue.split(".");
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ", ");
     return parts.join(".");
   };
 
@@ -117,14 +158,14 @@ export function AddGuestDialog({ event, guestToEdit, onClose, trigger, onSuccess
 
     try {
       setLoading(true);
-      
+
       const data = {
         name: name.trim(),
         location: location.trim(),
         amountUsd: parseFloat(amountUsd) || 0,
         amountKhr: parseInt(amountKhr.replace(/\D/g, "")) || 0,
         paymentMethod,
-        note: note.trim()
+        note: note.trim(),
       };
 
       if (guestToEdit) {
@@ -167,30 +208,36 @@ export function AddGuestDialog({ event, guestToEdit, onClose, trigger, onSuccess
     <Drawer open={open} onOpenChange={handleOpenChange}>
       <DrawerTrigger asChild>
         {trigger || (
-          <Button size="sm" className="rounded-md h-9 px-4 font-bold bg-primary hover:bg-primary/90 text-primary-foreground text-xs uppercase tracking-wide">
+          <Button
+            size="sm"
+            className="rounded-md h-9 px-4 font-bold bg-primary hover:bg-primary/90 text-primary-foreground text-xs uppercase"
+          >
             <Plus className="h-4 w-4 mr-1.5" />
-            {"បញ្ចូលភ្ញៀវ"}
+            <span>បញ្ចូលភ្ញៀវ</span>
           </Button>
         )}
       </DrawerTrigger>
       <DrawerContent className="inset-x-0 mx-auto max-w-150 max-h-[85vh] flex flex-col rounded-t-[2rem] border-border bg-background outline-none">
         <DrawerHeader className="border-b border-border pb-4">
           <DrawerTitle className="text-xl font-bold text-foreground">
-            {guestToEdit ? "កែប្រែទিন្នន័យ" : "កត់ត្រាការចងដៃថ្មី"}
+            {guestToEdit ? <span>កែប្រែទិន្នន័យ</span> : <span>កត់ត្រាការចងដៃថ្មី</span>}
           </DrawerTitle>
-          <p className="text-muted-foreground font-medium mt-0.5 text-[10px] uppercase tracking-widest">{"បច្ចេកវិទ្យាជំនួយការឌីជីថល សម្រាប់គ្រប់កម្មវិធី"}</p>
+          <DrawerDescription className="text-muted-foreground font-medium mt-0.5 text-[10px] uppercase">
+            <span>បច្ចេកវិទ្យាជំនួយការឌីជីថល សម្រាប់គ្រប់កម្មវិធី</span>
+          </DrawerDescription>
         </DrawerHeader>
 
         <div className="flex-1 overflow-y-auto px-6 -mx-1">
           <form onSubmit={handleManualSave} className="space-y-8 py-4">
             <div className="space-y-8">
-              
               {/* 1. Name Input */}
               <div className="space-y-2">
-                <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground ml-1">{"ឈ្មោះភ្ញៀវ"}</Label>
+                <Label className="text-[10px] font-semibold uppercase text-muted-foreground ml-1">
+                  <span>ឈ្មោះភ្ញៀវ</span>
+                </Label>
                 <div className="relative group">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
-                   <Input
+                  <Input
                     ref={nameInputRef}
                     placeholder={"ឧ. ឯកឧត្តម, លោកជំទាវ, លោក, អ្នកនាង..."}
                     value={name}
@@ -203,8 +250,11 @@ export function AddGuestDialog({ event, guestToEdit, onClose, trigger, onSuccess
 
               {/* 2. Location Input */}
               <div className="space-y-2">
-                <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground ml-1">
-                  {"មកពីទីតាំង"} <span className="text-muted-foreground/30">{"(មិនមានក៏បាន)"}</span>
+                <Label className="text-[10px] font-semibold uppercase text-muted-foreground ml-1">
+                  <span>មកពីទីតាំង</span>{" "}
+                  <span className="text-muted-foreground/30">
+                    <span>(មិនមានក៏បាន)</span>
+                  </span>
                 </Label>
                 <Input
                   placeholder={"ឧ. ភ្នំពេញ, បាត់ដំបង..."}
@@ -217,42 +267,52 @@ export function AddGuestDialog({ event, guestToEdit, onClose, trigger, onSuccess
 
               {/* 3. Amounts */}
               <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                     <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground ml-1">{"ទឹកប្រាក់ (ដុល្លារ)"}</Label>
-                     <div className="relative">
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-muted-foreground/30">$</div>
-                         <Input
-                           type="text"
-                           inputMode="decimal"
-                           placeholder="0"
-                           value={displayUsd}
-                           onChange={(e) => handleUsdChange(e.target.value)}
-                           className="h-14 text-xl font-bold rounded-md border-border bg-muted/30 text-foreground placeholder:text-muted-foreground/30 focus:border-primary/40 focus:ring-primary/10 pl-10"
-                           onFocus={(e) => e.target.select()}
-                         />
-                      </div>
-                   </div>
-  
-                   <div className="space-y-2">
-                      <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground ml-1">{"ទឹកប្រាក់ (រៀល)"}</Label>
-                      <div className="relative">
-                         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-muted-foreground/30">៛</div>
-                         <Input
-                           type="text"
-                           inputMode="numeric"
-                           placeholder="0"
-                           value={displayKhr}
-                           onChange={(e) => handleKhrChange(e.target.value)}
-                           className="h-14 text-xl font-bold rounded-md border-border bg-muted/30 text-foreground placeholder:text-muted-foreground/30 focus:border-primary/40 focus:ring-primary/10 pl-10"
-                           onFocus={(e) => e.target.select()}
-                         />
-                      </div>
-                   </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-semibold uppercase text-muted-foreground ml-1">
+                    <span>ទឹកប្រាក់ (ដុល្លារ)</span>
+                  </Label>
+                  <div className="relative">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-muted-foreground/30">
+                      $
+                    </div>
+                    <Input
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="0"
+                      value={displayUsd}
+                      onChange={(e) => handleUsdChange(e.target.value)}
+                      className="h-14 text-xl font-bold rounded-md border-border bg-muted/30 text-foreground placeholder:text-muted-foreground/30 focus:border-primary/40 focus:ring-primary/10 pl-10"
+                      onFocus={(e) => e.target.select()}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-semibold uppercase text-muted-foreground ml-1">
+                    <span>ទឹកប្រាក់ (រៀល)</span>
+                  </Label>
+                  <div className="relative">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-muted-foreground/30">
+                      ៛
+                    </div>
+                    <Input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="0"
+                      value={displayKhr}
+                      onChange={(e) => handleKhrChange(e.target.value)}
+                      className="h-14 text-xl font-bold rounded-md border-border bg-muted/30 text-foreground placeholder:text-muted-foreground/30 focus:border-primary/40 focus:ring-primary/10 pl-10"
+                      onFocus={(e) => e.target.select()}
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* 4. Payment Method Dropdown */}
               <div className="space-y-2">
-                <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground ml-1">{"វិធីបង់ប្រាក់"}</Label>
+                <Label className="text-[10px] font-semibold uppercase text-muted-foreground ml-1">
+                  <span>វិធីបង់ប្រាក់</span>
+                </Label>
                 <Select value={paymentMethod} onValueChange={setPaymentMethod}>
                   <SelectTrigger className="h-12 rounded-md border-border bg-muted/30 text-foreground font-semibold text-sm">
                     <SelectValue placeholder={"ជ្រើសរើសវិធីបង់ប្រាក់"} />
@@ -279,13 +339,15 @@ export function AddGuestDialog({ event, guestToEdit, onClose, trigger, onSuccess
 
               {/* 5. Note */}
               <div className="space-y-2">
-                 <Label className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground ml-1">{"សម្គាល់"}</Label>
-                 <Textarea
-                   placeholder="..."
-                   value={note}
-                   onChange={(e) => setNote(e.target.value)}
-                   className="min-h-20 rounded-md text-sm font-medium border-border bg-muted/30 text-foreground placeholder:text-muted-foreground/30 focus:border-primary/40 focus:ring-primary/10 resize-none px-4 py-3"
-                 />
+                <Label className="text-[10px] font-semibold uppercase text-muted-foreground ml-1">
+                  <span>សម្គាល់</span>
+                </Label>
+                <Textarea
+                  placeholder="..."
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  className="min-h-20 rounded-md text-sm font-medium border-border bg-muted/30 text-foreground placeholder:text-muted-foreground/30 focus:border-primary/40 focus:ring-primary/10 resize-none px-4 py-3"
+                />
               </div>
             </div>
           </form>
@@ -299,7 +361,7 @@ export function AddGuestDialog({ event, guestToEdit, onClose, trigger, onSuccess
                 variant="ghost"
                 className="flex-1 h-11 rounded-md font-semibold text-muted-foreground hover:text-foreground hover:bg-accent"
               >
-                {"បោះបង់"}
+                <span>បោះបង់</span>
               </Button>
             </DrawerClose>
             <Button
@@ -311,10 +373,12 @@ export function AddGuestDialog({ event, guestToEdit, onClose, trigger, onSuccess
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {"កំពុងរក្សាទុក..."}
+                  <span>កំពុងរក្សាទុក...</span>
                 </>
+              ) : guestToEdit ? (
+                <span>កែប្រែ</span>
               ) : (
-                guestToEdit ? "កែប្រែ" : "បញ្ចូលភ្ញៀវ"
+                <span>បញ្ចូលភ្ញៀវ</span>
               )}
             </Button>
           </div>

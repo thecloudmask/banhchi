@@ -1,6 +1,6 @@
 import React from "react";
 import type { Metadata, Viewport } from "next";
-import { Outfit, Kantumruy_Pro, Moul } from "next/font/google";
+import { Outfit, Kantumruy_Pro } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { LanguageProvider } from "@/providers/language-provider";
@@ -21,16 +21,10 @@ const kantumruy = Kantumruy_Pro({
   display: "swap",
 });
 
-const moul = Moul({
-  subsets: ["khmer"],
-  weight: ["400"],
-  variable: "--font-moul",
-  display: "swap",
-});
-
 export const metadata: Metadata = {
-  title: "Banhchi - Digital Event Companion",
-  description: "Modern event contribution tracking for Khmer weddings and ceremonies.",
+  title: "មត៍ក (MORDOK) - Digital Event Companion",
+  description:
+    "Modern event contribution tracking for Khmer weddings and ceremonies by MORDOK.",
   manifest: "/manifest.json",
 };
 
@@ -50,7 +44,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${outfit.variable} ${kantumruy.variable} ${moul.variable} antialiased font-sans bg-background text-foreground`}
+        className={`${outfit.variable} ${kantumruy.variable} antialiased font-sans bg-background text-foreground`}
       >
         <ThemeProvider
           attribute="class"

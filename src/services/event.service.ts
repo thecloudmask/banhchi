@@ -21,12 +21,27 @@ import { Event, Guest, AuditLog } from "@/types";
 
 const EVENTS_COLLECTION = "events";
 
+const cleanData = (obj: any): any => {
+  if (obj === null || typeof obj !== "object") return obj;
+  if (obj instanceof Date || (obj.constructor && obj.constructor.name === 'Timestamp')) return obj;
+  if (Array.isArray(obj)) return obj.map(cleanData);
+
+  const cleaned: any = {};
+  Object.keys(obj).forEach((key) => {
+    const value = obj[key];
+    if (value !== undefined) {
+      cleaned[key] = cleanData(value);
+    }
+  });
+  return cleaned;
+};
+
 export const getEvents = async (): Promise<Event[]> => {
   if (!db) return [];
   try {
-    const q = query(collection(db, EVENTS_COLLECTION), orderBy("eventDate", "desc"), limit(50));
+    const q = query(collection(db, EVENTS_COLLECTION), orderBy("eventDate", "desc"), limit(100));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Event));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), _source: 'events' } as any));
   } catch (error) {
     console.error(error);
     return [];
@@ -60,7 +75,7 @@ export const createEvent = async (
   let galleryUrls: string[] = [];
 
   if (bannerFile) {
-    bannerUrl = await uploadToCloudinary(bannerFile, "banners", 'banner');
+    bannerUrl = await uploadToCloudinary(bannerFile, "banners", "banner");
   }
 
   if (galleryFiles && galleryFiles.length > 0) {
@@ -70,14 +85,14 @@ export const createEvent = async (
   const finalExtraData = { ...(data.extraData || {}) };
   
   if (khqrUSDFile) {
-    finalExtraData.khqrUSDUrl = await uploadToCloudinary(khqrUSDFile, "wedding_qrs", 'thumbnail');
+    finalExtraData.khqrUSDUrl = await uploadToCloudinary(khqrUSDFile, "wedding_qrs", "thumbnail");
   }
 
   if (khqrKHRFile) {
-    finalExtraData.khqrKHRUrl = await uploadToCloudinary(khqrKHRFile, "wedding_qrs", 'thumbnail');
+    finalExtraData.khqrKHRUrl = await uploadToCloudinary(khqrKHRFile, "wedding_qrs", "thumbnail");
   }
 
-  const docRef = await addDoc(collection(db, EVENTS_COLLECTION), {
+  const eventData = cleanData({
     ...data,
     bannerUrl,
     galleryUrls,
@@ -87,6 +102,8 @@ export const createEvent = async (
     endDate: data.endDate ? Timestamp.fromDate(data.endDate as Date) : undefined,
     createdAt: serverTimestamp(),
   });
+
+  const docRef = await addDoc(collection(db, EVENTS_COLLECTION), eventData);
   return docRef.id;
 };
 
@@ -104,20 +121,20 @@ export const updateEvent = async (
   let updateData: any = { ...data };
 
   if (bannerFile) {
-    updateData.bannerUrl = await uploadToCloudinary(bannerFile, "banners", 'banner');
+    updateData.bannerUrl = await uploadToCloudinary(bannerFile, "banners", "banner");
   }
 
   if (bankQrFile) {
-    updateData.bankQrUrl = await uploadToCloudinary(bankQrFile, "bank_qrs", 'thumbnail');
+    updateData.bankQrUrl = await uploadToCloudinary(bankQrFile, "bank_qrs", "thumbnail");
   }
 
   if (khqrUSDFile) {
-    const url = await uploadToCloudinary(khqrUSDFile, "wedding_qrs", 'thumbnail');
+    const url = await uploadToCloudinary(khqrUSDFile, "wedding_qrs", "thumbnail");
     updateData.extraData = { ...updateData.extraData, khqrUSDUrl: url };
   }
 
   if (khqrKHRFile) {
-    const url = await uploadToCloudinary(khqrKHRFile, "wedding_qrs", 'thumbnail');
+    const url = await uploadToCloudinary(khqrKHRFile, "wedding_qrs", "thumbnail");
     updateData.extraData = { ...updateData.extraData, khqrKHRUrl: url };
   }
 
@@ -138,12 +155,7 @@ export const updateEvent = async (
     updateData.endDate = Timestamp.fromDate(data.endDate as Date);
   }
 
-  // Remove undefined values to prevent Firebase errors
-  Object.keys(updateData).forEach(key => {
-    if (updateData[key] === undefined) {
-      delete updateData[key];
-    }
-  });
+  updateData = cleanData(updateData);
 
   const docRef = doc(db, EVENTS_COLLECTION, id);
   await updateDoc(docRef, updateData);
@@ -199,7 +211,7 @@ export const logActivity = async (
 ) => {
   if (!db) return;
   try {
-    await addDoc(collection(db, EVENTS_COLLECTION, eventId, "logs"), {
+    await addDoc(collection(db, EVENTS_COLLECTION, eventId, "logs"), cleanData({
       guestId,
       action,
       details,
@@ -207,7 +219,7 @@ export const logActivity = async (
       newValue,
       timestamp: serverTimestamp(),
       userId: auth?.currentUser?.uid || "anonymous"
-    });
+    }));
   } catch (error) {
     console.error("Failed to log activity", error);
   }
@@ -215,10 +227,11 @@ export const logActivity = async (
 
 export const addGuest = async (eventId: string, guest: Omit<Guest, "id" | "createdAt">): Promise<string> => {
   if (!db) throw new Error("Database not initialized");
-  const docRef = await addDoc(collection(db, EVENTS_COLLECTION, eventId, "guests"), {
+  const guestData = cleanData({
     ...guest,
     createdAt: serverTimestamp(),
   });
+  const docRef = await addDoc(collection(db, EVENTS_COLLECTION, eventId, "guests"), guestData);
 
   const contributionSummary = `$${guest.amountUsd}, ${guest.amountKhr} ៛`;
 
@@ -240,7 +253,7 @@ export const updateGuest = async (eventId: string, guestId: string, data: Partia
   const oldDoc = await getDoc(docRef);
   const oldValue = oldDoc.exists() ? oldDoc.data() : null;
 
-  await updateDoc(docRef, data);
+  await updateDoc(docRef, cleanData(data));
 
   // Generate detailed change log
   let changes = [];

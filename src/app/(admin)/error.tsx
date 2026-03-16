@@ -23,7 +23,7 @@ export default function AdminError({
       </div>
       
       <div className="space-y-2">
-        <h2 className="text-2xl font-black tracking-tighter">Dashboard Error</h2>
+        <h2 className="text-2xl font-black">Dashboard Error</h2>
         <p className="text-muted-foreground text-sm max-w-sm mx-auto font-medium">
           An unexpected error occurred while managing your events. Our team has been notified.
         </p>

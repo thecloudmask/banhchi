@@ -32,7 +32,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
       if (file) {
         try {
           // You might want to show a loading state here
-          const url = await uploadToCloudinary(file, 'banhchi/editor', 'gallery');
+          const url = await uploadToCloudinary(file, 'sideth-theapka/editor', 'gallery');
           
           // Get the quill instance from the ref
           const quill = (window as any).QuillInstance; 
@@ -64,10 +64,7 @@ export default function RichTextEditor({ value, onChange, placeholder, className
   }), []);
 
   const formats = [
-    'header',
-    'bold', 'italic', 'underline', 'strike', 'blockquote',
-    'list', 'indent',
-    'link', 'image', 'video', 'align'
+    'header', 'bold', 'italic', 'underline', 'strike', 'blockquote', 'list', 'indent', 'link', 'image', 'video', 'align'
   ];
 
   return (
