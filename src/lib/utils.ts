@@ -57,6 +57,40 @@ export function formatTimeOnly(date: any): string {
   return `ម៉ោង ${khHours}:${khMinutes} ${ampm}`;
 }
 
+/**
+ * បម្លែង "HH:mm" ទៅជា format ខ្មែរ (ឧ. ០២:៣០ ល្ងាច)
+ */
+export function formatKhmerTimeStr(timeStr: string): string {
+  if (!timeStr) return "--:--";
+  const parts = timeStr.split(':');
+  if (parts.length !== 2) return timeStr;
+  
+  const h = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10);
+  if (isNaN(h) || isNaN(m)) return timeStr;
+  
+  const ampm = h >= 12 ? 'ល្ងាច' : 'ព្រឹក';
+  const displayHours = h % 12 || 12;
+  const khHours = toKhmerDigits(displayHours.toString().padStart(2, '0'));
+  const khMinutes = toKhmerDigits(m.toString().padStart(2, '0'));
+  
+  return `${khHours}:${khMinutes} ${ampm}`;
+}
+
+/**
+ * បម្លែង Date ទៅជា format សម្រាប់ datetime-local input (YYYY-MM-DDTHH:mm)
+ */
+export function formatForDateTimeLocal(date: any): string {
+  if (!date) return "";
+  const d = new Date(date?.seconds ? date.seconds * 1000 : date);
+  if (isNaN(d.getTime())) return "";
+  
+  // Adjust for local timezone to get the correct ISO string
+  const offset = d.getTimezoneOffset() * 60000;
+  const localIsoString = new Date(d.getTime() - offset).toISOString();
+  return localIsoString.slice(0, 16);
+}
+
 export function stripHtml(html: string | undefined | null) {
   if (!html) return "";
   // Step 1: Decode basic entities so tags are recognizable

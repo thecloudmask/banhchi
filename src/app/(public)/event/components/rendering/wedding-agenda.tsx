@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { cn, formatDateTime } from "@/lib/utils";
+import { cn, formatDateTime, formatKhmerTimeStr } from "@/lib/utils";
 import { useLanguage } from "@/providers/language-provider";
 import { Content } from "@/services/content.service";
 import { Event } from "@/types";
@@ -158,12 +158,12 @@ export const WeddingAgenda = ({
             <img
               src={event.bannerUrl}
               alt="Wedding Cover"
-              className="absolute inset-0 w-full h-full object-cover z-[-2]"
+              className="absolute inset-0 w-full h-full object-cover z-[-2] blur-[2px] scale-105"
             />
           ) : (
             <div className="absolute inset-0 w-full h-full bg-card z-[-2]" />
           )}
-          <div className="absolute inset-0 bg-black/40 bg-linear-to-b from-black/20 via-transparent to-black/95 z-[-1]" />
+          <div className="absolute inset-0 bg-black/25 bg-linear-to-b from-black/20 via-transparent to-black/95 z-[-1]" />
 
           {/* Top Texts */}
           <div className="relative z-10 w-full flex flex-col items-center p-6 sm:p-12 mt-20 sm:mt-32 space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-10 duration-1000">
@@ -217,14 +217,14 @@ export const WeddingAgenda = ({
 
         <div className="max-w-2xl mx-auto pb-10 relative z-10 w-full">
           {/* Section 1: Hero */}
-          <div className="relative rounded-none sm:rounded-[3rem] min-h-[700px] sm:h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
+          <div className="relative rounded-none sm:rounded-[3rem] min-h-[700px] sm:h-screen flex flex-col items-center justify-between px-6 overflow-hidden">
             {/* Background Image that covers the screen as in the image */}
-            <div className="absolute inset-0 z-[-2]">
+            <div className="absolute inset-0 z-[-2] overflow-hidden">
               {event.bannerUrl ? (
                 <img
                   src={event.bannerUrl}
                   alt="Wedding Background"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover blur-[2px] scale-105"
                 />
               ) : (
                 <div className="w-full h-full bg-[#E5DCC2] dark:bg-zinc-800" />
@@ -233,7 +233,7 @@ export const WeddingAgenda = ({
 
             {/* Premium Overlays */}
             <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-[#FDFBF4] via-[#FDFBF4]/60 to-transparent dark:from-zinc-950 dark:via-zinc-950/60 dark:to-transparent z-[-1]" />
-            <div className="absolute inset-0 bg-black/5 dark:bg-black/20 z-[-1]" />
+            <div className="absolute inset-0 bg-black/20 dark:bg-black/40 z-[-1]" />
 
             {/* Animated Flower/Heart Particles for Premium Feel */}
             {/* Static positions to avoid SSR/client hydration mismatch (no Math.random in render) */}
@@ -356,17 +356,17 @@ export const WeddingAgenda = ({
             </div>
           </div>
 
-          {/* Section: Wedding Program (Schedule) */}
-          <div className="relative z-20 -mt-24 px-6 py-6 flex flex-col items-center text-center animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-400">
+          {/* Section 1.5: Invitation Statement (Clean Background) */}
+          <div className="px-6 py-16 flex flex-col items-center text-center bg-[#FDFBF4] dark:bg-zinc-950 relative z-20">
             <h4
               style={{ fontFamily: "Kh Muol Light" }}
-              className="text-[#5D534A] dark:text-[#EACD88] text-sm sm:text-lg font-black mb-4 drop-shadow-sm leading-relaxed"
+              className="text-[#5D534A] dark:text-[#EACD88] text-base sm:text-xl font-black mb-8 leading-relaxed"
             >
               <span>យើងខ្ញុំមានកិត្តិយសសូមគោរពអញ្ជើញ</span>
             </h4>
             {mounted && (
               <div
-                className="text-[#5D534A] dark:text-zinc-300 text-[13px] sm:text-base leading-loose sm:leading-loose max-w-md mx-auto mb-10 px-4 font-medium"
+                className="text-[#5D534A] dark:text-zinc-300 text-[14px] sm:text-lg leading-loose max-w-xl mx-auto font-medium px-4"
                 dangerouslySetInnerHTML={{
                   __html:
                     event.description ||
@@ -376,15 +376,11 @@ export const WeddingAgenda = ({
                 }}
               />
             )}
-            <h3 className="text-[#C5A866] dark:text-[#EACD88] text-base sm:text-xl font-black mb-4 drop-shadow-sm">
-              <span>កម្មវិធីសិរីមង្គលអាពាហ៍ពិពាហ៍</span>
-            </h3>
-            <div className="flex items-center justify-center gap-3 mb-8 w-full max-w-xs mx-auto">
-              <div className="h-px flex-1 bg-linear-to-r from-transparent to-[#C5A866]" />
-              <Heart className="w-4 h-4 text-[#C5A866] fill-[#C5A866]/20" />
-              <div className="h-px flex-1 bg-linear-to-l from-transparent to-[#C5A866]" />
-            </div>
+            <div className="w-24 h-px bg-linear-to-r from-transparent via-[#C5A866]/50 to-transparent mt-12 opacity-50" />
+          </div>
 
+          {/* Section: Wedding Program (Schedule) */}
+          <div className="relative z-20 px-6 pb-6 flex flex-col items-center animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-400">
             <div className="relative w-full rounded-[2.5rem] sm:rounded-[3rem] overflow-hidden p-8 sm:p-12 isolate bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/5 transform transition-transform hover:-translate-y-1">
               {/* Background of Card */}
               {event.bannerUrl ? (
@@ -398,8 +394,19 @@ export const WeddingAgenda = ({
               )}
               <div className="absolute inset-0 bg-linear-to-b from-white/95 via-white/90 to-white/98 dark:from-zinc-950/90 dark:via-zinc-950/80 dark:to-zinc-950/95 z-[-1]" />
 
-              <div className="space-y-10 text-left relative z-10 w-full">
-                <div className="space-y-10">
+              <div className="space-y-10 mt-20 text-center relative z-10 w-full">
+                <div className="flex flex-col items-center">
+                  <h3 className="text-[#C5A866] dark:text-[#EACD88] text-base sm:text-xl font-black mb-4 drop-shadow-sm">
+                    <span>កម្មវិធីសិរីមង្គលអាពាហ៍ពិពាហ៍</span>
+                  </h3>
+                  <div className="flex items-center justify-center gap-3 mb-8 w-full max-w-xs mx-auto">
+                    <div className="h-px flex-1 bg-linear-to-r from-transparent to-[#C5A866]" />
+                    <Heart className="w-4 h-4 text-[#C5A866] fill-[#C5A866]/20" />
+                    <div className="h-px flex-1 bg-linear-to-l from-transparent to-[#C5A866]" />
+                  </div>
+                </div>
+
+                <div className="space-y-10 text-left">
                   {data?.schedule?.map((day: any, dIdx: number) => {
                     // Normalize: admin saves flat `activities[]`; content.service uses nested `groups[].activities[]`
                     // Support both formats transparently
@@ -445,7 +452,7 @@ export const WeddingAgenda = ({
 
                                         <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-4 transition-all group-hover:translate-x-1 duration-300">
                                           <div className="text-[#a38038] dark:text-[#EACD88] font-black text-xs sm:text-sm whitespace-nowrap opacity-80">
-                                            {activity.time}
+                                            {formatKhmerTimeStr(activity.time)}
                                           </div>
                                           <div className="space-y-1">
                                             <p className="text-[#5D534A] dark:text-white text-[14px] sm:text-[16px] font-black leading-tight">

@@ -41,6 +41,7 @@ import {
   Plus,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
@@ -50,10 +51,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { cn, formatDateTime } from "@/lib/utils";
+import { cn, formatDateTime, formatForDateTimeLocal, toKhmerDigits, formatKhmerTimeStr } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
 import { GuestHistoryDialog } from "@/components/guest-history-dialog";
 import { PublicSettingsDialog } from "@/components/public-settings-dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -123,6 +131,7 @@ export default function AdminEventClient() {
   const [filterLocation, setFilterLocation] = useState<string>("all");
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const [editEventDate, setEditEventDate] = useState<Date | undefined>(undefined);
 
   // Schedule state
   type ScheduleActivity = { time: string; title: string; description: string };
@@ -140,6 +149,12 @@ export default function AdminEventClient() {
       if (showLoading) setLoading(true);
       const eventData = await getEventById(currentEventId);
       setEvent(eventData);
+      if (eventData?.eventDate) {
+        const d = eventData.eventDate instanceof Date ? eventData.eventDate : 
+                 (eventData.eventDate as any).toDate ? (eventData.eventDate as any).toDate() : 
+                 new Date(eventData.eventDate as any);
+        setEditEventDate(d);
+      }
     } catch (error) {
       // console.error(error);
       toast.error("បរាជ័យក្នុងការទាញយកទិន្នន័យ");
@@ -509,9 +524,7 @@ export default function AdminEventClient() {
             </Sheet>
           </div>
           <div className="w-full sm:w-auto">
-            {(event.category !== "wedding" ||
-              activeTab === "guests" ||
-              activeTab === "receipts") && (
+            {activeTab === "receipts" && (
               <AddGuestDialog
                 event={event}
                 onSuccess={() => fetchData(false)}
@@ -522,58 +535,70 @@ export default function AdminEventClient() {
       </div>
 
       {/* Tab Navigation */}
-      {event.category === "wedding" && (
-        <div className="flex items-center bg-accent/40 border border-border p-1.5 rounded-md gap-1 overflow-x-auto no-print">
-          {[
-            { id: "overview", label: "ទូទៅ", icon: Activity },
-            { id: "receipts", label: "ភ្ញៀវ & ចំណងដៃ", icon: Receipt },
-            { id: "edit", label: "កែប្រែ", icon: Pencil },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+      <div className="flex items-center bg-accent/40 border border-border p-1.5 rounded-md gap-1 overflow-x-auto no-print">
+        {[
+          { id: "overview", label: "ទូទៅ", icon: Activity },
+          { id: "receipts", label: "ភ្ញៀវ & ចំណងដៃ", icon: Receipt },
+          ...(event.category === "wedding" ? [{ id: "schedule", label: "កាលវិភាគ", icon: Clock }] : []),
+          { id: "edit", label: "កែប្រែ", icon: Pencil },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={cn(
+              "cursor-pointer flex items-center gap-2 px-4 py-2 rounded-md font-semibold text-[11px] uppercase transition-all shrink-0",
+              activeTab === tab.id
+                ? "bg-primary text-primary-foreground shadow-md"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent",
+            )}
+          >
+            <tab.icon
               className={cn(
-                "cursor-pointer flex items-center gap-2 px-4 py-2 rounded-md font-semibold text-[11px] uppercase transition-all shrink-0",
+                "h-3.5 w-3.5",
                 activeTab === tab.id
-                  ? "bg-primary text-primary-foreground shadow-md"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent",
+                  ? "text-primary-foreground"
+                  : "text-primary",
               )}
-            >
-              <tab.icon
-                className={cn(
-                  "h-3.5 w-3.5",
-                  activeTab === tab.id
-                    ? "text-primary-foreground"
-                    : "text-primary",
-                )}
-              />
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      )}
+            />
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
       {/* DASHBOARD VIEWS */}
 
-      {event.category === "wedding" && activeTab === "overview" && (
+      {activeTab === "overview" && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 no-print">
-            <div className="bg-card/40 border border-border rounded-[1.5rem] p-6 space-y-4 hover:border-primary/20 transition-all hover:shadow-xl hover:shadow-primary/5">
-              <span className="text-[10px] font-black uppercase text-muted-foreground">
-                កូនប្រុស
-              </span>
-              <p className="text-2xl font-black text-foreground truncate">
-                {event.extraData?.groomName || "-"}
-              </p>
-            </div>
-            <div className="bg-card/40 border border-border rounded-[1.5rem] p-6 space-y-4 hover:border-primary/20 transition-all hover:shadow-xl hover:shadow-primary/5">
-              <span className="text-[10px] font-black uppercase text-muted-foreground">
-                កូនស្រី
-              </span>
-              <p className="text-2xl font-black text-foreground truncate">
-                {event.extraData?.brideName || "-"}
-              </p>
-            </div>
+            {event.category === "wedding" ? (
+              <>
+                <div className="bg-card/40 border border-border rounded-[1.5rem] p-6 space-y-4 hover:border-primary/20 transition-all hover:shadow-xl hover:shadow-primary/5">
+                  <span className="text-[10px] font-black uppercase text-muted-foreground">
+                    កូនប្រុស
+                  </span>
+                  <p className="text-2xl font-black text-foreground truncate">
+                    {event.extraData?.groomName || "-"}
+                  </p>
+                </div>
+                <div className="bg-card/40 border border-border rounded-[1.5rem] p-6 space-y-4 hover:border-primary/20 transition-all hover:shadow-xl hover:shadow-primary/5">
+                  <span className="text-[10px] font-black uppercase text-muted-foreground">
+                    កូនស្រី
+                  </span>
+                  <p className="text-2xl font-black text-foreground truncate">
+                    {event.extraData?.brideName || "-"}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <div className="bg-card/40 border border-border rounded-[1.5rem] p-6 space-y-4 hover:border-primary/20 transition-all hover:shadow-xl hover:shadow-primary/5 col-span-2">
+                <span className="text-[10px] font-black uppercase text-muted-foreground">
+                  {event.category === "buddhist" ? "ម្ចាស់ដើមបុណ្យ / ម្ចាស់ដើមទាន" : "ឈ្មោះកម្មវិធី"}
+                </span>
+                <p className="text-2xl font-black text-foreground truncate">
+                  {event.category === "buddhist" ? (event.extraData?.donorName || "-") : event.title}
+                </p>
+              </div>
+            )}
             <div className="bg-card/40 border border-border rounded-[1.5rem] p-6 space-y-4 hover:border-primary/20 transition-all hover:shadow-xl hover:shadow-primary/5">
               <span className="text-[10px] font-black uppercase text-muted-foreground">
                 ភ្ញៀវសរុប
@@ -633,9 +658,7 @@ export default function AdminEventClient() {
       )}
 
       {/* 2. SHARED STATS & GUESTS (Visible Always for Non-Weddings, or on Guest Tab for Weddings) */}
-      {(event.category !== "wedding" ||
-        activeTab === "guests" ||
-        activeTab === "receipts") && (
+      {activeTab === "receipts" && (
         <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {/* Stats Cards Section */}
           <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 no-print">
@@ -1068,16 +1091,29 @@ export default function AdminEventClient() {
                         {dayIndex + 1}
                       </span>
                     </div>
-                    <Input
-                      placeholder={"ឧ. ថ្ងៃទី១ - ពេលព្រឹក (ពិធីភ្ជាប់ពាក្យ)"}
-                      value={day.dayLabel}
-                      onChange={(e) => {
-                        const s = [...schedule];
-                        s[dayIndex].dayLabel = e.target.value;
-                        setSchedule(s);
-                      }}
-                      className="h-10 border-0 bg-transparent text-foreground font-bold text-base placeholder:text-muted-foreground/30 focus:ring-0 px-0 flex-1"
-                    />
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="h-10 border-0 bg-transparent text-foreground font-bold text-base flex-1 justify-start hover:bg-black/5 hover:text-[#f41f4d] transition-all px-4"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {day.dayLabel || "ជ្រើសរើសថ្ងៃ"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          onSelect={(d) => {
+                            if (!d) return;
+                            const s = [...schedule];
+                            s[dayIndex].dayLabel = formatDateTime(d, false);
+                            setSchedule(s);
+                          }}
+                          className="font-kantumruy"
+                        />
+                      </PopoverContent>
+                    </Popover>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -1098,17 +1134,57 @@ export default function AdminEventClient() {
                         className="group flex gap-3 items-start p-4 bg-accent/30 rounded-md border border-border hover:bg-accent/50 transition-all"
                       >
                         {/* Time */}
-                        <Input
-                          placeholder={"ម៉ោង ៧:០០"}
-                          value={act.time}
-                          onChange={(e) => {
-                            const s = [...schedule];
-                            s[dayIndex].activities[actIndex].time =
-                              e.target.value;
-                            setSchedule(s);
-                          }}
-                          className="w-28 h-10 shrink-0 border-0 bg-muted/50 shadow-inner rounded-md font-black text-primary text-center text-sm placeholder:text-muted-foreground/30 focus:ring-0"
-                        />
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className="w-32 h-10 shrink-0 border-0 bg-muted/50 shadow-inner rounded-md font-black text-primary text-center text-sm focus:ring-0 flex items-center justify-center gap-2"
+                            >
+                              <Clock className="h-3.5 w-3.5 opacity-50" />
+                              {formatKhmerTimeStr(act.time)}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-48 p-3" align="center">
+                            <div className="space-y-3">
+                              <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2">
+                                <Clock className="h-3 w-3" /> កំណត់ម៉ោងកម្មវិធី
+                              </Label>
+                              <div className="flex items-center justify-center gap-2">
+                                <select
+                                  className="bg-background border border-border rounded-md px-2 py-1.5 text-sm font-bold outline-none focus:ring-2 focus:ring-primary/20 appearance-none min-w-15 text-center cursor-pointer"
+                                  value={act.time ? act.time.split(":")[0] : "00"}
+                                  onChange={(e) => {
+                                    const h = e.target.value;
+                                    const m = act.time ? act.time.split(":")[1] || "00" : "00";
+                                    const s = [...schedule];
+                                    s[dayIndex].activities[actIndex].time = `${h}:${m}`;
+                                    setSchedule(s);
+                                  }}
+                                >
+                                  {Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, "0")).map(h => (
+                                    <option key={h} value={h}>{toKhmerDigits(h)}</option>
+                                  ))}
+                                </select>
+                                <span className="font-bold">:</span>
+                                <select
+                                  className="bg-background border border-border rounded-md px-2 py-1.5 text-sm font-bold outline-none focus:ring-2 focus:ring-primary/20 appearance-none min-w-15 text-center cursor-pointer"
+                                  value={act.time ? act.time.split(":")[1] || "00" : "00"}
+                                  onChange={(e) => {
+                                    const h = act.time ? act.time.split(":")[0] || "00" : "00";
+                                    const m = e.target.value;
+                                    const s = [...schedule];
+                                    s[dayIndex].activities[actIndex].time = `${h}:${m}`;
+                                    setSchedule(s);
+                                  }}
+                                >
+                                  {Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, "0")).map(m => (
+                                    <option key={m} value={m}>{toKhmerDigits(m)}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                         {/* Title + Description */}
                         <div className="flex-1 space-y-2">
                           <Input
@@ -1194,7 +1270,7 @@ export default function AdminEventClient() {
         </div>
       )}
 
-      {event.category === "wedding" && activeTab === "edit" && (
+      {activeTab === "edit" && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="bg-card/40 border border-border rounded-md p-5 sm:p-8">
             <div className="flex items-center gap-3 mb-8">
@@ -1217,19 +1293,23 @@ export default function AdminEventClient() {
                 const updatedData = {
                   title: formData.get("title") as string,
                   eventTime: formData.get("eventTime") as string,
-                  eventDate: new Date((formData.get("eventDate") as string) + 'T00:00:00'),
+                  eventDate: editEventDate,
                   extraData: {
                     ...event.extraData,
-                    groomName: formData.get("groomName") as string,
-                    brideName: formData.get("brideName") as string,
-                    groomFatherTitle: formData.get("groomFatherTitle") as string,
-                    groomFatherName: formData.get("groomFatherName") as string,
-                    groomMotherTitle: formData.get("groomMotherTitle") as string,
-                    groomMotherName: formData.get("groomMotherName") as string,
-                    brideFatherTitle: formData.get("brideFatherTitle") as string,
-                    brideFatherName: formData.get("brideFatherName") as string,
-                    brideMotherTitle: formData.get("brideMotherTitle") as string,
-                    brideMotherName: formData.get("brideMotherName") as string,
+                    ...(event.category === "wedding" ? {
+                      groomName: formData.get("groomName") as string,
+                      brideName: formData.get("brideName") as string,
+                      groomFatherTitle: formData.get("groomFatherTitle") as string,
+                      groomFatherName: formData.get("groomFatherName") as string,
+                      groomMotherTitle: formData.get("groomMotherTitle") as string,
+                      groomMotherName: formData.get("groomMotherName") as string,
+                      brideFatherTitle: formData.get("brideFatherTitle") as string,
+                      brideFatherName: formData.get("brideFatherName") as string,
+                      brideMotherTitle: formData.get("brideMotherTitle") as string,
+                      brideMotherName: formData.get("brideMotherName") as string,
+                    } : event.category === "buddhist" ? {
+                      donorName: formData.get("donorName") as string,
+                    } : {}),
                   },
                 };
                 try {
@@ -1255,6 +1335,21 @@ export default function AdminEventClient() {
                   className="h-10 rounded-md border-border bg-accent/50 text-foreground font-medium placeholder:text-muted-foreground/30"
                 />
               </div>
+
+              {event.category === "buddhist" && (
+                <div className="space-y-2">
+                  <label className="text-[10px] font-semibold uppercase text-muted-foreground">
+                    {"ឈ្មោះម្ចាស់បុណ្យ"}
+                  </label>
+                  <Input
+                    name="donorName"
+                    defaultValue={event.extraData?.donorName}
+                    placeholder="ឧ. ឧបាសក ឡុង ប៊ុនធឿន"
+                    className="h-10 rounded-md border-border bg-accent/50 text-foreground font-medium placeholder:text-muted-foreground/30"
+                  />
+                </div>
+              )}
+
               <div className="space-y-2">
                 <label className="text-[10px] font-semibold uppercase text-muted-foreground">
                   {"ម៉ោង"}
@@ -1268,88 +1363,161 @@ export default function AdminEventClient() {
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-semibold uppercase text-muted-foreground">
-                  {"ថ្ងៃទី"}
+                  {"ថ្ងៃទី និង ម៉ោងកម្មវិធី"}
                 </label>
-                <Input
-                  name="eventDate"
-                  type="date"
-                  defaultValue={
-                    event.eventDate instanceof Date
-                      ? event.eventDate.toISOString().split("T")[0]
-                      : (event.eventDate as any)
-                          ?.toDate?.()
-                          .toISOString()
-                          .split("T")[0]
-                  }
-                  className="h-10 rounded-md border-border bg-accent/50 text-foreground"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-semibold uppercase text-muted-foreground">
-                  {"ឈ្មោះកូនប្រុស"}
-                </label>
-                <Input
-                  name="groomName"
-                  defaultValue={event.extraData?.groomName}
-                  className="h-10 rounded-md border-border bg-accent/50 text-foreground font-medium placeholder:text-muted-foreground/30"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-semibold uppercase text-muted-foreground">
-                  {"ឈ្មោះកូនស្រី"}
-                </label>
-                <Input
-                  name="brideName"
-                  defaultValue={event.extraData?.brideName}
-                  className="h-10 rounded-md border-border bg-accent/50 text-foreground font-medium placeholder:text-muted-foreground/30"
-                />
-              </div>
-
-              {/* Parents Section - Groom */}
-              <div className="space-y-4 col-span-1 md:col-span-2 p-4 border rounded-md bg-muted/20">
-                <h4 className="text-sm font-bold text-[#C5A866]">ព័ត៌មានមាតាបិតាកូនប្រុស</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-semibold uppercase text-muted-foreground">ងារឪពុក</label>
-                    <Input name="groomFatherTitle" defaultValue={event.extraData?.groomFatherTitle} placeholder="ឧ. លោក / ឯកឧត្តម" className="h-10 text-foreground text-sm" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-semibold uppercase text-muted-foreground">ឈ្មោះឪពុក</label>
-                    <Input name="groomFatherName" defaultValue={event.extraData?.groomFatherName} placeholder="ឧ. ឈន ស៊ីដេត" className="h-10 text-foreground text-sm" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-semibold uppercase text-muted-foreground">ងារម្ដាយ</label>
-                    <Input name="groomMotherTitle" defaultValue={event.extraData?.groomMotherTitle} placeholder="ឧ. លោកស្រី / លោកជំទាវ" className="h-10 text-foreground text-sm" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-semibold uppercase text-muted-foreground">ឈ្មោះម្ដាយ</label>
-                    <Input name="groomMotherName" defaultValue={event.extraData?.groomMotherName} placeholder="ឧ. ម៉ម សុផាត" className="h-10 text-foreground text-sm" />
-                  </div>
+                <div className="grid grid-cols-1 gap-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="h-10 justify-start cursor-pointer text-left font-medium bg-accent/50 border-border text-foreground hover:bg-accent hover:text-foreground rounded-md w-full px-4"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
+                        {editEventDate
+                          ? formatDateTime(editEventDate)
+                          : "ជ្រើសរើសថ្ងៃ និង ម៉ោង"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-card border-border" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={editEventDate}
+                        onSelect={(date) => {
+                          if (!date) return;
+                          const newDate = new Date(date);
+                          if (editEventDate && !isNaN(editEventDate.getTime())) {
+                            newDate.setHours(editEventDate.getHours());
+                            newDate.setMinutes(editEventDate.getMinutes());
+                          } else {
+                            const now = new Date();
+                            newDate.setHours(now.getHours());
+                            newDate.setMinutes(now.getMinutes());
+                          }
+                          setEditEventDate(newDate);
+                        }}
+                        className="bg-card text-foreground rounded-t-md font-kantumruy"
+                      />
+                      <div className="p-4 border-t border-border flex items-center justify-between gap-4 bg-accent/5">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 opacity-50" />
+                          <span className="text-xs font-bold uppercase">កំណត់ម៉ោង</span>
+                        </div>
+                        <div className="flex items-center justify-center gap-2">
+                          <select
+                            className="bg-background border border-border rounded-md px-3 py-1 text-sm font-bold outline-none focus:ring-2 focus:ring-primary/20 appearance-none min-w-17.5 text-center cursor-pointer"
+                            value={editEventDate && !isNaN(editEventDate.getTime()) ? format(editEventDate, "HH") : "00"}
+                            onChange={(e) => {
+                              const h = e.target.value;
+                              const n = new Date(editEventDate && !isNaN(editEventDate.getTime()) ? editEventDate : new Date());
+                              n.setHours(parseInt(h, 10));
+                              if (isNaN(n.getMinutes())) n.setMinutes(0);
+                              n.setSeconds(0);
+                              setEditEventDate(n);
+                            }}
+                          >
+                            {Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, "0")).map(h => (
+                              <option key={h} value={h}>{toKhmerDigits(h)}</option>
+                            ))}
+                          </select>
+                          <span className="font-bold">:</span>
+                          <select
+                            className="bg-background border border-border rounded-md px-3 py-1 text-sm font-bold outline-none focus:ring-2 focus:ring-primary/20 appearance-none min-w-17.5 text-center cursor-pointer"
+                            value={editEventDate && !isNaN(editEventDate.getTime()) ? format(editEventDate, "mm") : "00"}
+                            onChange={(e) => {
+                              const m = e.target.value;
+                              const n = new Date(editEventDate && !isNaN(editEventDate.getTime()) ? editEventDate : new Date());
+                              n.setMinutes(parseInt(m, 10));
+                              if (isNaN(n.getHours())) n.setHours(0);
+                              n.setSeconds(0);
+                              setEditEventDate(n);
+                            }}
+                          >
+                            {Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, "0")).map(m => (
+                              <option key={m} value={m}>{toKhmerDigits(m)}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                  {editEventDate && (
+                    <p className="text-[10px] text-primary font-bold">
+                      {formatDateTime(editEventDate)}
+                    </p>
+                  )}
                 </div>
               </div>
 
-              {/* Parents Section - Bride */}
-              <div className="space-y-4 col-span-1 md:col-span-2 p-4 border rounded-md bg-muted/20">
-                <h4 className="text-sm font-bold text-[#C5A866]">ព័ត៌មានមាតាបិតាកូនស្រី</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {event.category === "wedding" && (
+                <>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-semibold uppercase text-muted-foreground">ងារឪពុក</label>
-                    <Input name="brideFatherTitle" defaultValue={event.extraData?.brideFatherTitle} placeholder="ឧ. លោក / ឯកឧត្តម" className="h-10 text-foreground text-sm" />
+                    <label className="text-[10px] font-semibold uppercase text-muted-foreground">
+                      {"ឈ្មោះកូនប្រុស"}
+                    </label>
+                    <Input
+                      name="groomName"
+                      defaultValue={event.extraData?.groomName}
+                      className="h-10 rounded-md border-border bg-accent/50 text-foreground font-medium placeholder:text-muted-foreground/30"
+                    />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-semibold uppercase text-muted-foreground">ឈ្មោះឪពុក</label>
-                    <Input name="brideFatherName" defaultValue={event.extraData?.brideFatherName} placeholder="ឧ. ស៊ីម ច័ន្ទសុធានេត្រ" className="h-10 text-foreground text-sm" />
+                    <label className="text-[10px] font-semibold uppercase text-muted-foreground">
+                      {"ឈ្មោះកូនស្រី"}
+                    </label>
+                    <Input
+                      name="brideName"
+                      defaultValue={event.extraData?.brideName}
+                      className="h-10 rounded-md border-border bg-accent/50 text-foreground font-medium placeholder:text-muted-foreground/30"
+                    />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-semibold uppercase text-muted-foreground">ងារម្ដាយ</label>
-                    <Input name="brideMotherTitle" defaultValue={event.extraData?.brideMotherTitle} placeholder="ឧ. លោកស្រី / លោកជំទាវ" className="h-10 text-foreground text-sm" />
+
+                  {/* Parents Section - Groom */}
+                  <div className="space-y-4 col-span-1 md:col-span-2 p-4 border rounded-md bg-muted/20">
+                    <h4 className="text-sm font-bold text-[#C5A866]">ព័ត៌មានមាតាបិតាកូនប្រុស</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-semibold uppercase text-muted-foreground">ងារឪពុក</label>
+                        <Input name="groomFatherTitle" defaultValue={event.extraData?.groomFatherTitle} placeholder="ឧ. លោក / ឯកឧត្តម" className="h-10 text-foreground text-sm" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-semibold uppercase text-muted-foreground">ឈ្មោះឪពុក</label>
+                        <Input name="groomFatherName" defaultValue={event.extraData?.groomFatherName} placeholder="ឧ. ឈន ស៊ីដេត" className="h-10 text-foreground text-sm" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-semibold uppercase text-muted-foreground">ងារម្ដាយ</label>
+                        <Input name="groomMotherTitle" defaultValue={event.extraData?.groomMotherTitle} placeholder="ឧ. លោកស្រី / លោកជំទាវ" className="h-10 text-foreground text-sm" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-semibold uppercase text-muted-foreground">ឈ្មោះម្ដាយ</label>
+                        <Input name="groomMotherName" defaultValue={event.extraData?.groomMotherName} placeholder="ឧ. ម៉ម សុផាត" className="h-10 text-foreground text-sm" />
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-semibold uppercase text-muted-foreground">ឈ្មោះម្ដាយ</label>
-                    <Input name="brideMotherName" defaultValue={event.extraData?.brideMotherName} placeholder="ឧ. អ៊ុក សោភា" className="h-10 text-foreground text-sm" />
+
+                  {/* Parents Section - Bride */}
+                  <div className="space-y-4 col-span-1 md:col-span-2 p-4 border rounded-md bg-muted/20">
+                    <h4 className="text-sm font-bold text-[#C5A866]">ព័ត៌មានមាតាបិតាកូនស្រី</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-semibold uppercase text-muted-foreground">ងារឪពុក</label>
+                        <Input name="brideFatherTitle" defaultValue={event.extraData?.brideFatherTitle} placeholder="ឧ. លោក / ឯកឧត្តម" className="h-10 text-foreground text-sm" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-semibold uppercase text-muted-foreground">ឈ្មោះឪពុក</label>
+                        <Input name="brideFatherName" defaultValue={event.extraData?.brideFatherName} placeholder="ឧ. ស៊ីម ច័ន្ទសុធានេត្រ" className="h-10 text-foreground text-sm" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-semibold uppercase text-muted-foreground">ងារម្ដាយ</label>
+                        <Input name="brideMotherTitle" defaultValue={event.extraData?.brideMotherTitle} placeholder="ឧ. លោកស្រី / លោកជំទាវ" className="h-10 text-foreground text-sm" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-semibold uppercase text-muted-foreground">ឈ្មោះម្ដាយ</label>
+                        <Input name="brideMotherName" defaultValue={event.extraData?.brideMotherName} placeholder="ឧ. អ៊ុក សោភា" className="h-10 text-foreground text-sm" />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                </>
+              )}
 
               <div className="md:col-span-2 pt-4">
                 <Button

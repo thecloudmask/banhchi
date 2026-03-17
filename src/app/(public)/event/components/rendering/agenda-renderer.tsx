@@ -20,10 +20,11 @@ export const AgendaRenderer = ({ content, event, theme, onCoverStateChange }: Pr
   switch (category) {
     case 'wedding':
       return <WeddingAgenda content={content} event={event} theme={theme} onCoverStateChange={onCoverStateChange} />;
-    case 'buddhist':
-    case 'merit_making':
     case 'funeral':
     case 'memorial':
+      return <FuneralAgenda content={content} event={event} theme={theme} />;
+    case 'buddhist':
+    case 'merit_making':
     case 'inauguration':
       return <TraditionalAgenda content={content} event={event} theme={theme} />;
     default:

@@ -54,7 +54,12 @@ import { EVENT_TEMPLATES } from "@/lib/constants";
 import { toast } from "sonner";
 import { updateEvent } from "@/services/event.service";
 import RichTextEditor from "./rich-text-editor";
-import { cn, formatDateTime } from "@/lib/utils";
+import {
+  cn,
+  formatDateTime,
+  toKhmerDigits,
+  formatKhmerTimeStr,
+} from "@/lib/utils";
 import { format } from "date-fns";
 import { Timestamp } from "firebase/firestore";
 
@@ -98,16 +103,32 @@ export function EditEventDialog({
   // Wedding/Ceremony Specific State
   const [activeTab, setActiveTab] = useState("general");
   const [groomName, setGroomName] = useState(event.extraData?.groomName || "");
-  const [groomFatherTitle, setGroomFatherTitle] = useState(event.extraData?.groomFatherTitle || "");
-  const [groomFatherName, setGroomFatherName] = useState(event.extraData?.groomFatherName || "");
-  const [groomMotherTitle, setGroomMotherTitle] = useState(event.extraData?.groomMotherTitle || "");
-  const [groomMotherName, setGroomMotherName] = useState(event.extraData?.groomMotherName || "");
+  const [groomFatherTitle, setGroomFatherTitle] = useState(
+    event.extraData?.groomFatherTitle || "",
+  );
+  const [groomFatherName, setGroomFatherName] = useState(
+    event.extraData?.groomFatherName || "",
+  );
+  const [groomMotherTitle, setGroomMotherTitle] = useState(
+    event.extraData?.groomMotherTitle || "",
+  );
+  const [groomMotherName, setGroomMotherName] = useState(
+    event.extraData?.groomMotherName || "",
+  );
 
   const [brideName, setBrideName] = useState(event.extraData?.brideName || "");
-  const [brideFatherTitle, setBrideFatherTitle] = useState(event.extraData?.brideFatherTitle || "");
-  const [brideFatherName, setBrideFatherName] = useState(event.extraData?.brideFatherName || "");
-  const [brideMotherTitle, setBrideMotherTitle] = useState(event.extraData?.brideMotherTitle || "");
-  const [brideMotherName, setBrideMotherName] = useState(event.extraData?.brideMotherName || "");
+  const [brideFatherTitle, setBrideFatherTitle] = useState(
+    event.extraData?.brideFatherTitle || "",
+  );
+  const [brideFatherName, setBrideFatherName] = useState(
+    event.extraData?.brideFatherName || "",
+  );
+  const [brideMotherTitle, setBrideMotherTitle] = useState(
+    event.extraData?.brideMotherTitle || "",
+  );
+  const [brideMotherName, setBrideMotherName] = useState(
+    event.extraData?.brideMotherName || "",
+  );
 
   const [donorName, setDonorName] = useState(event.extraData?.donorName || "");
   const [preventDuplicateGuests, setPreventDuplicateGuests] = useState(
@@ -250,7 +271,7 @@ export function EditEventDialog({
             category === "wedding"
               ? `${groomName} & ${brideName}`
               : category === "buddhist"
-                ? (title.trim() || donorName)
+                ? title.trim() || donorName
                 : title.trim(),
           category: category === "custom" ? customCategory : category,
           eventDate: selectedDate,
@@ -261,15 +282,23 @@ export function EditEventDialog({
           extraData: {
             ...extraData,
             groomName: category === "wedding" ? groomName || null : null,
-            groomFatherTitle: category === "wedding" ? groomFatherTitle || null : null,
-            groomFatherName: category === "wedding" ? groomFatherName || null : null,
-            groomMotherTitle: category === "wedding" ? groomMotherTitle || null : null,
-            groomMotherName: category === "wedding" ? groomMotherName || null : null,
+            groomFatherTitle:
+              category === "wedding" ? groomFatherTitle || null : null,
+            groomFatherName:
+              category === "wedding" ? groomFatherName || null : null,
+            groomMotherTitle:
+              category === "wedding" ? groomMotherTitle || null : null,
+            groomMotherName:
+              category === "wedding" ? groomMotherName || null : null,
             brideName: category === "wedding" ? brideName || null : null,
-            brideFatherTitle: category === "wedding" ? brideFatherTitle || null : null,
-            brideFatherName: category === "wedding" ? brideFatherName || null : null,
-            brideMotherTitle: category === "wedding" ? brideMotherTitle || null : null,
-            brideMotherName: category === "wedding" ? brideMotherName || null : null,
+            brideFatherTitle:
+              category === "wedding" ? brideFatherTitle || null : null,
+            brideFatherName:
+              category === "wedding" ? brideFatherName || null : null,
+            brideMotherTitle:
+              category === "wedding" ? brideMotherTitle || null : null,
+            brideMotherName:
+              category === "wedding" ? brideMotherName || null : null,
             donorName: category === "buddhist" ? donorName || null : null,
             preventDuplicateGuests,
             footerContent:
@@ -426,7 +455,9 @@ export function EditEventDialog({
                     </SelectTrigger>
                     <SelectContent className="font-kantumruy">
                       <SelectItem value="wedding">{"អាពាហ៍ពិពាហ៍"}</SelectItem>
-                      <SelectItem value="buddhist">{"កម្មវិធីបុណ្យ"}</SelectItem>
+                      <SelectItem value="buddhist">
+                        {"កម្មវិធីបុណ្យ"}
+                      </SelectItem>
                       <SelectItem value="custom">{"ផ្សេងៗ"}</SelectItem>
                     </SelectContent>
                   </Select>
@@ -490,57 +521,123 @@ export function EditEventDialog({
                     <CalendarIcon className="h-3 w-3" />{" "}
                     {"កាលបរិច្ឆេទ & ពេលវេលា"}
                   </Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start h-12 bg-muted/20 border-border font-bold"
+                  <div className="grid grid-cols-1 gap-2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="h-12 justify-start cursor-pointer text-left font-bold bg-muted/20 border-border rounded-md w-full px-4"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
+                          {selectedDate
+                            ? formatDateTime(selectedDate)
+                            : "ជ្រើសរើសថ្ងៃ និង ម៉ោង"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        className="w-auto p-0 bg-card border-border"
+                        align="start"
                       >
-                        {selectedDate
-                          ? formatDateTime(selectedDate)
-                          : "ជ្រើសរើសថ្ងៃ"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={(d) => {
-                          if (!d) return;
-                          const n = new Date(d);
-                          if (selectedDate) {
-                            n.setHours(selectedDate.getHours());
-                            n.setMinutes(selectedDate.getMinutes());
-                          }
-                          setSelectedDate(n);
-                        }}
-                        className="font-kantumruy"
-                      />
-                      <div className="p-4 border-t border-border flex items-center justify-between gap-4 bg-card">
-                        <span className="text-xs font-bold uppercase">
-                          កំណត់ម៉ោង
-                        </span>
-                        <input
-                          type="time"
-                          className="bg-muted/30 border border-border rounded-md px-3 py-2 text-sm font-bold outline-none focus:ring-2 focus:ring-rose-500/20"
-                          value={
-                            selectedDate
-                              ? `${String(selectedDate.getHours()).padStart(2, "0")}:${String(selectedDate.getMinutes()).padStart(2, "0")}`
-                              : "00:00"
-                          }
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            const [h, m] = val.split(":");
-                            const n = new Date(selectedDate || new Date());
-                            n.setHours(parseInt(h));
-                            n.setMinutes(parseInt(m));
-                            setSelectedDate(n);
-                            setTime(val);
+                        <Calendar
+                          mode="single"
+                          selected={selectedDate}
+                          onSelect={(date) => {
+                            if (!date) return;
+
+                            const newDate = new Date(date);
+                            // If a time was already set and is valid, preserve it when changing the day
+                            if (
+                              selectedDate &&
+                              !isNaN(selectedDate.getTime())
+                            ) {
+                              newDate.setHours(selectedDate.getHours());
+                              newDate.setMinutes(selectedDate.getMinutes());
+                            } else {
+                              // Default to current time if no date was previously selected or if it was invalid
+                              const now = new Date();
+                              newDate.setHours(now.getHours());
+                              newDate.setMinutes(now.getMinutes());
+                            }
+                            setSelectedDate(newDate);
                           }}
+                          className="font-kantumruy bg-card text-foreground rounded-t-md"
                         />
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+
+                        <div className="p-4 border-t border-border space-y-3 bg-accent/5">
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 opacity-50" />
+                            <span className="text-xs font-bold uppercase">
+                              កំណត់ម៉ោង
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-center gap-2">
+                            <select
+                              className="bg-background border border-border rounded-md px-3 py-2 text-sm font-bold outline-none focus:ring-2 focus:ring-[#f41f4d]/20 appearance-none min-w-17.5 text-center cursor-pointer"
+                              value={
+                                selectedDate && !isNaN(selectedDate.getTime())
+                                  ? format(selectedDate, "HH")
+                                  : "00"
+                              }
+                              onChange={(e) => {
+                                const h = e.target.value;
+                                const n = new Date(
+                                  selectedDate && !isNaN(selectedDate.getTime())
+                                    ? selectedDate
+                                    : new Date(),
+                                );
+                                n.setHours(parseInt(h, 10));
+                                if (isNaN(n.getMinutes())) n.setMinutes(0);
+                                n.setSeconds(0);
+                                setSelectedDate(n);
+                              }}
+                            >
+                              {Array.from({ length: 24 }, (_, i) =>
+                                i.toString().padStart(2, "0"),
+                              ).map((h) => (
+                                <option key={h} value={h}>
+                                  {toKhmerDigits(h)}
+                                </option>
+                              ))}
+                            </select>
+                            <span className="font-bold">:</span>
+                            <select
+                              className="bg-background border border-border rounded-md px-3 py-2 text-sm font-bold outline-none focus:ring-2 focus:ring-[#f41f4d]/20 appearance-none min-w-17.5 text-center cursor-pointer"
+                              value={
+                                selectedDate && !isNaN(selectedDate.getTime())
+                                  ? format(selectedDate, "mm")
+                                  : "00"
+                              }
+                              onChange={(e) => {
+                                const m = e.target.value;
+                                const n = new Date(
+                                  selectedDate && !isNaN(selectedDate.getTime())
+                                    ? selectedDate
+                                    : new Date(),
+                                );
+                                n.setMinutes(parseInt(m, 10));
+                                if (isNaN(n.getHours())) n.setHours(0);
+                                n.setSeconds(0);
+                                setSelectedDate(n);
+                              }}
+                            >
+                              {Array.from({ length: 60 }, (_, i) =>
+                                i.toString().padStart(2, "0"),
+                              ).map((m) => (
+                                <option key={m} value={m}>
+                                  {toKhmerDigits(m)}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                    {selectedDate && (
+                      <p className="text-[10px] text-primary font-bold px-1">
+                        {formatDateTime(selectedDate)}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-3">
@@ -566,7 +663,8 @@ export function EditEventDialog({
                   {/* GROOM */}
                   <div className="space-y-4 p-4 rounded-xl border border-border bg-muted/5">
                     <h3 className="text-xs font-black uppercase text-[#C5A866] flex items-center gap-2">
-                       <Heart className="h-4 w-4 fill-[#C5A866]/20" /> ព័ត៌មានកូនកំលោះ និង មាតាបិតា
+                      <Heart className="h-4 w-4 fill-[#C5A866]/20" />{" "}
+                      ព័ត៌មានកូនកំលោះ និង មាតាបិតា
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-3 col-span-1 md:col-span-2">
@@ -581,20 +679,48 @@ export function EditEventDialog({
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground mr-1">ងារឪពុក</Label>
-                        <Input className="h-10 text-sm font-semibold border-border bg-background shadow-inner" placeholder="ឧ. លោក / ឯកឧត្តម" value={groomFatherTitle} onChange={(e) => setGroomFatherTitle(e.target.value)} />
+                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground mr-1">
+                          ងារឪពុក
+                        </Label>
+                        <Input
+                          className="h-10 text-sm font-semibold border-border bg-background shadow-inner"
+                          placeholder="ឧ. លោក / ឯកឧត្តម"
+                          value={groomFatherTitle}
+                          onChange={(e) => setGroomFatherTitle(e.target.value)}
+                        />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground mr-1">ឈ្មោះឪពុក</Label>
-                        <Input className="h-10 text-sm font-semibold border-border bg-background shadow-inner" placeholder="ឧ. ឈន ស៊ីដេត" value={groomFatherName} onChange={(e) => setGroomFatherName(e.target.value)} />
+                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground mr-1">
+                          ឈ្មោះឪពុក
+                        </Label>
+                        <Input
+                          className="h-10 text-sm font-semibold border-border bg-background shadow-inner"
+                          placeholder="ឧ. ឈន ស៊ីដេត"
+                          value={groomFatherName}
+                          onChange={(e) => setGroomFatherName(e.target.value)}
+                        />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground mr-1">ងារម្ដាយ</Label>
-                        <Input className="h-10 text-sm font-semibold border-border bg-background shadow-inner" placeholder="ឧ. លោកស្រី / លោកជំទាវ" value={groomMotherTitle} onChange={(e) => setGroomMotherTitle(e.target.value)} />
+                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground mr-1">
+                          ងារម្ដាយ
+                        </Label>
+                        <Input
+                          className="h-10 text-sm font-semibold border-border bg-background shadow-inner"
+                          placeholder="ឧ. លោកស្រី / លោកជំទាវ"
+                          value={groomMotherTitle}
+                          onChange={(e) => setGroomMotherTitle(e.target.value)}
+                        />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground mr-1">ឈ្មោះម្ដាយ</Label>
-                        <Input className="h-10 text-sm font-semibold border-border bg-background shadow-inner" placeholder="ឧ. ម៉ម សុផាត" value={groomMotherName} onChange={(e) => setGroomMotherName(e.target.value)} />
+                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground mr-1">
+                          ឈ្មោះម្ដាយ
+                        </Label>
+                        <Input
+                          className="h-10 text-sm font-semibold border-border bg-background shadow-inner"
+                          placeholder="ឧ. ម៉ម សុផាត"
+                          value={groomMotherName}
+                          onChange={(e) => setGroomMotherName(e.target.value)}
+                        />
                       </div>
                     </div>
                   </div>
@@ -602,7 +728,8 @@ export function EditEventDialog({
                   {/* BRIDE */}
                   <div className="space-y-4 p-4 rounded-xl border border-border bg-muted/5">
                     <h3 className="text-xs font-black uppercase text-[#C5A866] flex items-center gap-2">
-                       <Heart className="h-4 w-4 fill-[#C5A866]/20" /> ព័ត៌មានកូនក្រមុំ និង មាតាបិតា
+                      <Heart className="h-4 w-4 fill-[#C5A866]/20" />{" "}
+                      ព័ត៌មានកូនក្រមុំ និង មាតាបិតា
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-3 col-span-1 md:col-span-2">
@@ -617,20 +744,48 @@ export function EditEventDialog({
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground mr-1">ងារឪពុក</Label>
-                        <Input className="h-10 text-sm font-semibold border-border bg-background shadow-inner" placeholder="ឧ. លោក / ឯកឧត្តម" value={brideFatherTitle} onChange={(e) => setBrideFatherTitle(e.target.value)} />
+                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground mr-1">
+                          ងារឪពុក
+                        </Label>
+                        <Input
+                          className="h-10 text-sm font-semibold border-border bg-background shadow-inner"
+                          placeholder="ឧ. លោក / ឯកឧត្តម"
+                          value={brideFatherTitle}
+                          onChange={(e) => setBrideFatherTitle(e.target.value)}
+                        />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground mr-1">ឈ្មោះឪពុក</Label>
-                        <Input className="h-10 text-sm font-semibold border-border bg-background shadow-inner" placeholder="ឧ. ស៊ីម ច័ន្ទសុធានេត្រ" value={brideFatherName} onChange={(e) => setBrideFatherName(e.target.value)} />
+                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground mr-1">
+                          ឈ្មោះឪពុក
+                        </Label>
+                        <Input
+                          className="h-10 text-sm font-semibold border-border bg-background shadow-inner"
+                          placeholder="ឧ. ស៊ីម ច័ន្ទសុធានេត្រ"
+                          value={brideFatherName}
+                          onChange={(e) => setBrideFatherName(e.target.value)}
+                        />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground mr-1">ងារម្ដាយ</Label>
-                        <Input className="h-10 text-sm font-semibold border-border bg-background shadow-inner" placeholder="ឧ. លោកស្រី / លោកជំទាវ" value={brideMotherTitle} onChange={(e) => setBrideMotherTitle(e.target.value)} />
+                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground mr-1">
+                          ងារម្ដាយ
+                        </Label>
+                        <Input
+                          className="h-10 text-sm font-semibold border-border bg-background shadow-inner"
+                          placeholder="ឧ. លោកស្រី / លោកជំទាវ"
+                          value={brideMotherTitle}
+                          onChange={(e) => setBrideMotherTitle(e.target.value)}
+                        />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground mr-1">ឈ្មោះម្ដាយ</Label>
-                        <Input className="h-10 text-sm font-semibold border-border bg-background shadow-inner" placeholder="ឧ. អ៊ុក សោភា" value={brideMotherName} onChange={(e) => setBrideMotherName(e.target.value)} />
+                        <Label className="text-[10px] font-semibold uppercase text-muted-foreground mr-1">
+                          ឈ្មោះម្ដាយ
+                        </Label>
+                        <Input
+                          className="h-10 text-sm font-semibold border-border bg-background shadow-inner"
+                          placeholder="ឧ. អ៊ុក សោភា"
+                          value={brideMotherName}
+                          onChange={(e) => setBrideMotherName(e.target.value)}
+                        />
                       </div>
                     </div>
                   </div>
@@ -829,16 +984,29 @@ export function EditEventDialog({
                       <Label className="text-[10px] font-black uppercase text-muted-foreground pl-1">
                         {"កាលបរិច្ឆេទ (ឧ. ថ្ងៃទី១ - ពេលព្រឹក)"}
                       </Label>
-                      <Input
-                        placeholder="ឧ. ថ្ងៃសៅរ៍ ទី២១ ខែមីនា"
-                        value={day.dayLabel}
-                        onChange={(e) => {
-                          const n = [...weddingSchedule];
-                          n[dIdx].dayLabel = e.target.value;
-                          setWeddingSchedule(n);
-                        }}
-                        className="h-12 font-bold bg-muted/20 border-border rounded-md px-4 focus:ring-rose-500/20"
-                      />
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start h-12 bg-muted/20 border-border font-bold text-left px-4"
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
+                            {day.dayLabel || "ជ្រើសរើសថ្ងៃ"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            onSelect={(d) => {
+                              if (!d) return;
+                              const n = [...weddingSchedule];
+                              n[dIdx].dayLabel = formatDateTime(d, false);
+                              setWeddingSchedule(n);
+                            }}
+                            className="font-kantumruy"
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </div>
 
                     <div className="space-y-5 pt-4">
@@ -852,17 +1020,85 @@ export function EditEventDialog({
                               <Label className="text-[8px] font-black text-muted-foreground uppercase ml-1 text-center">
                                 ម៉ោង
                               </Label>
-                              <Input
-                                placeholder="៧:៣០"
-                                value={act.time}
-                                onChange={(e) => {
-                                  const n = [...weddingSchedule];
-                                  n[dIdx].groups[0].activities[aIdx].time =
-                                    e.target.value;
-                                  setWeddingSchedule(n);
-                                }}
-                                className="w-24 h-11 font-black text-center bg-background border-border text-[#f41f4d] rounded-md text-lg shadow-inner"
-                              />
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    className="w-32 h-11 font-black text-center bg-background border-border text-[#f41f4d] rounded-md text-sm shadow-inner flex items-center justify-center gap-2"
+                                  >
+                                    <Clock className="h-3 w-3 opacity-50" />
+                                    {formatKhmerTimeStr(act.time)}
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                  className="w-48 p-3"
+                                  align="center"
+                                >
+                                  <div className="space-y-3">
+                                    <Label className="text-[10px] font-black uppercase text-muted-foreground flex items-center gap-2">
+                                      <Clock className="h-3 w-3" />{" "}
+                                      កំណត់ម៉ោងសកម្មភាព
+                                    </Label>
+                                    <div className="flex items-center justify-center gap-2">
+                                      <select
+                                        className="bg-background border border-border rounded-md px-2 py-1.5 text-sm font-bold outline-none focus:ring-2 focus:ring-[#f41f4d]/20 appearance-none min-w-15 text-center cursor-pointer"
+                                        value={
+                                          act.time
+                                            ? act.time.split(":")[0]
+                                            : "00"
+                                        }
+                                        onChange={(e) => {
+                                          const h = e.target.value;
+                                          const m = act.time
+                                            ? act.time.split(":")[1] || "00"
+                                            : "00";
+                                          const n = [...weddingSchedule];
+                                          n[dIdx].groups[0].activities[
+                                            aIdx
+                                          ].time = `${h}:${m}`;
+                                          setWeddingSchedule(n);
+                                        }}
+                                      >
+                                        {Array.from({ length: 24 }, (_, i) =>
+                                          i.toString().padStart(2, "0"),
+                                        ).map((h) => (
+                                          <option key={h} value={h}>
+                                            {toKhmerDigits(h)}
+                                          </option>
+                                        ))}
+                                      </select>
+                                      <span className="font-bold">:</span>
+                                      <select
+                                        className="bg-background border border-border rounded-md px-2 py-1.5 text-sm font-bold outline-none focus:ring-2 focus:ring-[#f41f4d]/20 appearance-none min-w-15 text-center cursor-pointer"
+                                        value={
+                                          act.time
+                                            ? act.time.split(":")[1] || "00"
+                                            : "00"
+                                        }
+                                        onChange={(e) => {
+                                          const h = act.time
+                                            ? act.time.split(":")[0] || "00"
+                                            : "00";
+                                          const m = e.target.value;
+                                          const n = [...weddingSchedule];
+                                          n[dIdx].groups[0].activities[
+                                            aIdx
+                                          ].time = `${h}:${m}`;
+                                          setWeddingSchedule(n);
+                                        }}
+                                      >
+                                        {Array.from({ length: 60 }, (_, i) =>
+                                          i.toString().padStart(2, "0"),
+                                        ).map((m) => (
+                                          <option key={m} value={m}>
+                                            {toKhmerDigits(m)}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  </div>
+                                </PopoverContent>
+                              </Popover>
                             </div>
                             <div className="flex-1 space-y-4">
                               <div className="space-y-1.5 flex-1">
