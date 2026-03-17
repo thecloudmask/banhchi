@@ -242,7 +242,7 @@ export const TraditionalAgenda = ({ content, event, theme }: Props) => {
           </div>
         </div>
       </div>
+      </div>
     </div>
-  </div>
-);
+  );
 };

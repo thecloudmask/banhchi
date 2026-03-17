@@ -39,6 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { LoadingOverlay } from "@/components/loading-overlay";
 
 export default function ExpensesClient() {
   const { user, loading: authLoading } = useAuth();
@@ -160,7 +161,7 @@ export default function ExpensesClient() {
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
-        <Loader2 className="h-10 w-10 animate-spin text-primary opacity-20" />
+        <LoadingOverlay isVisible={true} message="កំពុងទាញយកទិន្នន័យ..." />
       </div>
     );
   }

@@ -623,13 +623,13 @@ export default function Home() {
                 {
                   icon: <Smartphone className="h-6 w-6" />,
                   title: "ធៀបកាឌីជីថល",
-                  desc: "ផ្ញើសំបុត្រអញ្ជើញ និងទទួលការដឹងគុណពីភ្ញៀវតាមរយៈ QR Code។",
+                  desc: "ផ្ញើសំបុត្រអញ្ជើញ និងទទួលការចងដៃ Digital ពីភ្ញៀវកិត្តិយសតាមរយៈ QR Code។",
                   color: "emerald",
                 },
                 {
                   icon: <ShieldCheck className="h-6 w-6" />,
                   title: "សុវត្ថិភាពខ្ពស់",
-                  desc: "ទិន្នន័យរបស់អ្នកត្រូវបានកូដនីយកម្ម និងរក្សាទុកដោយសុវត្ថិភាពបំផុត។",
+                  desc: "ទិន្នន័យរបស់អ្នកត្រូវបាន Encrypt និងរក្សាទុកដោយសុវត្ថិភាពបំផុត។",
                   color: "blue",
                 },
               ].map((f, i) => (

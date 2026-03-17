@@ -54,6 +54,7 @@ import { EVENT_TEMPLATES } from "@/lib/constants";
 import { toast } from "sonner";
 import { updateEvent } from "@/services/event.service";
 import RichTextEditor from "./rich-text-editor";
+import { LoadingOverlay } from "./loading-overlay";
 import {
   cn,
   formatDateTime,
@@ -356,6 +357,7 @@ export function EditEventDialog({
 
   const renderFormContent = () => (
     <div className="flex flex-col h-full w-full bg-background text-foreground font-kantumruy">
+      <LoadingOverlay isVisible={loading} />
       {/* HEADER */}
       <div className="h-16 bg-card border-b border-border flex items-center px-4 relative shrink-0">
         <DrawerClose asChild>

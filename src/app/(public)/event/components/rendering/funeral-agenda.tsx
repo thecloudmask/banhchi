@@ -189,7 +189,7 @@ export const FuneralAgenda = ({ content, event, theme }: Props) => {
           </div>
         </div>
       </div>
+      </div>
     </div>
-  </div>
-);
+  );
 };

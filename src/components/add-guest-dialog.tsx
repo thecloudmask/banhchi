@@ -31,6 +31,7 @@ import {
   Smartphone,
 } from "lucide-react";
 import { toast } from "sonner";
+import { LoadingOverlay } from "./loading-overlay";
 import { Guest, PaymentMethod, Event } from "@/types";
 
 interface AddGuestDialogProps {
@@ -218,6 +219,7 @@ export function AddGuestDialog({
         )}
       </DrawerTrigger>
       <DrawerContent className="inset-x-0 mx-auto max-w-150 max-h-[85vh] flex flex-col rounded-t-[2rem] border-border bg-background outline-none">
+        <LoadingOverlay isVisible={loading} />
         <DrawerHeader className="border-b border-border pb-4">
           <DrawerTitle className="text-xl font-bold text-foreground">
             {guestToEdit ? <span>កែប្រែទិន្នន័យ</span> : <span>កត់ត្រាការចងដៃថ្មី</span>}

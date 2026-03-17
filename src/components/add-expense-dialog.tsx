@@ -19,6 +19,7 @@ import { Loader2, Plus, ShoppingBag, Receipt, Wand2 } from "lucide-react";
 
 
 import { toast } from "sonner";
+import { LoadingOverlay } from "./loading-overlay";
 import { Expense, Event, PaymentMethod } from "@/types";
 import { Wallet, CreditCard, Building2, Smartphone } from "lucide-react";
 
@@ -195,6 +196,7 @@ export function AddExpenseDialog({ event, expenseToEdit, onClose, trigger, onSuc
         )}
       </DrawerTrigger>
       <DrawerContent className="inset-x-0 mx-auto max-w-150 max-h-[85vh] flex flex-col rounded-t-[2rem] border-border bg-background text-foreground outline-none">
+        <LoadingOverlay isVisible={loading} />
         <DrawerHeader className="border-b border-border pb-4">
           <DrawerTitle className="text-2xl font-black text-foreground">
             {expenseToEdit ? "កែប្រែការចំណាយ" : "បន្ថែមការចំណាយ"}

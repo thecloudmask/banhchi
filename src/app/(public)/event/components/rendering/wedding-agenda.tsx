@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { cn, formatDateTime, formatKhmerTimeStr } from "@/lib/utils";
+import {
+  cn,
+  formatDateTime,
+  formatKhmerTimeStr,
+  toKhmerDigits,
+} from "@/lib/utils";
 import { useLanguage } from "@/providers/language-provider";
 import { Content } from "@/services/content.service";
 import { Event } from "@/types";
@@ -85,9 +90,21 @@ export const WeddingAgenda = ({
 
   useEffect(() => {
     const dateVal = event.eventDate as any;
-    let targetDate = dateVal?.toDate
-      ? dateVal.toDate().getTime()
-      : new Date(dateVal).getTime();
+    let targetDate: number;
+
+    if (dateVal?.toDate) {
+      targetDate = dateVal.toDate().getTime();
+    } else if (dateVal?.seconds) {
+      targetDate = dateVal.seconds * 1000;
+    } else {
+      const parsedDate = new Date(dateVal);
+      targetDate = !isNaN(parsedDate.getTime()) ? parsedDate.getTime() : Date.now();
+    }
+
+    if (isNaN(targetDate)) {
+      console.warn("Invalid eventDate for countdown:", event.eventDate);
+      return;
+    }
 
     // If there's an eventTime like "17:00" or "05:00 PM", try to adjust the targetDate
     if (event.eventTime) {
@@ -165,26 +182,67 @@ export const WeddingAgenda = ({
           )}
           <div className="absolute inset-0 bg-black/25 bg-linear-to-b from-black/20 via-transparent to-black/95 z-[-1]" />
 
+          {/* Animated Flower/Heart Particles for Premium Feel */}
+          <div className="absolute inset-0 pointer-events-none z-1 overflow-hidden opacity-40">
+            {[
+              { left: 12, top: 15, delay: 0.5, opacity: 0.6 },
+              { left: 28, top: 60, delay: 1.5, opacity: 0.5 },
+              { left: 45, top: 35, delay: 2.2, opacity: 0.7 },
+              { left: 68, top: 78, delay: 1.0, opacity: 0.4 },
+              { left: 85, top: 22, delay: 3.5, opacity: 0.65 },
+              { left: 95, top: 50, delay: 1.8, opacity: 0.55 },
+              { left: 20, top: 85, delay: 2.5, opacity: 0.5 },
+              { left: 55, top: 95, delay: 0.5, opacity: 0.45 },
+            ].map((p, i) => (
+              <div
+                key={i}
+                className="absolute animate-float-slow"
+                style={{
+                  left: `${p.left}%`,
+                  top: `${p.top}%`,
+                  animationDelay: `${p.delay}s`,
+                  opacity: p.opacity,
+                }}
+              >
+                <Heart
+                  style={{
+                    color: "#" + ["FFD700", "E5C170", "F41F4D"][i % 3],
+                  }}
+                  className="w-3 h-3 sm:w-4 sm:h-4 fill-current blur-[0.5px]"
+                />
+              </div>
+            ))}
+          </div>
+
           {/* Top Texts */}
-          <div className="relative z-10 w-full flex flex-col items-center p-6 sm:p-12 mt-20 sm:mt-32 space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-10 duration-1000">
+          <div className="relative z-10 w-full flex flex-col items-center p-6 sm:p-12 mt-20 sm:mt-32 space-y-8 animate-in fade-in slide-in-from-bottom-10 duration-1000">
             <h1
               style={{ fontFamily: "Kh Muol Light" }}
-              className="text-2xl sm:text-4xl lg:text-6xl text-[#E5C170] drop-shadow-xl text-center leading-relaxed"
+              className="text-2xl sm:text-4xl lg:text-5xl text-[#E5C170] drop-shadow-xl text-center leading-relaxed"
             >
               <span>សិរីមង្គលអាពាហ៍ពិពាហ៍</span>
             </h1>
-            <div className="text-2xl sm:text-4xl lg:text-5xl font-black text-white drop-shadow-xl text-center leading-relaxed">
-              {data?.groom?.name} & {data?.bride?.name}
+
+            <div className="flex flex-col items-center space-y-4 relative w-full">
+              <div
+                className="italic text-[#E5C170] text-3xl sm:text-4xl md:text-5xl drop-shadow-md mb-1"
+                style={{ fontFamily: "'Dancing Script', cursive, serif" }}
+              >
+                The Wedding Day
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 w-full text-3xl sm:text-5xl font-black text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
+                <span className="leading-tight">{data?.groom?.name}</span>
+                <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-lg group my-2 sm:my-0">
+                  <Heart className="w-5 h-5 sm:w-7 sm:h-7 text-[#E5C170] fill-[#E5C170] group-hover:scale-125 transition-transform duration-500" />
+                </div>
+                <span className="leading-tight">{data?.bride?.name}</span>
+              </div>
             </div>
-            <p className="text-xl sm:text-2xl text-white/90 font-bold text-center mt-4">
+
+            <p className="text-xl sm:text-2xl text-white font-bold text-center mt-6 drop-shadow-lg">
               <span>សូមគោរពអញ្ជើញ</span>
             </p>
-
-            <div className="w-full max-w-sm mt-8 opacity-80 flex items-center justify-center gap-4">
-              <div className="h-px flex-1 bg-linear-to-r from-transparent via-white to-transparent" />
-              <Heart className="h-6 w-6 text-white" />
-              <div className="h-px flex-1 bg-linear-to-l from-transparent via-white to-transparent" />
-            </div>
           </div>
 
           {/* Bottom Button */}
@@ -217,17 +275,17 @@ export const WeddingAgenda = ({
 
         <div className="max-w-2xl mx-auto pb-10 relative z-10 w-full">
           {/* Section 1: Hero */}
-          <div className="relative rounded-none sm:rounded-[3rem] min-h-[700px] sm:h-screen flex flex-col items-center justify-between px-6 overflow-hidden">
+          <div className="relative rounded-none sm:rounded-[3rem] min-h-[700px] sm:h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
             {/* Background Image that covers the screen as in the image */}
             <div className="absolute inset-0 z-[-2] overflow-hidden">
               {event.bannerUrl ? (
                 <img
                   src={event.bannerUrl}
                   alt="Wedding Background"
-                  className="w-full h-full object-cover blur-[2px] scale-105"
+                  className="absolute inset-0 w-full h-full object-cover z-[-2] blur-[2px] scale-105"
                 />
               ) : (
-                <div className="w-full h-full bg-[#E5DCC2] dark:bg-zinc-800" />
+                <div className="absolute inset-0 w-full h-full bg-card z-[-2]" />
               )}
             </div>
 
@@ -276,13 +334,13 @@ export const WeddingAgenda = ({
               {/* Header Title */}
               <h2
                 style={{ fontFamily: "Kh Muol Light" }}
-                className="text-2xl sm:text-4xl text-[#C5A866] mb-8 sm:mb-10 drop-shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
+                className="text-2xl sm:text-4xl text-[#E5C170]/90 drop-shadow-xl text-center leading-relaxed mb-20"
               >
                 <span>សិរីមង្គលអាពាហ៍ពិពាហ៍</span>
               </h2>
 
               {/* Parents Section */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-20 w-full max-w-2xl mb-12 px-6">
+              <div className="flex flex-row justify-between items-start w-full max-w-2xl mb-12 px-6 sm:px-12">
                 {/* Groom's Parents */}
                 <div className="flex flex-col items-start text-left space-y-1 sm:space-y-2">
                   {(data.groom?.father || data.groom?.mother) && mounted && (
@@ -564,7 +622,7 @@ export const WeddingAgenda = ({
                 ].map((item, i) => (
                   <div key={i} className="flex flex-col items-center gap-3">
                     <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[#C5A866] text-white flex items-center justify-center text-2xl sm:text-3xl font-black shadow-xl shadow-[#C5A866]/20 border border-[#b3914a] transform transition-transform hover:-translate-y-1">
-                      {String(item.val).padStart(2, "0")}
+                      {toKhmerDigits(String(item.val).padStart(2, "0"))}
                     </div>
                     <span className="text-[#a38038] dark:text-[#EACD88] text-[10px] sm:text-[11px] font-black uppercase">
                       {item.label}

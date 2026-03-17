@@ -71,40 +71,45 @@ export const createEvent = async (
 ): Promise<string> => {
   if (!db) throw new Error("Firebase services not initialized");
   
-  let bannerUrl = "";
-  let galleryUrls: string[] = [];
+  try {
+    let bannerUrl = "";
+    let galleryUrls: string[] = [];
 
-  if (bannerFile) {
-    bannerUrl = await uploadToCloudinary(bannerFile, "banners", "banner");
+    if (bannerFile) {
+      bannerUrl = await uploadToCloudinary(bannerFile, "banners", "banner");
+    }
+
+    if (galleryFiles && galleryFiles.length > 0) {
+      galleryUrls = await uploadMultipleToCloudinary(galleryFiles, "galleries");
+    }
+
+    const finalExtraData = { ...(data.extraData || {}) };
+    
+    if (khqrUSDFile) {
+      finalExtraData.khqrUSDUrl = await uploadToCloudinary(khqrUSDFile, "wedding_qrs", "thumbnail");
+    }
+
+    if (khqrKHRFile) {
+      finalExtraData.khqrKHRUrl = await uploadToCloudinary(khqrKHRFile, "wedding_qrs", "thumbnail");
+    }
+
+    const eventData = cleanData({
+      ...data,
+      bannerUrl,
+      galleryUrls,
+      status: 'active',
+      extraData: Object.keys(finalExtraData).length > 0 ? finalExtraData : undefined,
+      eventDate: Timestamp.fromDate(data.eventDate as Date),
+      endDate: data.endDate ? Timestamp.fromDate(data.endDate as Date) : undefined,
+      createdAt: serverTimestamp(),
+    });
+
+    const docRef = await addDoc(collection(db, EVENTS_COLLECTION), eventData);
+    return docRef.id;
+  } catch (error) {
+    console.error("Critical: Failed to create event", error);
+    throw error;
   }
-
-  if (galleryFiles && galleryFiles.length > 0) {
-    galleryUrls = await uploadMultipleToCloudinary(galleryFiles, "galleries");
-  }
-
-  const finalExtraData = { ...(data.extraData || {}) };
-  
-  if (khqrUSDFile) {
-    finalExtraData.khqrUSDUrl = await uploadToCloudinary(khqrUSDFile, "wedding_qrs", "thumbnail");
-  }
-
-  if (khqrKHRFile) {
-    finalExtraData.khqrKHRUrl = await uploadToCloudinary(khqrKHRFile, "wedding_qrs", "thumbnail");
-  }
-
-  const eventData = cleanData({
-    ...data,
-    bannerUrl,
-    galleryUrls,
-    status: 'active',
-    extraData: Object.keys(finalExtraData).length > 0 ? finalExtraData : undefined,
-    eventDate: Timestamp.fromDate(data.eventDate as Date),
-    endDate: data.endDate ? Timestamp.fromDate(data.endDate as Date) : undefined,
-    createdAt: serverTimestamp(),
-  });
-
-  const docRef = await addDoc(collection(db, EVENTS_COLLECTION), eventData);
-  return docRef.id;
 };
 
 export const updateEvent = async (
@@ -118,53 +123,60 @@ export const updateEvent = async (
 ): Promise<void> => {
   if (!db) throw new Error("Database not initialized");
   
-  let updateData: any = { ...data };
+  try {
+    let updateData: any = { ...data };
 
-  if (bannerFile) {
-    updateData.bannerUrl = await uploadToCloudinary(bannerFile, "banners", "banner");
+    if (bannerFile) {
+      updateData.bannerUrl = await uploadToCloudinary(bannerFile, "banners", "banner");
+    }
+
+    if (bankQrFile) {
+      updateData.bankQrUrl = await uploadToCloudinary(bankQrFile, "bank_qrs", "thumbnail");
+    }
+
+    if (khqrUSDFile) {
+      const url = await uploadToCloudinary(khqrUSDFile, "wedding_qrs", "thumbnail");
+      updateData.extraData = { ...updateData.extraData, khqrUSDUrl: url };
+    }
+
+    if (khqrKHRFile) {
+      const url = await uploadToCloudinary(khqrKHRFile, "wedding_qrs", "thumbnail");
+      updateData.extraData = { ...updateData.extraData, khqrKHRUrl: url };
+    }
+
+    if (galleryFiles && galleryFiles.length > 0) {
+      const newUrls = await uploadMultipleToCloudinary(galleryFiles, "galleries");
+      const currentUrls = updateData.galleryUrls || [];
+      updateData.galleryUrls = [...currentUrls, ...newUrls];
+    }
+
+    if (data.eventDate) {
+      updateData.eventDate = Timestamp.fromDate(data.eventDate as Date);
+    }
+
+    if (data.endDate) {
+      updateData.endDate = Timestamp.fromDate(data.endDate as Date);
+    }
+
+    updateData = cleanData(updateData);
+
+    const docRef = doc(db, EVENTS_COLLECTION, id);
+    await updateDoc(docRef, updateData);
+  } catch (error) {
+    console.error(`Failed to update event ${id}:`, error);
+    throw error;
   }
-
-  if (bankQrFile) {
-    updateData.bankQrUrl = await uploadToCloudinary(bankQrFile, "bank_qrs", "thumbnail");
-  }
-
-  if (khqrUSDFile) {
-    const url = await uploadToCloudinary(khqrUSDFile, "wedding_qrs", "thumbnail");
-    updateData.extraData = { ...updateData.extraData, khqrUSDUrl: url };
-  }
-
-  if (khqrKHRFile) {
-    const url = await uploadToCloudinary(khqrKHRFile, "wedding_qrs", "thumbnail");
-    updateData.extraData = { ...updateData.extraData, khqrKHRUrl: url };
-  }
-
-  if (galleryFiles && galleryFiles.length > 0) {
-    const newUrls = await uploadMultipleToCloudinary(galleryFiles, "galleries");
-    // If we have existing galleryUrls in data, append. Otherwise, fetch or just set.
-    // However, the UI usually passes the full 'galleryUrls' list if it wants to manage removals.
-    // If galleryFiles is provided, we append them to whatever is in updateData.galleryUrls or event.galleryUrls.
-    const currentUrls = updateData.galleryUrls || [];
-    updateData.galleryUrls = [...currentUrls, ...newUrls];
-  }
-
-  if (data.eventDate) {
-    updateData.eventDate = Timestamp.fromDate(data.eventDate as Date);
-  }
-
-  if (data.endDate) {
-    updateData.endDate = Timestamp.fromDate(data.endDate as Date);
-  }
-
-  updateData = cleanData(updateData);
-
-  const docRef = doc(db, EVENTS_COLLECTION, id);
-  await updateDoc(docRef, updateData);
 };
 
 export const deleteEvent = async (id: string): Promise<void> => {
   if (!db) return;
-  const docRef = doc(db, EVENTS_COLLECTION, id);
-  await deleteDoc(docRef);
+  try {
+    const docRef = doc(db, EVENTS_COLLECTION, id);
+    await deleteDoc(docRef);
+  } catch (error) {
+    console.error(`Failed to delete event ${id}:`, error);
+    throw error;
+  }
 };
 
 // --- Guest Sub-collection ---
@@ -227,67 +239,82 @@ export const logActivity = async (
 
 export const addGuest = async (eventId: string, guest: Omit<Guest, "id" | "createdAt">): Promise<string> => {
   if (!db) throw new Error("Database not initialized");
-  const guestData = cleanData({
-    ...guest,
-    createdAt: serverTimestamp(),
-  });
-  const docRef = await addDoc(collection(db, EVENTS_COLLECTION, eventId, "guests"), guestData);
+  try {
+    const guestData = cleanData({
+      ...guest,
+      createdAt: serverTimestamp(),
+    });
+    const docRef = await addDoc(collection(db, EVENTS_COLLECTION, eventId, "guests"), guestData);
 
-  const contributionSummary = `$${guest.amountUsd}, ${guest.amountKhr} ៛`;
+    const contributionSummary = `$${guest.amountUsd || 0}, ${guest.amountKhr || 0} ៛`;
 
-  await logActivity(
-    eventId, 
-    'CREATE', 
-    `Added guest [${guest.name}] with [${contributionSummary}]`,
-    docRef.id,
-    null,
-    guest
-  );
+    await logActivity(
+      eventId, 
+      'CREATE', 
+      `Added guest [${guest.name}] with [${contributionSummary}]`,
+      docRef.id,
+      null,
+      guest
+    );
 
-  return docRef.id;
+    return docRef.id;
+  } catch (error) {
+    console.error(`Failed to add guest to event ${eventId}:`, error);
+    throw error;
+  }
 };
 
 export const updateGuest = async (eventId: string, guestId: string, data: Partial<Guest>) => {
   if (!db) throw new Error("Database not initialized");
-  const docRef = doc(db, EVENTS_COLLECTION, eventId, "guests", guestId);
-  const oldDoc = await getDoc(docRef);
-  const oldValue = oldDoc.exists() ? oldDoc.data() : null;
+  try {
+    const docRef = doc(db, EVENTS_COLLECTION, eventId, "guests", guestId);
+    const oldDoc = await getDoc(docRef);
+    const oldValue = oldDoc.exists() ? oldDoc.data() : null;
 
-  await updateDoc(docRef, cleanData(data));
+    await updateDoc(docRef, cleanData(data));
 
-  // Generate detailed change log
-  const changes = [];
-  if (data.name && data.name !== oldValue?.name) changes.push(`name: ${oldValue?.name} -> ${data.name}`);
-  if (data.amountUsd !== undefined && data.amountUsd !== oldValue?.amountUsd) changes.push(`usd: ${oldValue?.amountUsd} -> ${data.amountUsd}`);
-  if (data.amountKhr !== undefined && data.amountKhr !== oldValue?.amountKhr) changes.push(`khr: ${oldValue?.amountKhr} -> ${data.amountKhr}`);
-  if (data.paymentMethod && data.paymentMethod !== oldValue?.paymentMethod) changes.push(`method: ${oldValue?.paymentMethod} -> ${data.paymentMethod}`);
-  
-  await logActivity(
-    eventId, 
-    'UPDATE', 
-    `Updated guest [${oldValue?.name || 'Unknown'}]. Changes: ${changes.join(', ') || 'None'}`,
-    guestId,
-    oldValue,
-    data
-  );
+    // Generate detailed change log
+    const changes = [];
+    if (data.name && data.name !== oldValue?.name) changes.push(`name: ${oldValue?.name} -> ${data.name}`);
+    if (data.amountUsd !== undefined && data.amountUsd !== oldValue?.amountUsd) changes.push(`usd: ${oldValue?.amountUsd} -> ${data.amountUsd}`);
+    if (data.amountKhr !== undefined && data.amountKhr !== oldValue?.amountKhr) changes.push(`khr: ${oldValue?.amountKhr} -> ${data.amountKhr}`);
+    if (data.paymentMethod && data.paymentMethod !== oldValue?.paymentMethod) changes.push(`method: ${oldValue?.paymentMethod} -> ${data.paymentMethod}`);
+    
+    await logActivity(
+      eventId, 
+      'UPDATE', 
+      `Updated guest [${oldValue?.name || 'Unknown'}]. Changes: ${changes.join(', ') || 'None'}`,
+      guestId,
+      oldValue,
+      data
+    );
+  } catch (error) {
+    console.error(`Failed to update guest ${guestId} in event ${eventId}:`, error);
+    throw error;
+  }
 };
 
 export const deleteGuest = async (eventId: string, guestId: string) => {
   if (!db) throw new Error("Database not initialized");
-  const docRef = doc(db, EVENTS_COLLECTION, eventId, "guests", guestId);
-  const oldDoc = await getDoc(docRef);
-  const oldValue = oldDoc.exists() ? oldDoc.data() : null;
+  try {
+    const docRef = doc(db, EVENTS_COLLECTION, eventId, "guests", guestId);
+    const oldDoc = await getDoc(docRef);
+    const oldValue = oldDoc.exists() ? oldDoc.data() : null;
 
-  await deleteDoc(docRef);
+    await deleteDoc(docRef);
 
-  await logActivity(
-    eventId, 
-    'DELETE', 
-    `Deleted guest [${oldValue?.name || 'Unknown'}]`,
-    guestId,
-    oldValue,
-    null
-  );
+    await logActivity(
+      eventId, 
+      'DELETE', 
+      `Deleted guest [${oldValue?.name || 'Unknown'}]`,
+      guestId,
+      oldValue,
+      null
+    );
+  } catch (error) {
+    console.error(`Failed to delete guest ${guestId} from event ${eventId}:`, error);
+    throw error;
+  }
 };
 
 export const getGuestLogs = async (eventId: string, guestId: string): Promise<AuditLog[]> => {

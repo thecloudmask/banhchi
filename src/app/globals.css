@@ -170,6 +170,11 @@ html[lang="kh"] body {
   50% { transform: translateY(-15px); }
 }
 
+@keyframes loading-bar {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+
 .animate-float-slow {
  animation: float-slow 8s ease-in-out infinite;
 }
