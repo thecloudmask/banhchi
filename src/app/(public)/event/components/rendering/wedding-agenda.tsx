@@ -316,7 +316,7 @@ export const WeddingAgenda = ({
 
         <div className="max-w-2xl mx-auto pb-10 relative z-10 w-full">
           {/* Section 1: Hero */}
-          <div className="relative rounded-none sm:rounded-[3rem] min-h-[700px] sm:h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
+          <div className="relative rounded-xs sm:rounded-[3rem] min-h-[700px] sm:h-screen flex flex-col items-center justify-center px-6 overflow-hidden">
             {/* Background Image that covers the screen as in the image */}
             <div className="absolute inset-0 z-[-2] overflow-hidden">
               {event.bannerUrl ? (
@@ -333,7 +333,7 @@ export const WeddingAgenda = ({
 
             {/* Premium Overlays */}
             <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-[#FDFBF4] via-[#FDFBF4]/60 to-transparent dark:from-zinc-950 dark:via-zinc-950/60 dark:to-transparent z-[-1]" />
-            <div className="absolute inset-0 bg-black/20 dark:bg-black/40 z-[-1]" />
+            <div className="absolute inset-0 bg-black/50 dark:bg-black/40 z-[-1]" />
 
             {/* Animated Flower/Heart Particles for Premium Feel */}
             {/* Static positions to avoid SSR/client hydration mismatch (no Math.random in render) */}
@@ -388,7 +388,7 @@ export const WeddingAgenda = ({
                   {(data.groom?.father || data.groom?.mother) && mounted && (
                     <div className="space-y-1">
                       {data.groom.father && (
-                        <p className="text-white dark:text-zinc-200 text-[12px] sm:text-lg font-black drop-shadow-md">
+                        <p className="text-white dark:text-zinc-200 text-[16px] sm:text-lg font-black drop-shadow-md">
                           <span className="text-[#E5C170] mr-2">
                             {data.groom.fatherTitle || "លោក"}
                           </span>
@@ -396,7 +396,7 @@ export const WeddingAgenda = ({
                         </p>
                       )}
                       {data.groom.mother && (
-                        <p className="text-white dark:text-zinc-200 text-[12px] sm:text-lg font-black drop-shadow-md">
+                        <p className="text-white dark:text-zinc-200 text-[16px] sm:text-lg font-black drop-shadow-md">
                           <span className="text-[#E5C170] mr-2">
                             {data.groom.motherTitle || "លោកស្រី"}
                           </span>
@@ -412,7 +412,7 @@ export const WeddingAgenda = ({
                   {(data.bride?.father || data.bride?.mother) && mounted && (
                     <div className="space-y-1">
                       {data.bride.father && (
-                        <p className="text-white dark:text-zinc-200 text-[12px] sm:text-lg font-black drop-shadow-md">
+                        <p className="text-white dark:text-zinc-200 text-[16px] sm:text-lg font-black drop-shadow-md">
                           <span className="text-[#E5C170] mr-2">
                             {data.bride.fatherTitle || "លោក"}
                           </span>
@@ -420,7 +420,7 @@ export const WeddingAgenda = ({
                         </p>
                       )}
                       {data.bride.mother && (
-                        <p className="text-white dark:text-zinc-200 text-[12px] sm:text-lg font-black drop-shadow-md">
+                        <p className="text-white dark:text-zinc-200 text-[16px] sm:text-lg font-black drop-shadow-md">
                           <span className="text-[#E5C170] mr-2">
                             {data.bride.motherTitle || "លោកស្រី"}
                           </span>
@@ -491,7 +491,7 @@ export const WeddingAgenda = ({
                   className="absolute inset-0 w-full h-full object-cover z-[-2] opacity-30 dark:opacity-50 contrast-125 grayscale-20"
                 />
               ) : (
-                <div className="absolute inset-0 w-full h-full bg-[#3B3A36] dark:bg-black/50 z-[-2]" />
+                <div className="absolute inset-0 w-full h-full bg-[#3B3A36]/50 dark:bg-black/50 z-[-2]" />
               )}
               <div className="absolute inset-0 bg-linear-to-b from-white/95 via-white/90 to-white/98 dark:from-zinc-950/90 dark:via-zinc-950/80 dark:to-zinc-950/95 z-[-1]" />
 
@@ -635,42 +635,60 @@ export const WeddingAgenda = ({
                         ពណ៌សម្លៀកបំពាក់
                       </span>
                       <div className="flex items-center gap-3 bg-[#C5A866]/5 dark:bg-black/50 p-2 sm:px-4 sm:py-2 rounded-full border border-[#C5A866]/10 backdrop-blur-md">
-                        {dressColors.map((dc: { color: string; name: string; meaning: string }, i: number) => (
-                          <div
-                            key={i}
-                            onClick={() => setActiveColor(i === activeColor ? null : i)}
-                            className={cn(
-                              "w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 transition-all cursor-pointer shadow-sm relative",
-                              activeColor === i 
-                                ? "scale-125 shadow-lg border-[#C5A866] ring-4 ring-[#C5A866]/20" 
-                                : "hover:scale-110 border-white/20"
-                            )}
-                            style={{ backgroundColor: dc.color }}
-                          >
-                            {activeColor === i && (
-                               <div className="absolute inset-0 rounded-full animate-ping bg-current opacity-20 pointer-events-none" />
-                            )}
-                          </div>
-                        ))}
+                        {dressColors.map(
+                          (
+                            dc: {
+                              color: string;
+                              name: string;
+                              meaning: string;
+                            },
+                            i: number,
+                          ) => (
+                            <div
+                              key={i}
+                              onClick={() =>
+                                setActiveColor(i === activeColor ? null : i)
+                              }
+                              className={cn(
+                                "w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 transition-all cursor-pointer shadow-sm relative",
+                                activeColor === i
+                                  ? "scale-125 shadow-lg border-[#C5A866] ring-4 ring-[#C5A866]/20"
+                                  : "hover:scale-110 border-white/20",
+                              )}
+                              style={{ backgroundColor: dc.color }}
+                            >
+                              {activeColor === i && (
+                                <div className="absolute inset-0 rounded-full animate-ping bg-current opacity-20 pointer-events-none" />
+                              )}
+                            </div>
+                          ),
+                        )}
                       </div>
                     </div>
 
                     {activeColor !== null && (
                       <div className="w-full animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-500">
                         <div className="relative p-6 rounded-3xl bg-[#C5A866]/5 dark:bg-white/5 border border-[#C5A866]/20 overflow-hidden group">
-                           <div 
-                              className="absolute top-0 left-0 w-1.5 h-full opacity-70 transition-colors duration-500" 
-                              style={{ backgroundColor: dressColors[activeColor].color }}
-                           />
-                           <h5 
-                              className="text-lg font-black font-kantumruy mb-1 transition-colors duration-500"
-                              style={{ color: activeColor === 0 && !mounted ? '#000' : dressColors[activeColor].color }}
-                           >
-                             {dressColors[activeColor].name}
-                           </h5>
-                           <p className="text-[#5D534A] dark:text-zinc-400 text-sm font-medium leading-relaxed italic">
-                             {dressColors[activeColor].meaning}
-                           </p>
+                          <div
+                            className="absolute top-0 left-0 w-1.5 h-full opacity-70 transition-colors duration-500"
+                            style={{
+                              backgroundColor: dressColors[activeColor].color,
+                            }}
+                          />
+                          <h5
+                            className="text-lg font-black font-kantumruy mb-1 transition-colors duration-500"
+                            style={{
+                              color:
+                                activeColor === 0 && !mounted
+                                  ? "#000"
+                                  : dressColors[activeColor].color,
+                            }}
+                          >
+                            {dressColors[activeColor].name}
+                          </h5>
+                          <p className="text-[#5D534A] dark:text-zinc-400 text-sm font-medium leading-relaxed italic">
+                            {dressColors[activeColor].meaning}
+                          </p>
                         </div>
                       </div>
                     )}

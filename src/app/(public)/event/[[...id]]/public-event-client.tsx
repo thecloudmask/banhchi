@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { getEventById } from "@/services/event.service";
 import {
@@ -31,7 +31,7 @@ import Image from "next/image";
 import { AgendaRenderer } from "../components/rendering/agenda-renderer";
 import { ArticleRenderer } from "../components/rendering/article-renderer";
 import { PublicHeader } from "@/components/layout/public-header";
-import { PublicFooter } from "@/components/layout/public-footer";
+
 
 const getCategoryTheme = (category?: string) => {
   const themes: Record<
@@ -96,6 +96,8 @@ export default function PublicEventClient() {
   const [isLocked, setIsLocked] = useState(false);
   const [hideLayout, setHideLayout] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  const handleCoverStateChange = useCallback((shown: boolean) => setHideLayout(shown), []);
 
   useEffect(() => {
     setMounted(true);
@@ -335,7 +337,7 @@ export default function PublicEventClient() {
                 content={effectiveContent}
                 event={event!}
                 theme={theme}
-                onCoverStateChange={(shown: boolean) => setHideLayout(shown)}
+                onCoverStateChange={handleCoverStateChange}
               />
             ) : (
               <ArticleRenderer
