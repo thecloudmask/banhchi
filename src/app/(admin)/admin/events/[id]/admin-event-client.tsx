@@ -10,35 +10,24 @@ import {
 } from "@/services/event.service";
 import { Event, Guest } from "@/types";
 import { AddGuestDialog } from "@/components/add-guest-dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
   ArrowLeft,
   Search,
-  Wallet,
   Trash2,
   Pencil,
   Download,
-  Smartphone,
   MessageSquare,
   ListFilter,
   ExternalLink,
   MoreVertical,
   Loader2,
-  CreditCard,
   TrendingDown,
   Receipt,
   Clock,
   Calendar as CalendarIcon,
   Plus,
+  Palette,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,7 +43,6 @@ import { toast } from "sonner";
 import {
   cn,
   formatDateTime,
-  formatForDateTimeLocal,
   toKhmerDigits,
   formatKhmerTimeStr,
 } from "@/lib/utils";
@@ -81,9 +69,6 @@ import {
   Printer,
   History,
   Activity,
-  TrendingUp,
-  PieChart,
-  Building2,
 } from "lucide-react";
 import {
   Sheet,
@@ -151,6 +136,9 @@ export default function AdminEventClient() {
   };
   const [schedule, setSchedule] = useState<ScheduleDay[]>([]);
   const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [dressColors, setDressColors] = useState<
+    { color: string; name: string; meaning: string }[]
+  >([]);
 
   const fetchData = async (showLoading = true) => {
     if (!currentEventId) return;
@@ -159,12 +147,16 @@ export default function AdminEventClient() {
       const eventData = await getEventById(currentEventId);
       setEvent(eventData);
       if (eventData?.eventDate) {
-        const d =
-          eventData.eventDate instanceof Date
-            ? eventData.eventDate
-            : (eventData.eventDate as any).toDate
-              ? (eventData.eventDate as any).toDate()
-              : new Date(eventData.eventDate as any);
+        const dateVal = eventData.eventDate;
+        let d: Date;
+        
+        if (dateVal && typeof (dateVal as any).toDate === "function") {
+          d = (dateVal as any).toDate();
+        } else if (dateVal instanceof Date) {
+          d = dateVal;
+        } else {
+          d = new Date(dateVal as any);
+        }
         setEditEventDate(d);
       }
     } catch (error) {
@@ -203,18 +195,31 @@ export default function AdminEventClient() {
     }
   }, [event?.id]);
 
+  // Sync dressColors from event.extraData
+  useEffect(() => {
+    if (event?.extraData?.dressColors) {
+      setDressColors(event.extraData.dressColors);
+    } else {
+      setDressColors([]);
+    }
+  }, [event?.id]);
+
   const handleSaveSchedule = async () => {
     if (!event) return;
     try {
       setScheduleLoading(true);
-      const cleanSchedule = schedule
+      const cleanSchedule = (schedule || [])
         .map((day) => ({
           ...day,
-          activities: day.activities.filter(
-            (a) => a.time.trim() || a.title.trim(),
+          activities: (day.activities || []).filter(
+            (a) => a.time?.trim() || a.title?.trim(),
           ),
         }))
-        .filter((day) => day.dayLabel.trim() || day.activities.length > 0);
+        .filter(
+          (day) =>
+            day.dayLabel?.trim() ||
+            (day.activities && day.activities.length > 0),
+        );
       await updateEvent(event.id, {
         extraData: { ...event.extraData, schedule: cleanSchedule },
       });
@@ -239,13 +244,13 @@ export default function AdminEventClient() {
   };
 
   const filteredGuests = useMemo(() => {
-    let result = guests;
+    let result = guests || [];
 
     // Filter by search query
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
-        (g) =>
+        (g: Guest) =>
           g.name.toLowerCase().includes(q) ||
           g.note?.toLowerCase().includes(q) ||
           g.location?.toLowerCase().includes(q),
@@ -255,15 +260,24 @@ export default function AdminEventClient() {
     // Filter by payment method
     if (filterPaymentMethod !== "all") {
       if (filterPaymentMethod === "cash") {
-        result = result.filter((g) => g.paymentMethod === "cash");
-      } else if (filterPaymentMethod === "bank") {
-        result = result.filter((g) => g.paymentMethod !== "cash");
+        result = result.filter((g: Guest) => g.paymentMethod === filterPaymentMethod);
+      } else if (filterPaymentMethod === "others") {
+        result = result.filter(
+          (g: Guest) =>
+            !["aba", "acleda", "chipmong", "wing", "cash"].includes(
+              g.paymentMethod,
+            ),
+        );
+      } else {
+        result = result.filter(
+          (g: Guest) => g.paymentMethod === filterPaymentMethod,
+        );
       }
     }
 
     // Filter by location
     if (filterLocation !== "all") {
-      result = result.filter((g) => g.location === filterLocation);
+      result = result.filter((g: Guest) => g.location === filterLocation);
     }
 
     return result;
@@ -271,10 +285,10 @@ export default function AdminEventClient() {
 
   // Get unique locations for filter
   const uniqueLocations = useMemo(() => {
-    const locations = (guests || [])
-      .map((g) => g.location)
-      .filter((loc): loc is string => !!loc && loc.trim() !== "");
-    return Array.from(new Set(locations)).sort();
+    const uniqueLocations = Array.from(
+      new Set(guests?.map((g: Guest) => g.location).filter(Boolean)),
+    ).sort();
+    return uniqueLocations;
   }, [guests]);
 
   const totals = useMemo(() => {
@@ -282,7 +296,7 @@ export default function AdminEventClient() {
       usd: { total: 0, cash: 0, qr: 0 },
       khr: { total: 0, cash: 0, qr: 0 },
     };
-    guests.forEach((g) => {
+    (guests || []).forEach((g) => {
       const isQR = g.paymentMethod !== "cash";
       res.usd.total += g.amountUsd || 0;
       res.khr.total += g.amountKhr || 0;
@@ -298,14 +312,14 @@ export default function AdminEventClient() {
   }, [guests]);
 
   const downloadCSV = (type: "full" | "invitation" = "full") => {
-    if (!event || guests.length === 0) return;
+    if (!event || !guests || guests.length === 0) return;
 
     let headers: string[] = [];
     let rows: any[][] = [];
 
     if (type === "invitation") {
       headers = ["ល.រ", "ឈ្មោះភ្ញៀវ", "ចំណាំ"];
-      rows = guests.map((g, index) => [
+      rows = (guests || []).map((g, index) => [
         index + 1,
         `"${g.name}"`,
         `"${g.note || ""}"`,
@@ -319,7 +333,7 @@ export default function AdminEventClient() {
         "វិធីបង់ប្រាក់",
         "ចំណាំ",
       ];
-      rows = guests.map((g, index) => [
+      rows = (guests || []).map((g, index) => [
         index + 1,
         `"${g.name}"`,
         g.amountUsd,
@@ -350,7 +364,7 @@ export default function AdminEventClient() {
     link.setAttribute("href", url);
     link.setAttribute(
       "download",
-      `Sideth-Theapka_${event.title.replace(/\s+/g, "_")}_${type}.csv`,
+      `Mordok-Theapka_${(event.title || "Event").replace(/\s+/g, "_")}_${type}.csv`,
     );
     document.body.appendChild(link);
     link.click();
@@ -366,8 +380,9 @@ export default function AdminEventClient() {
     if (!event) return;
 
     const parts = [];
-    if (guest.amountUsd > 0) parts.push(`$${guest.amountUsd}`);
-    if (guest.amountKhr > 0)
+    if (guest?.amountUsd && guest.amountUsd > 0)
+      parts.push(`$${guest.amountUsd}`);
+    if (guest?.amountKhr && guest.amountKhr > 0)
       parts.push(`${guest.amountKhr.toLocaleString()} ៛`);
 
     const amountStr = parts.join("និង");
@@ -530,8 +545,8 @@ export default function AdminEventClient() {
                   <SheetDescription>{"កំណត់ត្រាក្រុមការងារ"}</SheetDescription>
                 </SheetHeader>
                 <AdminEventLogsFeed
-                  eventId={event.id}
-                  refreshKey={guests.length}
+                  eventId={event?.id || ""}
+                  refreshKey={guests?.length || 0}
                 />
               </SheetContent>
             </Sheet>
@@ -779,7 +794,7 @@ export default function AdminEventClient() {
                       {uniqueLocations?.map((location) => (
                         <SelectItem
                           key={location}
-                          value={location}
+                          value={location || ""}
                           className="font-semibold text-xs"
                         >
                           {location}
@@ -1028,7 +1043,7 @@ export default function AdminEventClient() {
             </table>
 
             <div className="mt-12 text-center text-[10px] font-bold text-gray-400 uppercase">
-              រៀបរៀងដោយ មត៌ត ធៀបការ (Motorola Theapka) Digital Event Companion •{" "}
+              រៀបរៀងដោយ មត៌ក ធៀបការ (Mordok-Theapka) Digital Event Companion •{" "}
               {new Date().toLocaleDateString()}
             </div>
           </div>
@@ -1086,7 +1101,7 @@ export default function AdminEventClient() {
           </div>
 
           {/* Days */}
-          {schedule.length === 0 ? (
+          {!schedule || schedule.length === 0 ? (
             <div className="text-center py-20 border border-dashed border-border rounded-md">
               <Clock className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
               <p className="text-[11px] font-semibold uppercase text-muted-foreground/50">
@@ -1095,7 +1110,7 @@ export default function AdminEventClient() {
             </div>
           ) : (
             <div className="space-y-6">
-              {schedule.map((day, dayIndex) => (
+              {(schedule || []).map((day, dayIndex) => (
                 <div
                   key={day.id}
                   className="bg-card/40 border border-border rounded-md overflow-hidden"
@@ -1376,6 +1391,7 @@ export default function AdminEventClient() {
                             donorName: formData.get("donorName") as string,
                           }
                         : {}),
+                    dressColors: dressColors,
                   },
                 };
                 try {
@@ -1676,6 +1692,122 @@ export default function AdminEventClient() {
                   </div>
                 </>
               )}
+
+              {/* Dress Code Section */}
+              <div className="space-y-6 col-span-1 md:col-span-2 pt-6 border-t border-border mt-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center">
+                      <Palette className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-foreground">
+                        ពណ៌សម្លៀកបំពាក់ចូលរួម (Dress Code)
+                      </h4>
+                      <p className="text-[10px] text-muted-foreground uppercase font-black">
+                        កំណត់ពណ៌ និងអត្ថន័យសម្រាប់ផ្ទាំងធៀប
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setDressColors([
+                        ...dressColors,
+                        { color: "#E5C170", name: "", meaning: "" },
+                      ])
+                    }
+                    className="h-9 rounded-md border-border bg-card hover:bg-accent text-primary font-bold text-xs px-4"
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1.5" />
+                    បន្ថែមពណ៌
+                  </Button>
+                </div>
+
+                {dressColors.length === 0 ? (
+                  <div className="text-center py-10 border border-dashed border-border rounded-xl bg-accent/5">
+                    <p className="text-xs font-bold text-muted-foreground/50 uppercase">
+                      មិនទាន់មានពណ៌សម្លៀកបំពាក់នៅឡើយទេ
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {dressColors.map((dc, idx) => (
+                      <div
+                        key={idx}
+                        className="group relative p-5 rounded-2xl bg-card border border-border hover:border-primary/20 transition-all shadow-sm"
+                      >
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() =>
+                            setDressColors(dressColors.filter((_, i) => i !== idx))
+                          }
+                          className="absolute -top-2 -right-2 h-7 w-7 rounded-full bg-red-500 text-white shadow-lg hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+
+                        <div className="flex gap-4">
+                          <div className="space-y-2">
+                            <label className="text-[9px] font-black uppercase text-muted-foreground">
+                              ពណ៌
+                            </label>
+                            <div className="relative">
+                               <input
+                                 type="color"
+                                 value={dc.color}
+                                 onChange={(e) => {
+                                   const newColors = [...dressColors];
+                                   newColors[idx].color = e.target.value;
+                                   setDressColors(newColors);
+                                 }}
+                                 className="h-12 w-12 rounded-lg border-2 border-border cursor-pointer bg-accent/20 transition-all hover:scale-105"
+                               />
+                            </div>
+                          </div>
+                          
+                          <div className="flex-1 space-y-4">
+                            <div className="space-y-1.5">
+                              <label className="text-[9px] font-black uppercase text-muted-foreground">
+                                ឈ្មោះពណ៌ (Khmer/English)
+                              </label>
+                              <Input
+                                value={dc.name}
+                                onChange={(e) => {
+                                  const newColors = [...dressColors];
+                                  newColors[idx].name = e.target.value;
+                                  setDressColors(newColors);
+                                }}
+                                placeholder="ឧ. ពណ៌ផ្កាឈូក (Pink)"
+                                className="h-9 text-xs font-bold border-border bg-accent/10"
+                              />
+                            </div>
+                            <div className="space-y-1.5">
+                              <label className="text-[9px] font-black uppercase text-muted-foreground">
+                                អត្ថន័យពណ៌
+                              </label>
+                              <Input
+                                value={dc.meaning}
+                                onChange={(e) => {
+                                  const newColors = [...dressColors];
+                                  newColors[idx].meaning = e.target.value;
+                                  setDressColors(newColors);
+                                }}
+                                placeholder="ឧ. តំណាងឱ្យសេចក្តីស្រឡាញ់ដ៏ផ្អែមល្ហែម"
+                                className="h-9 text-[11px] font-medium border-border bg-accent/10 italic"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               <div className="md:col-span-2 pt-4">
                 <Button

@@ -94,8 +94,8 @@ export const ArticleRenderer = ({ content, event, theme }: Props) => {
                             </div>
                             <div className="flex-1 text-center sm:text-left space-y-3 relative z-10">
                                 <div className="text-[10px] sm:text-xs font-black uppercase text-primary"><span>{t("written_by")}</span></div>
-                                <div className="text-2xl sm:text-5xl font-black text-foreground"><span>{content.author?.name || "Sideth-Theapka Admin"}</span></div>
-                                <p className="text-muted-foreground text-sm sm:text-lg font-medium opacity-60"><span>Sideth-Theapka Digital Event Specialist • Sharing stories and traditions.</span></p>
+                                <div className="text-2xl sm:text-5xl font-black text-foreground"><span>{content.author?.name || "Mordok-Theapka Admin"}</span></div>
+                                <p className="text-muted-foreground text-sm sm:text-lg font-medium opacity-60"><span>Mordok-Theapka Digital Event Specialist • Sharing stories and traditions.</span></p>
                             </div>
                         </div>
                     </div>

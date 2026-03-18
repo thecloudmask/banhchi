@@ -153,6 +153,9 @@ export function EditEventDialog({
       },
     ],
   );
+  const [dressColors, setDressColors] = useState<any[]>(
+    event.extraData?.dressColors || [],
+  );
 
   // Refined Location State
   const [locObj, setLocObj] = useState({
@@ -227,6 +230,7 @@ export function EditEventDialog({
           },
         ],
       );
+      setDressColors(event.extraData?.dressColors || []);
       setLocObj({
         name: event.extraData?.location?.name || event.location || "",
         address: event.extraData?.location?.address || "",
@@ -334,6 +338,7 @@ export function EditEventDialog({
                 : null,
             khqrUSDUrl: currentKhqrUSDUrl || null,
             khqrKHRUrl: currentKhqrKHRUrl || null,
+            dressColors: dressColors,
           },
           galleryUrls: currentGalleryUrls,
         },
@@ -402,7 +407,7 @@ export function EditEventDialog({
                   : "border-transparent text-muted-foreground hover:text-foreground",
               )}
             >
-              <Users className="h-3 w-3" /> {"គូស្រករ"}
+              <Users className="h-3 w-3" /> {"ព័ត៌មានគូស្រករ"}
             </button>
             <button
               onClick={() => setActiveTab("schedule")}
@@ -425,6 +430,17 @@ export function EditEventDialog({
               )}
             >
               <MapIcon className="h-3 w-3" /> {"ទីតាំង & Footer"}
+            </button>
+            <button
+              onClick={() => setActiveTab("dress-code")}
+              className={cn(
+                "px-4 py-3 text-[10px] font-black uppercase border-b-2 transition-all whitespace-nowrap flex items-center gap-2",
+                activeTab === "dress-code"
+                  ? "border-[#f41f4d] text-[#f41f4d]"
+                  : "border-transparent text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <Palette className="h-3 w-3" /> {"ពណ៌សម្លៀកបំពាក់"}
             </button>
           </>
         )}
@@ -1232,6 +1248,123 @@ export function EditEventDialog({
                     placeholder="ឧ. វត្តមានដ៏ខ្ពង់ខ្ពស់របស់អស់លោក លោកស្រី អ្នកនាងកញ្ញា ជាកិត្តិយសដ៏ធំធេងសម្រាប់គ្រួសាររបស់យើងក្នុងឱកាសនេះ..."
                     className="min-h-40 text-sm leading-relaxed p-6 bg-muted/5 rounded-2xl"
                   />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "dress-code" && category === "wedding" && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="bg-card/40 border border-border rounded-md p-6 space-y-6 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center">
+                      <Palette className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-foreground">
+                        ពណ៌សម្លៀកបំពាក់ចូលរួម (Dress Code)
+                      </h4>
+                      <p className="text-[10px] text-muted-foreground uppercase font-black">
+                        កំណត់ពណ៌ និងអត្ថន័យសម្រាប់ផ្ទាំងធៀប
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setDressColors([
+                        ...dressColors,
+                        { color: "#E5C170", name: "", meaning: "" },
+                      ])
+                    }
+                    className="h-9 px-4 text-[10px] font-black uppercase border-[#f41f4d]/20 text-[#f41f4d] hover:bg-[#f41f4d]/5"
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" /> {"បន្ថែមពណ៌"}
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {dressColors.length === 0 ? (
+                    <div className="col-span-full text-center py-10 border border-dashed border-border rounded-xl bg-muted/10">
+                      <Palette className="h-8 w-8 text-muted-foreground/20 mx-auto mb-3" />
+                      <p className="text-xs text-muted-foreground font-black uppercase">
+                        មិនទាន់មានពណ៌ត្រូវបានកំណត់នៅឡើយទេ
+                      </p>
+                    </div>
+                  ) : (
+                    dressColors.map((dc, i) => (
+                      <div
+                        key={i}
+                        className="p-4 rounded-xl border border-border bg-background relative group/c animate-in zoom-in-95 duration-200"
+                      >
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setDressColors(
+                              dressColors.filter((_, idx) => idx !== i),
+                            )
+                          }
+                          className="absolute top-2 right-2 text-muted-foreground/30 hover:text-destructive transition-colors p-1"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-4">
+                            <div className="relative">
+                              <input
+                                type="color"
+                                value={dc.color}
+                                onChange={(e) => {
+                                  const newColors = [...dressColors];
+                                  newColors[i].color = e.target.value;
+                                  setDressColors(newColors);
+                                }}
+                                className="w-12 h-12 rounded-lg border-0 p-0 overflow-hidden cursor-pointer"
+                              />
+                              <div
+                                className="absolute inset-0 rounded-lg pointer-events-none border border-black/10 shadow-inner"
+                                style={{ backgroundColor: dc.color }}
+                              />
+                            </div>
+                            <div className="flex-1 space-y-2">
+                              <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">
+                                ឈ្មោះពណ៌
+                              </Label>
+                              <Input
+                                placeholder="ឧ. Rose Gold"
+                                value={dc.name}
+                                onChange={(e) => {
+                                  const newColors = [...dressColors];
+                                  newColors[i].name = e.target.value;
+                                  setDressColors(newColors);
+                                }}
+                                className="h-9 bg-muted/10 font-bold text-xs"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">
+                              អត្ថន័យ
+                            </Label>
+                            <Input
+                              placeholder="ឧ. តំណាងឱ្យភាពស្រស់ថ្លា"
+                              value={dc.meaning}
+                              onChange={(e) => {
+                                const newColors = [...dressColors];
+                                newColors[i].meaning = e.target.value;
+                                setDressColors(newColors);
+                              }}
+                              className="h-9 bg-muted/10 font-bold text-xs"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>

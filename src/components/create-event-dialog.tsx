@@ -98,6 +98,7 @@ export function CreateEventDialog() {
       ],
     },
   ]);
+  const [dressColors, setDressColors] = useState<any[]>([]);
 
   // Assets State
   const [banner, setBanner] = useState<File | null>(null);
@@ -165,6 +166,7 @@ export function CreateEventDialog() {
         ],
       },
     ]);
+    setDressColors([]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -214,6 +216,7 @@ export function CreateEventDialog() {
                 activities: g.activities.filter((a: any) => a.time.trim() || a.title.trim())
               })).filter((g: any) => g.activities.length > 0)
             })).filter(day => day.dayLabel.trim() || day.groups.length > 0) : undefined,
+            dressColors,
           },
         },
         banner || undefined,
@@ -731,6 +734,117 @@ export function CreateEventDialog() {
               </Label>
             </div>
           </div>
+
+          {/* DRESS CODE - Wedding Only */}
+          {category === "wedding" && (
+            <div className="bg-card/40 border border-border rounded-md p-5 space-y-6 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center">
+                    <Palette className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-foreground">
+                      ពណ៌សម្លៀកបំពាក់ចូលរួម (Dress Code)
+                    </h4>
+                    <p className="text-[10px] text-muted-foreground uppercase font-black">
+                      កំណត់ពណ៌ និងអត្ថន័យសម្រាប់ផ្ទាំងធៀប
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setDressColors([
+                      ...dressColors,
+                      { color: "#E5C170", name: "", meaning: "" },
+                    ])
+                  }
+                  className="h-9 px-4 text-[10px] font-bold uppercase border-primary/20 text-primary hover:bg-primary/5"
+                >
+                  <Plus className="h-3 w-3 mr-1" /> {"បន្ថែមពណ៌"}
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {dressColors.length === 0 ? (
+                  <div className="col-span-full text-center py-6 border border-dashed border-border rounded-md bg-muted/10">
+                    <p className="text-xs text-muted-foreground">មិនទាន់មានពណ៌ត្រូវបានកំណត់នៅឡើយទេ</p>
+                  </div>
+                ) : (
+                  dressColors.map((dc, i) => (
+                    <div
+                      key={i}
+                      className="p-4 rounded-md border border-border bg-muted/5 relative group/c animate-in zoom-in-95 duration-200"
+                    >
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setDressColors(dressColors.filter((_, idx) => idx !== i))
+                        }
+                        className="absolute top-2 right-2 text-muted-foreground/30 hover:text-destructive transition-colors p-1"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                          <div className="relative">
+                            <input
+                              type="color"
+                              value={dc.color}
+                              onChange={(e) => {
+                                const newColors = [...dressColors];
+                                newColors[i].color = e.target.value;
+                                setDressColors(newColors);
+                              }}
+                              className="w-10 h-10 rounded-md border-0 p-0 overflow-hidden cursor-pointer"
+                            />
+                            <div
+                              className="absolute inset-0 rounded-md pointer-events-none border border-black/10"
+                              style={{ backgroundColor: dc.color }}
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <Label className="text-[10px] font-semibold uppercase text-muted-foreground ml-1">
+                              ឈ្មោះពណ៌
+                            </Label>
+                            <Input
+                              placeholder="ឧ. Rose Gold"
+                              value={dc.name}
+                              onChange={(e) => {
+                                const newColors = [...dressColors];
+                                newColors[i].name = e.target.value;
+                                setDressColors(newColors);
+                              }}
+                              className="h-8 bg-background border-border text-xs"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-semibold uppercase text-muted-foreground ml-1">
+                            អត្ថន័យ
+                          </Label>
+                          <Input
+                            placeholder="ឧ. តំណាងឱ្យភាពស្រស់ថ្លា"
+                            value={dc.meaning}
+                            onChange={(e) => {
+                              const newColors = [...dressColors];
+                              newColors[i].meaning = e.target.value;
+                              setDressColors(newColors);
+                            }}
+                            className="h-8 bg-background border-border text-xs"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
 
           {/* CARD 3: ASSETS - Dash style upload as image */}
           <div className="bg-card/40 border border-border rounded-md p-5 space-y-6 shadow-sm">

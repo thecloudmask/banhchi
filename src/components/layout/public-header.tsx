@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, ReactNode } from "react";
+import React, { useState, ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -51,7 +51,7 @@ export function PublicHeader({
           <Link href="/" className="flex items-center group">
             <div className="relative h-10 w-40 sm:h-14 sm:w-56 transition-transform duration-500 group-hover:scale-105">
               <Image
-                src="/SIDETH-THEAPKA.png"
+                src="/MORDOK-THEAPKA.png"
                 alt="Logo"
                 fill
                 className="object-contain object-left dark:brightness-200"
@@ -98,7 +98,7 @@ export function PublicHeader({
                 <SheetHeader className="px-10 pt-16 pb-8 text-left border-none">
                   <div className="relative h-10 w-40 mb-8">
                     <Image
-                      src="/SIDETH-THEAPKA.png"
+                      src="/MORDOK-THEAPKA.png"
                       alt="Logo"
                       fill
                       className="object-contain object-left dark:brightness-200"
@@ -124,7 +124,7 @@ export function PublicHeader({
                   </div>
                   <div className="mt-10 pt-10 border-t border-border/10 flex flex-col items-center gap-2">
                     <p className="text-[10px] font-black uppercase text-muted-foreground/30">
-                      © {mounted ? new Date().getFullYear() : ""} មត៌ត ធៀបការ (Motorola Theapka)
+                      © {mounted ? new Date().getFullYear() : ""} មត៌ក ធៀបការ (Mordok-Theapka)
                     </p>
                     <p className="text-[9px] font-bold uppercase text-primary/40">
                       Digital Event Companion

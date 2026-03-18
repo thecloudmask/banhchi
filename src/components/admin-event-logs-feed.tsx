@@ -62,7 +62,7 @@ export function AdminEventLogsFeed({ eventId, refreshKey = 0 }: AdminEventLogsFe
              </div>
           ) : (
              <div className="space-y-6">
-                {logs.map((log) => (
+                {logs?.map((log) => (
                    <div key={log.id} className="relative pl-6 border-l border-border pb-1 last:pb-0">
                       <div className={cn(
                         "absolute -left-1.5 top-0 h-3 w-3 rounded-full border-2 border-background", log.action === 'CREATE' ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" : 

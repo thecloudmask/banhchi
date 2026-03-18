@@ -33,7 +33,7 @@ export function SystemInfoDialog() {
               <span className="text-lg font-black">S</span>
             </div>
             <DialogTitle className="text-lg font-black italic uppercase">
-              {"Sideth-Theapka"}
+              {"Mordok-Theapka"}
             </DialogTitle>
             <div className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-muted text-muted-foreground border border-border ml-1">
               v1.0.0
@@ -70,7 +70,7 @@ export function SystemInfoDialog() {
               {/* QR Code Column */}
               <div className="flex flex-col items-center gap-2 shrink-0">
                 <div className="bg-white p-1.5 rounded-xl border border-border shadow-sm">
-                  <img src="/mengley.svg" alt="Support" className="w-20 h-20" />
+                  <img src="/MORDOK-THEAPKA.png" alt="Support" className="w-20 h-20" />
                 </div>
                 <span className="text-[9px] font-bold uppercase text-muted-foreground text-center leading-tight w-20">
                   {"ស្កេន"}

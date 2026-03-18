@@ -1,28 +1,31 @@
 import React, { useState, useEffect } from "react";
-import {
-  cn,
-  formatDateTime,
-  formatKhmerTimeStr,
-  toKhmerDigits,
-} from "@/lib/utils";
-import { useLanguage } from "@/providers/language-provider";
+import { cn, formatKhmerTimeStr, toKhmerDigits } from "@/lib/utils";
 import { Content } from "@/services/content.service";
 import { Event } from "@/types";
-import {
-  Heart,
-  MapPin,
-  Mail,
-  Calendar,
-  ChevronDown,
-  X,
-  ZoomIn,
-} from "lucide-react";
+import { Heart, MapPin, Mail, ChevronDown, X, ZoomIn } from "lucide-react";
 import Image from "next/image";
+
+interface Activity {
+  time: string;
+  title: string;
+  description?: string;
+}
+
+interface ScheduleGroup {
+  groupTitle?: string;
+  activities: Activity[];
+}
+
+interface ScheduleDay {
+  dayLabel: string;
+  activities?: Activity[];
+  groups?: ScheduleGroup[];
+}
 
 interface Props {
   content: Content;
   event: Event;
-  theme: any;
+  theme?: Record<string, any>;
   onCoverStateChange?: (shown: boolean) => void;
 }
 
@@ -32,13 +35,11 @@ export const WeddingAgenda = ({
   theme,
   onCoverStateChange,
 }: Props) => {
-  const { t, language } = useLanguage();
-
   // Combine content data with event extra data, prioritizing event level info
   const extra = event.extraData || {};
   const contentData = content.contentData || {};
 
-  const data: any = {
+  const data = {
     ...contentData,
     ...extra,
     groom: {
@@ -77,6 +78,35 @@ export const WeddingAgenda = ({
     minutes: 0,
     seconds: 0,
   });
+  const [activeColor, setActiveColor] = useState<number | null>(null);
+
+  const dressColors = event.extraData?.dressColors || [
+    {
+      color: "#FFFFFF",
+      name: "ពណ៌ស (White)",
+      meaning: "តំណាងឱ្យភាពបរិសុទ្ធ ភាពស្មោះត្រង់ និងការចាប់ផ្តើមដ៏ថ្មីសន្លាង។",
+    },
+    {
+      color: "#0F172A",
+      name: "ពណ៌ទឹកប៊ិច (Dark Blue)",
+      meaning: "តំណាងឱ្យភាពស្ងប់ស្ងាត់ ទំនុកចិត្ត និងសេចក្តីសុខដែលរឹងមាំ។",
+    },
+    {
+      color: "#8b9bb4",
+      name: "ពណ៌ប្រផេះបែកខៀវ (Slate Blue)",
+      meaning: "តំណាងឱ្យភាពរឹងមាំ មិត្តភាព និងការគោរពគ្នាទៅវិញទៅមក។",
+    },
+    {
+      color: "#f8b4d9",
+      name: "ពណ៌ផ្កាឈូក (Pink)",
+      meaning: "តំណាងឱ្យសេចក្តីស្រឡាញ់ដ៏ផ្អែមល្ហែម មនោសញ្ចេតនា និងភាពកក់ក្តៅ។",
+    },
+    {
+      color: "#EF4444",
+      name: "ពណ៌ក្រហម (Red)",
+      meaning: "តំណាងឱ្យភាពរំភើប កម្លាំងថាមពល និងក្តីស្រឡាញ់ដ៏មានអានុភាព។",
+    },
+  ];
 
   React.useEffect(() => {
     setMounted(true);
@@ -89,16 +119,26 @@ export const WeddingAgenda = ({
   }, [showCover, onCoverStateChange]);
 
   useEffect(() => {
-    const dateVal = event.eventDate as any;
+    const dateVal = event.eventDate;
     let targetDate: number;
 
-    if (dateVal?.toDate) {
+    const isFirebaseTimestamp = (val: any): val is { toDate: () => Date } => {
+      return val && typeof val.toDate === "function";
+    };
+
+    const isFirebaseSeconds = (val: any): val is { seconds: number } => {
+      return val && typeof val.seconds === "number";
+    };
+
+    if (isFirebaseTimestamp(dateVal)) {
       targetDate = dateVal.toDate().getTime();
-    } else if (dateVal?.seconds) {
+    } else if (isFirebaseSeconds(dateVal)) {
       targetDate = dateVal.seconds * 1000;
     } else {
-      const parsedDate = new Date(dateVal);
-      targetDate = !isNaN(parsedDate.getTime()) ? parsedDate.getTime() : Date.now();
+      const parsedDate = new Date(dateVal as any);
+      targetDate = !isNaN(parsedDate.getTime())
+        ? parsedDate.getTime()
+        : Date.now();
     }
 
     if (isNaN(targetDate)) {
@@ -172,9 +212,10 @@ export const WeddingAgenda = ({
         >
           {/* Background Image & Overlay */}
           {event.bannerUrl ? (
-            <img
+            <Image
               src={event.bannerUrl}
               alt="Wedding Cover"
+              fill
               className="absolute inset-0 w-full h-full object-cover z-[-2] blur-[2px] scale-105"
             />
           ) : (
@@ -279,9 +320,10 @@ export const WeddingAgenda = ({
             {/* Background Image that covers the screen as in the image */}
             <div className="absolute inset-0 z-[-2] overflow-hidden">
               {event.bannerUrl ? (
-                <img
+                <Image
                   src={event.bannerUrl}
                   alt="Wedding Background"
+                  fill
                   className="absolute inset-0 w-full h-full object-cover z-[-2] blur-[2px] scale-105"
                 />
               ) : (
@@ -442,9 +484,10 @@ export const WeddingAgenda = ({
             <div className="relative w-full rounded-[2.5rem] sm:rounded-[3rem] overflow-hidden p-8 sm:p-12 isolate bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/5 transform transition-transform hover:-translate-y-1">
               {/* Background of Card */}
               {event.bannerUrl ? (
-                <img
+                <Image
                   src={event.bannerUrl}
                   alt="Background"
+                  fill
                   className="absolute inset-0 w-full h-full object-cover z-[-2] opacity-30 dark:opacity-50 contrast-125 grayscale-20"
                 />
               ) : (
@@ -468,7 +511,7 @@ export const WeddingAgenda = ({
                   {data?.schedule?.map((day: any, dIdx: number) => {
                     // Normalize: admin saves flat `activities[]`; content.service uses nested `groups[].activities[]`
                     // Support both formats transparently
-                    const groups: { groupTitle?: string; activities: any[] }[] =
+                    const groups: ScheduleGroup[] =
                       Array.isArray(day.groups) && day.groups.length > 0
                         ? day.groups
                         : [
@@ -501,12 +544,12 @@ export const WeddingAgenda = ({
                                 )}
                                 <div className="space-y-6">
                                   {group.activities?.map(
-                                    (activity: any, aIdx: number) => (
+                                    (activity: Activity, aIdx: number) => (
                                       <div
                                         key={aIdx}
                                         className="relative pl-8 group"
                                       >
-                                        <div className="absolute left-[-3px] top-1.5 w-2 h-2 rounded-full bg-[#C5A866] shadow-[0_0_8px_rgba(197,168,102,0.6)] group-hover:scale-150 transition-transform duration-300" />
+                                        <div className="absolute -left-0.75 top-1.5 w-2 h-2 rounded-full bg-[#C5A866] shadow-[0_0_8px_rgba(197,168,102,0.6)] group-hover:scale-150 transition-transform duration-300" />
 
                                         <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-4 transition-all group-hover:translate-x-1 duration-300">
                                           <div className="text-[#a38038] dark:text-[#EACD88] font-black text-xs sm:text-sm whitespace-nowrap opacity-80">
@@ -556,9 +599,11 @@ export const WeddingAgenda = ({
                   <div className="flex justify-center py-2">
                     <div className="bg-white p-4 rounded-[2rem] shadow-2xl shadow-black/10 border border-[#C5A866]/10">
                       <div className="w-24 h-24 sm:w-32 sm:h-32 flex items-center justify-center">
-                        <img
+                        <Image
                           src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(data?.location?.mapUrl || "https://maps.google.com")}`}
                           alt="QR Code"
+                          width={128}
+                          height={128}
                           className="w-full h-full object-contain"
                         />
                       </div>
@@ -584,17 +629,51 @@ export const WeddingAgenda = ({
                     </a>
                   )}
 
-                  <div className="mt-8 pt-6 border-t border-[#C5A866]/10 flex flex-col sm:flex-row items-center justify-between gap-6">
-                    <span className="text-[#a38038] dark:text-[#EACD88] font-black text-[11px] sm:text-xs uppercase tracking-widest">
-                      ពណ៌សម្លៀកបំពាក់
-                    </span>
-                    <div className="flex items-center gap-3 bg-[#C5A866]/5 dark:bg-black/50 p-2 sm:px-4 sm:py-2 rounded-full border border-[#C5A866]/10 backdrop-blur-md">
-                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white border-2 border-black/10 hover:scale-110 transition-transform cursor-pointer shadow-sm"></div>
-                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#0F172A] border-2 border-white/20 hover:scale-110 transition-transform cursor-pointer shadow-sm"></div>
-                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#8b9bb4] border-2 border-white/20 hover:scale-110 transition-transform cursor-pointer shadow-sm"></div>
-                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#f8b4d9] border-2 border-white/20 hover:scale-110 transition-transform cursor-pointer shadow-sm"></div>
-                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#EF4444] border-2 border-white/20 hover:scale-110 transition-transform cursor-pointer shadow-sm"></div>
+                  <div className="mt-8 pt-6 border-t border-[#C5A866]/10 flex flex-col items-center gap-6">
+                    <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-6">
+                      <span className="text-[#a38038] dark:text-[#EACD88] font-black text-[11px] sm:text-xs uppercase tracking-widest">
+                        ពណ៌សម្លៀកបំពាក់
+                      </span>
+                      <div className="flex items-center gap-3 bg-[#C5A866]/5 dark:bg-black/50 p-2 sm:px-4 sm:py-2 rounded-full border border-[#C5A866]/10 backdrop-blur-md">
+                        {dressColors.map((dc: { color: string; name: string; meaning: string }, i: number) => (
+                          <div
+                            key={i}
+                            onClick={() => setActiveColor(i === activeColor ? null : i)}
+                            className={cn(
+                              "w-6 h-6 sm:w-8 sm:h-8 rounded-full border-2 transition-all cursor-pointer shadow-sm relative",
+                              activeColor === i 
+                                ? "scale-125 shadow-lg border-[#C5A866] ring-4 ring-[#C5A866]/20" 
+                                : "hover:scale-110 border-white/20"
+                            )}
+                            style={{ backgroundColor: dc.color }}
+                          >
+                            {activeColor === i && (
+                               <div className="absolute inset-0 rounded-full animate-ping bg-current opacity-20 pointer-events-none" />
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
+
+                    {activeColor !== null && (
+                      <div className="w-full animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-500">
+                        <div className="relative p-6 rounded-3xl bg-[#C5A866]/5 dark:bg-white/5 border border-[#C5A866]/20 overflow-hidden group">
+                           <div 
+                              className="absolute top-0 left-0 w-1.5 h-full opacity-70 transition-colors duration-500" 
+                              style={{ backgroundColor: dressColors[activeColor].color }}
+                           />
+                           <h5 
+                              className="text-lg font-black font-kantumruy mb-1 transition-colors duration-500"
+                              style={{ color: activeColor === 0 && !mounted ? '#000' : dressColors[activeColor].color }}
+                           >
+                             {dressColors[activeColor].name}
+                           </h5>
+                           <p className="text-[#5D534A] dark:text-zinc-400 text-sm font-medium leading-relaxed italic">
+                             {dressColors[activeColor].meaning}
+                           </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -648,9 +727,10 @@ export const WeddingAgenda = ({
                     onClick={() => setSelectedImage(url)}
                     className="aspect-3/4 sm:aspect-4/5 rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden shadow-lg border-4 border-white dark:border-zinc-800 transform transition-all hover:scale-[1.03] hover:z-10 bg-[#E5DCC2] dark:bg-zinc-800 cursor-zoom-in group relative"
                   >
-                    <img
+                    <Image
                       src={url}
                       alt={`Gallery ${i}`}
+                      fill
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -683,9 +763,11 @@ export const WeddingAgenda = ({
                 {data.khqrUSDUrl && (
                   <div className="flex flex-col items-center space-y-4">
                     <div className="relative group w-70 sm:w-75 rounded-[1.5rem] overflow-hidden shadow-2xl border-4 border-white dark:border-zinc-800 bg-white hover:border-[#C5A866] transition-all">
-                      <img
+                      <Image
                         src={data.khqrUSDUrl}
                         alt="KHQR USD"
+                        width={300}
+                        height={400}
                         className="w-full h-auto object-contain cursor-zoom-in"
                         onClick={() => setSelectedImage(data.khqrUSDUrl)}
                       />
@@ -698,9 +780,11 @@ export const WeddingAgenda = ({
                 {data.khqrKHRUrl && (
                   <div className="flex flex-col items-center space-y-4">
                     <div className="relative group w-70 sm:w-75 rounded-[1.5rem] overflow-hidden shadow-2xl border-4 border-white dark:border-zinc-800 bg-white hover:border-[#C5A866] transition-all">
-                      <img
+                      <Image
                         src={data.khqrKHRUrl}
                         alt="KHQR KHR"
+                        width={300}
+                        height={400}
                         className="w-full h-auto object-contain cursor-zoom-in"
                         onClick={() => setSelectedImage(data.khqrKHRUrl)}
                       />
@@ -729,10 +813,12 @@ export const WeddingAgenda = ({
             </p>
 
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-4xl sm:rounded-[1.5rem] bg-[#f41f4d] flex items-center justify-center text-white shadow-xl shadow-[#f41f4d]/20 transition-transform hover:scale-105 mb-8">
-              <img
-                src="/SIDETH-THEAPKA.png"
+              <Image
+                src="/MORDOK-THEAPKA.png"
                 alt="Logo"
-                className="w-10 sm:w-24 object-contain brightness-200"
+                width={64}
+                height={64}
+                className="w-10 sm:w-12 object-contain brightness-200"
               />
             </div>
 
@@ -764,7 +850,7 @@ export const WeddingAgenda = ({
             </div>
 
             <p className="text-[#C5A866]/80 text-[9px] sm:text-[10px] uppercase font-black border-t border-[#C5A866]/20 pt-8 w-full">
-              មត៌ត ធៀបការ (Motorola Theapka) Event Management ©{" "}
+              មត៌ក ធៀបការ (Mordok-Theapka) Event Management ©{" "}
               {mounted ? new Date().getFullYear() : ""}
             </p>
           </div>
@@ -791,9 +877,11 @@ export const WeddingAgenda = ({
             className="relative w-full h-full flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <img
+            <Image
               src={selectedImage}
               alt="Gallery Preview"
+              width={1600}
+              height={1200}
               className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-in zoom-in-95 fill-mode-both duration-500"
             />
           </div>

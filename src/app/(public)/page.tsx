@@ -7,14 +7,8 @@ import {
   ArrowRight,
   LayoutDashboard,
   Calendar,
-  ChevronLeft,
-  ChevronRight,
-  Loader2,
-  Phone,
-  MessageCircle,
   Search,
   X,
-  LifeBuoy,
   Zap,
   ShieldCheck,
   Smartphone,
@@ -35,8 +29,8 @@ import { PublicHeader } from "@/components/layout/public-header";
 import { compressImage } from "@/lib/cloudinary";
 
 // Helper type guard
-function isEvent(item: any): item is Event {
-  return !!(item.eventDate || item.category || item._source === "events");
+function isEvent(item: Event | Content): item is Event {
+  return "category" in item || "eventDate" in item;
 }
 
 // Helper: returns the correct public URL based on item category/type
@@ -248,7 +242,7 @@ function FeedCard({
           {((!isEvt && (item as Content).description) ||
             (isEvt && featured && item.description)) && (
             <p className="text-sm text-muted-foreground/80 line-clamp-2 md:line-clamp-3 mb-6 font-medium leading-relaxed">
-              {stripHtml((item as any).description)}
+              {stripHtml(item.description || "")}
             </p>
           )}
 
@@ -286,12 +280,11 @@ function FeedCard({
 }
 
 export default function Home() {
-  const { signIn, signInWithGoogle, user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
 
   const [items, setItems] = useState<(Event | Content)[]>([]);
   const [loading, setLoading] = useState(true);
-  const [featuredIndex, setFeaturedIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
 
@@ -323,7 +316,7 @@ export default function Home() {
 
         const sorted = combined.sort((a, b) => {
           const getD = (item: Event | Content) => {
-            const d = isEvent(item) ? item.eventDate : item.createdAt;
+            const d = isEvent(item) ? item.eventDate : (item as any).createdAt;
             if (!d) return 0;
             const timestamp = (d as any)?.seconds
               ? (d as any).seconds * 1000
@@ -383,18 +376,6 @@ export default function Home() {
     ];
   }, [items]);
 
-  const bannerItems = items.filter((item) => {
-    if (isEvent(item)) return true;
-    return item.type !== "article";
-  });
-
-  useEffect(() => {
-    if (bannerItems.length <= 1) return;
-    const interval = setInterval(() => {
-      setFeaturedIndex((prev) => (prev + 1) % bannerItems.length);
-    }, 8000);
-    return () => clearInterval(interval);
-  }, [bannerItems.length]);
 
   const { ceremonies, articles } = useMemo(() => {
     const evts = items.filter(isEvent);
@@ -459,15 +440,16 @@ export default function Home() {
         nav={
           <nav className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-10">
             {[
-              { id: "feed", label: "កម្មវិធីទាំងអស់" },
-              { id: "features", label: "មុខងារពិសេស" },
-            ].map((section) => (
+              { id: "feed", label: "កម្មវិធីទាំងអស់", href: "#feed" },
+              { id: "about-brand", label: "អំពីយើង", href: "/about-mordok" },
+              { id: "features", label: "មុខងារពិសេស", href: "#features" },
+            ].map((item) => (
               <Link
-                key={section.id}
-                href={`#${section.id}`}
+                key={item.id}
+                href={item.href}
                 className="py-3 lg:py-0 text-[13px] font-bold uppercase text-muted-foreground/60 hover:text-primary transition-all duration-300 relative group/link font-kantumruy"
               >
-                <span>{section.label}</span>
+                <span>{item.label}</span>
                 <span className="absolute -bottom-1 left-0 w-0 h-px bg-primary transition-all duration-300 group-hover/link:w-full hidden lg:block" />
               </Link>
             ))}
@@ -511,8 +493,8 @@ export default function Home() {
 
                 <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-foreground leading-[1.4] uppercase font-kantumruy animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
                   <span className="text-4xl md:text-6xl lg:text-7xl font-black text-primary leading-[1.4] uppercase font-kantumruy animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
-                    មត៌ត ធៀបការ
-                  </span>
+                    មត៌ក ធៀបការ
+                  </span>{" "}
                   ដៃគូឌីជីថលសម្រាប់គ្រប់កម្មវិធីមង្គលរបស់អ្នក
                 </h1>
 
@@ -559,7 +541,7 @@ export default function Home() {
                   <div className="absolute top-0 right-0 w-full h-full bg-linear-to-br from-primary/20 to-transparent rounded-md rotate-6 border border-primary/10 backdrop-blur-3xl" />
                   <div className="absolute inset-4 bg-card rounded-md border border-border shadow-2xl flex items-center justify-center overflow-hidden">
                     <Image
-                      src="/SIDETH-THEAPKA.png"
+                      src="/MORDOK-THEAPKA.png"
                       alt="Hero Brand"
                       width={400}
                       height={200}
@@ -622,7 +604,7 @@ export default function Home() {
                 },
                 {
                   icon: <Smartphone className="h-6 w-6" />,
-                  title: "ធៀបកាឌីជីថល",
+                  title: "ធៀបការឌីជីថល",
                   desc: "ផ្ញើសំបុត្រអញ្ជើញ និងទទួលការចងដៃ Digital ពីភ្ញៀវកិត្តិយសតាមរយៈ QR Code។",
                   color: "emerald",
                 },
@@ -661,6 +643,8 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Brand Explanation Section */}
+
         {/* Feed Section */}
         <section id="feed" className="py-32 relative">
           <div className="container mx-auto max-w-7xl px-6 lg:px-12 relative z-10">
@@ -670,8 +654,9 @@ export default function Home() {
                   ស្វែងរកកម្មវិធី និងចំណេះដឹង
                 </h2>
                 <p className="text-lg text-muted-foreground font-medium">
-                  ចូលរួមជាមួយពួកយើង ដើម្បីទទួលបានបទពិសោធន៍ថ្មីៗ។
+                  ជាមួយពួកយើង ដើម្បីទទួលបានបទពិសោធន៍ថ្មីៗ។
                 </p>
+                ចូលរួម
               </div>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 flex-1 md:max-w-lg lg:max-w-xl">
@@ -804,7 +789,7 @@ export default function Home() {
                   តើអ្នកត្រៀមខ្លួនហើយឬនៅ?
                 </h2>
                 <p className="text-xl md:text-2xl text-white/80 font-medium max-w-2xl mx-auto">
-                  ចូលរួមជាមួយគ្រួសាររាប់រយដែលកំពុងប្រើប្រាស់ ស៊ីដេត-ធៀបកា
+                  ចូលរួមជាមួយគ្រួសាររាប់រយដែលកំពុងប្រើប្រាស់ មត៌ក ធៀបការ
                   ដើម្បីកម្មវិធីដ៏មានន័យ។
                 </p>
                 <div className="flex flex-wrap justify-center gap-6 pt-6">

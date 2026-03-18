@@ -46,7 +46,7 @@ export default function AdminLayout({
       <div className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center p-8 text-center">
         <Loader2 className="h-8 w-8 animate-spin text-rose-500 opacity-60 mb-4" />
         <h2 className="text-sm font-bold uppercase text-muted-foreground">
-          {"SIDETH-THEAPKA"}
+          {"MORDOK-THEAPKA"}
         </h2>
       </div>
     );
@@ -64,7 +64,7 @@ export default function AdminLayout({
           >
             <div className="flex h-9 w-40 items-center justify-center overflow-hidden">
               <img
-                src="/SIDETH-THEAPKA.png"
+                src="/MORDOK-THEAPKA.png"
                 alt="Logo"
                 className="w-full h-full object-contain object-left dark:brightness-200 dark:contrast-75"
               />

@@ -22,9 +22,9 @@ const kantumruy = Kantumruy_Pro({
 });
 
 export const metadata: Metadata = {
-  title: "មត៌ត ធៀបការ (Motorola Theapka) - Digital Event Companion",
+  title: "មត៌ក ធៀបការ (Mordok-Theapka) - Digital Event Companion",
   description:
-    "Modern event contribution tracking for Khmer weddings and ceremonies by Motorola Theapka.",
+    "Modern event contribution tracking for Khmer weddings and ceremonies by Mordok-Theapka.",
   manifest: "/manifest.json",
 };
 

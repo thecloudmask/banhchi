@@ -67,7 +67,7 @@ export default function LoginPage() {
             <div className="w-full bg-card border border-border shadow-2xl p-8 rounded-[2rem] max-w-sm space-y-8 text-center animate-in fade-in zoom-in-95 duration-500">
                 <div>
                     <div className="inline-flex h-20 w-20 bg-muted/50 border border-border shadow-xl rounded-2xl items-center justify-center overflow-hidden mb-6 p-3 group hover:scale-105 transition-transform">
-                        <img src="/SIDETH-THEAPKA.png" alt="Logo" className="w-full h-full object-contain dark:brightness-200" />
+                        <img src="/MORDOK-THEAPKA.png" alt="Logo" className="w-full h-full object-contain dark:brightness-200" />
                     </div>
                     <h1 className="text-2xl font-black text-foreground uppercase">{t("admin_access")}</h1>
                     <div className="h-1 w-12 bg-primary mx-auto mt-4 rounded-full" />
