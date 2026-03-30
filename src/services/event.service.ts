@@ -62,6 +62,25 @@ export const getEventById = async (id: string): Promise<Event | null> => {
   return null;
 };
 
+export const getEventByTrackingToken = async (token: string): Promise<Event | null> => {
+  if (!db) return null;
+  try {
+    const q = query(
+      collection(db, EVENTS_COLLECTION),
+      where("trackingToken", "==", token),
+      limit(1)
+    );
+    const snapshot = await getDocs(q);
+    if (!snapshot.empty) {
+      const docSnap = snapshot.docs[0];
+      return { id: docSnap.id, ...docSnap.data() } as Event;
+    }
+  } catch (error) {
+    console.error(error);
+  }
+  return null;
+};
+
 export const createEvent = async (
   data: Omit<Event, "id" | "createdAt" | "status" | "bannerUrl" | "galleryUrls">, 
   bannerFile?: File,

@@ -49,6 +49,7 @@ import {
 import { useAuth } from "@/providers/auth-provider";
 import { GuestHistoryDialog } from "@/components/guest-history-dialog";
 import { PublicSettingsDialog } from "@/components/public-settings-dialog";
+import { TrackingReportDialog } from "@/components/tracking-report-dialog";
 import {
   Popover,
   PopoverContent,
@@ -65,11 +66,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AdminEventLogsFeed } from "@/components/admin-event-logs-feed";
-import {
-  Printer,
-  History,
-  Activity,
-} from "lucide-react";
+import { Printer, History, Activity } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -126,6 +123,7 @@ export default function AdminEventClient() {
   const [editEventDate, setEditEventDate] = useState<Date | undefined>(
     undefined,
   );
+  const [displayCount, setDisplayCount] = useState(24);
 
   // Schedule state
   type ScheduleActivity = { time: string; title: string; description: string };
@@ -149,7 +147,7 @@ export default function AdminEventClient() {
       if (eventData?.eventDate) {
         const dateVal = eventData.eventDate;
         let d: Date;
-        
+
         if (dateVal && typeof (dateVal as any).toDate === "function") {
           d = (dateVal as any).toDate();
         } else if (dateVal instanceof Date) {
@@ -260,7 +258,9 @@ export default function AdminEventClient() {
     // Filter by payment method
     if (filterPaymentMethod !== "all") {
       if (filterPaymentMethod === "cash") {
-        result = result.filter((g: Guest) => g.paymentMethod === filterPaymentMethod);
+        result = result.filter(
+          (g: Guest) => g.paymentMethod === filterPaymentMethod,
+        );
       } else if (filterPaymentMethod === "others") {
         result = result.filter(
           (g: Guest) =>
@@ -481,6 +481,12 @@ export default function AdminEventClient() {
             />
           </div>
           <div className="flex-1 sm:flex-none">
+            <TrackingReportDialog
+              event={event}
+              onRefresh={() => fetchData(false)}
+            />
+          </div>
+          <div className="flex-1 sm:flex-none">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -550,14 +556,6 @@ export default function AdminEventClient() {
                 />
               </SheetContent>
             </Sheet>
-          </div>
-          <div className="w-full sm:w-auto">
-            {activeTab === "receipts" && (
-              <AddGuestDialog
-                event={event}
-                onSuccess={() => fetchData(false)}
-              />
-            )}
           </div>
         </div>
       </div>
@@ -742,84 +740,105 @@ export default function AdminEventClient() {
             </div>
           </div>
 
-          <div className="space-y-5 bg-card/40 border border-border rounded-md p-4 sm:p-6">
-            <div className="flex flex-col gap-3">
-              <div className="relative w-full sm:max-w-xs">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder={"ស្វែងរក..."}
-                  className="h-10 pl-9 rounded-md border-border bg-accent/50 text-foreground placeholder:text-muted-foreground font-medium text-sm"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Select
-                  value={filterPaymentMethod}
-                  onValueChange={setFilterPaymentMethod}
-                >
-                  <SelectTrigger className="w-full sm:w-40 h-10 rounded-md border-border bg-accent/50 text-muted-foreground font-semibold text-xs">
-                    <div className="flex items-center gap-2">
-                      <ListFilter className="h-3.5 w-3.5 text-muted-foreground" />
-                      <SelectValue placeholder={"ការបង់ប្រាក់"} />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent className="rounded-md bg-card border-border text-foreground">
-                    <SelectItem value="all" className="font-semibold text-xs">
-                      {"គ្រប់វិធី"}
-                    </SelectItem>
-                    <SelectItem value="cash" className="font-semibold text-xs">
-                      {"សាច់ប្រាក់"}
-                    </SelectItem>
-                    <SelectItem value="bank" className="font-semibold text-xs">
-                      {"ធនាគារ"}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                {uniqueLocations.length > 0 && (
+          <div className="space-y-5 bg-card/40 border border-border rounded-[1.5rem] p-4 sm:p-6">
+            <div className="flex flex-col xl:flex-row xl:justify-between gap-6">
+              <div className="flex flex-col gap-3 flex-1">
+                <div className="relative w-full sm:max-w-sm">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder={"ស្វែងរកឈ្មោះភ្ញៀវ លេខទូរស័ព្ទ..."}
+                    className="h-11 pl-10 rounded-xl border-border bg-background shadow-inner text-foreground placeholder:text-muted-foreground font-semibold text-sm focus-visible:ring-primary/20"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setDisplayCount(24);
+                    }}
+                  />
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
                   <Select
-                    value={filterLocation}
-                    onValueChange={setFilterLocation}
+                    value={filterPaymentMethod}
+                    onValueChange={setFilterPaymentMethod}
                   >
                     <SelectTrigger className="w-full sm:w-40 h-10 rounded-md border-border bg-accent/50 text-muted-foreground font-semibold text-xs">
                       <div className="flex items-center gap-2">
                         <ListFilter className="h-3.5 w-3.5 text-muted-foreground" />
-                        <SelectValue placeholder={"ទីតាំង"} />
+                        <SelectValue placeholder={"ការបង់ប្រាក់"} />
                       </div>
                     </SelectTrigger>
-                    <SelectContent className="rounded-md bg-card border-border text-foreground max-h-48">
+                    <SelectContent className="rounded-md bg-card border-border text-foreground">
                       <SelectItem value="all" className="font-semibold text-xs">
-                        {"គ្រប់ទីតាំង"}
+                        {"គ្រប់វិធី"}
                       </SelectItem>
-                      {uniqueLocations?.map((location) => (
-                        <SelectItem
-                          key={location}
-                          value={location || ""}
-                          className="font-semibold text-xs"
-                        >
-                          {location}
-                        </SelectItem>
-                      ))}
+                      <SelectItem
+                        value="cash"
+                        className="font-semibold text-xs"
+                      >
+                        {"សាច់ប្រាក់"}
+                      </SelectItem>
+                      <SelectItem
+                        value="bank"
+                        className="font-semibold text-xs"
+                      >
+                        {"ធនាគារ"}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
-                )}
-                {(filterPaymentMethod !== "all" ||
-                  filterLocation !== "all") && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setFilterPaymentMethod("all");
-                      setFilterLocation("all");
-                    }}
-                    className="h-9 px-3 text-xs font-semibold text-muted-foreground hover:text-foreground"
-                  >
-                    {"សម្អាត"}
-                  </Button>
-                )}
-                <p className="ml-auto text-[10px] font-semibold uppercase text-muted-foreground/60">
-                  {filteredGuests.length} {"នាក់"}
-                </p>
+                  {uniqueLocations.length > 0 && (
+                    <Select
+                      value={filterLocation}
+                      onValueChange={setFilterLocation}
+                    >
+                      <SelectTrigger className="w-full sm:w-40 h-10 rounded-md border-border bg-accent/50 text-muted-foreground font-semibold text-xs">
+                        <div className="flex items-center gap-2">
+                          <ListFilter className="h-3.5 w-3.5 text-muted-foreground" />
+                          <SelectValue placeholder={"ទីតាំង"} />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent className="rounded-md bg-card border-border text-foreground max-h-48">
+                        <SelectItem
+                          value="all"
+                          className="font-semibold text-xs"
+                        >
+                          {"គ្រប់ទីតាំង"}
+                        </SelectItem>
+                        {uniqueLocations?.map((location) => (
+                          <SelectItem
+                            key={location}
+                            value={location || ""}
+                            className="font-semibold text-xs"
+                          >
+                            {location}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  {(filterPaymentMethod !== "all" ||
+                    filterLocation !== "all") && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setFilterPaymentMethod("all");
+                        setFilterLocation("all");
+                      }}
+                      className="h-9 px-3 text-xs font-semibold text-muted-foreground hover:text-foreground"
+                    >
+                      {"សម្អាត"}
+                    </Button>
+                  )}
+                  <p className="ml-auto text-[10px] font-semibold uppercase text-muted-foreground/60">
+                    {filteredGuests.length} {"នាក់"}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <AddGuestDialog
+                  event={event}
+                  onSuccess={() => fetchData(false)}
+                />
               </div>
             </div>
 
@@ -830,13 +849,14 @@ export default function AdminEventClient() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {filteredGuests?.map((guest, index) => (
-                  <div
-                    key={guest.id}
-                    className="relative p-7 rounded-[1.5rem] border border-border bg-card/40 hover:bg-card hover:border-primary/20 transition-all duration-500 hover:shadow-xl hover:shadow-primary/5 group animate-in fade-in zoom-in"
-                    style={{ animationDelay: `${(index % 12) * 50}ms` }}
-                  >
+              <div className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {filteredGuests?.slice(0, displayCount).map((guest, index) => (
+                    <div
+                      key={guest.id}
+                      className="relative p-7 rounded-[1.5rem] border border-border bg-card/40 hover:bg-card hover:border-primary/20 transition-all duration-500 hover:shadow-xl hover:shadow-primary/5 group animate-in fade-in zoom-in"
+                      style={{ animationDelay: `${(index % 12) * 20}ms` }}
+                    >
                     <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -956,6 +976,20 @@ export default function AdminEventClient() {
                     </div>
                   </div>
                 ))}
+                </div>
+
+                {filteredGuests.length > displayCount && (
+                  <div className="flex justify-center pt-8">
+                    <Button
+                      variant="outline"
+                      onClick={() => setDisplayCount(prev => prev + 48)}
+                      className="h-11 px-10 rounded-xl border-primary/20 bg-primary/5 text-primary font-bold hover:bg-primary hover:text-white transition-all shadow-lg shadow-primary/5"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      {"បង្ហាញបន្ថែម"} ({filteredGuests.length - displayCount} {"នាក់ទៀត"})
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1744,7 +1778,9 @@ export default function AdminEventClient() {
                           variant="ghost"
                           size="icon"
                           onClick={() =>
-                            setDressColors(dressColors.filter((_, i) => i !== idx))
+                            setDressColors(
+                              dressColors.filter((_, i) => i !== idx),
+                            )
                           }
                           className="absolute -top-2 -right-2 h-7 w-7 rounded-full bg-red-500 text-white shadow-lg hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity z-10"
                         >
@@ -1757,19 +1793,19 @@ export default function AdminEventClient() {
                               ពណ៌
                             </label>
                             <div className="relative">
-                               <input
-                                 type="color"
-                                 value={dc.color}
-                                 onChange={(e) => {
-                                   const newColors = [...dressColors];
-                                   newColors[idx].color = e.target.value;
-                                   setDressColors(newColors);
-                                 }}
-                                 className="h-12 w-12 rounded-lg border-2 border-border cursor-pointer bg-accent/20 transition-all hover:scale-105"
-                               />
+                              <input
+                                type="color"
+                                value={dc.color}
+                                onChange={(e) => {
+                                  const newColors = [...dressColors];
+                                  newColors[idx].color = e.target.value;
+                                  setDressColors(newColors);
+                                }}
+                                className="h-12 w-12 rounded-lg border-2 border-border cursor-pointer bg-accent/20 transition-all hover:scale-105"
+                              />
                             </div>
                           </div>
-                          
+
                           <div className="flex-1 space-y-4">
                             <div className="space-y-1.5">
                               <label className="text-[9px] font-black uppercase text-muted-foreground">

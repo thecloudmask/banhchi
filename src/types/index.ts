@@ -18,6 +18,8 @@ export interface Event {
   category?: string;
   description? : string;
   extraData? : Record<string, any>;
+  trackingToken?: string;
+  trackingPin?: string;
 }
 
 export type PaymentMethod = string;

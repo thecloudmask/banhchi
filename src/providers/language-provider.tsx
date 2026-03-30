@@ -372,6 +372,25 @@ export const translations: Record<string, Record<Language, string>> = {
     kh: "ភ្ញៀវស្កេន QR នេះដើម្បីមើលការរាប់ថយក្រោយ និងបញ្ជីឈ្មោះ។",
   },
 
+  // Tracking Report
+  share_tracking_report: { en: "Share Tracking Report", kh: "ចែករំលែករបាយការណ៍" },
+  generate_tracking_link: { en: "Generate Link", kh: "បង្កើតតំណភ្ជាប់" },
+  reset_tracking_link: { en: "Reset Link", kh: "បង្កើតតំណភ្ជាប់ថ្មី" },
+  tracking_link: { en: "Tracking Link", kh: "តំណភ្ជាប់របាយការណ៍" },
+  tracking_pin: { en: "Tracking PIN", kh: "លេខកូដសម្ងាត់របាយការណ៍" },
+  tracking_description: {
+    en: "Share this link with the event owner so they can track the income and expenses without logging in.",
+    kh: "ផ្ញើតំណភ្ជាប់នេះទៅកាន់ម្ចាស់កម្មវិធី ដើម្បីឱ្យពួកគាត់អាចតាមដានចំណូលចំណាយដោយមិនចាំបាច់ Login។",
+  },
+  enter_tracking_pin: { en: "Enter PIN", kh: "បញ្ចូលលេខកូដសម្ងាត់" },
+  enter_tracking_pin_desc: {
+    en: "Please enter the PIN to view the event report",
+    kh: "សូមបញ្ចូលលេខកូដសម្ងាត់ដើម្បីមើលរបាយការណ៍",
+  },
+  tracking_report: { en: "Event Tracking Report", kh: "របាយការណ៍តាមដានកម្មវិធី" },
+  income_expenses_overview: { en: "Income & Expenses Overview", kh: "ទិដ្ឋភាពទូទៅនៃចំណូលចំណាយ" },
+  guest_contributions_list: { en: "Contributions List", kh: "តារាងរាយនាមភ្ញៀវចូលរួម" },
+
   // Public Event Page
   content_protected: { en: "Content Protected", kh: "ខ្លឹមសារត្រូវបានការពារ" },
   enter_pin_desc: {

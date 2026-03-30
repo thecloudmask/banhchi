@@ -210,10 +210,9 @@ export function AddGuestDialog({
       <DrawerTrigger asChild>
         {trigger || (
           <Button
-            size="sm"
-            className="rounded-md h-9 px-4 font-bold bg-primary hover:bg-primary/90 text-primary-foreground text-xs uppercase"
+            className="w-full xl:w-auto h-11 rounded-xl px-6 font-black bg-primary hover:bg-primary/90 text-primary-foreground text-sm uppercase shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:-translate-y-0.5"
           >
-            <Plus className="h-4 w-4 mr-1.5" />
+            <Plus className="h-4 w-4 mr-2" />
             <span>បញ្ចូលភ្ញៀវ</span>
           </Button>
         )}
